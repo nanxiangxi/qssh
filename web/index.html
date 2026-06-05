@@ -1,1494 +1,348 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 
 <head>
   <meta charset="utf-8">
-  <title>Saasive | SaaS & Tech Startup HTML Template | Home Page Ai Chatbot</title>
-  <!-- Stylesheets -->
+  <title>启SSH - 中文SSH远程连接工具</title>
   <link href="css/bootstrap.min.css" rel="stylesheet">
   <link href="css/style.css" rel="stylesheet">
   <link href="css/style-5.css" rel="stylesheet">
-
   <link rel="shortcut icon" href="images/favicon-ai.png" type="image/x-icon">
-  <link rel="icon" href="images/favicon-ai.png" type="image/x-icon">
-
-  <!-- Responsive -->
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #0d1117; color: #c9d1d9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif; overflow-x: hidden; }
+    a { color: inherit; text-decoration: none; }
 
+    /* === Header === */
+    .site-header {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(13,17,23,0.85); backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .header-inner {
+      max-width: 1000px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 2rem; height: 52px;
+    }
+    .header-logo { display: flex; align-items: center; gap: 0.5rem; }
+    .header-logo-img {
+      width: 28px; height: 28px; border-radius: 7px; object-fit: contain;
+    }
+    .header-logo-icon {
+      width: 28px; height: 28px;
+      background: linear-gradient(135deg, #63b3ed, #9f7aea);
+      border-radius: 7px; display: flex; align-items: center; justify-content: center;
+    }
+    .header-logo-text { font-size: 1rem; font-weight: 700; color: #f7fafc; }
+    .header-nav { display: flex; align-items: center; gap: 1.25rem; }
+    .header-nav a { font-size: 0.8rem; color: #8b949e; transition: color 0.15s; }
+    .header-nav a:hover { color: #e2e8f0; }
+    .header-download {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      padding: 0.35rem 0.9rem; background: rgba(99,179,237,0.15);
+      border: 1px solid rgba(99,179,237,0.3); border-radius: 6px;
+      color: #63b3ed; font-size: 0.78rem; font-weight: 600; transition: all 0.15s;
+    }
+    .header-download:hover { background: rgba(99,179,237, 0.25); }
+
+    /* === Hero === */
+    .hero {
+      padding: 120px 2rem 40px;
+      text-align: center;
+      position: relative;
+    }
+    .hero::before {
+      content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+      width: 700px; height: 300px;
+      background: radial-gradient(ellipse, rgba(99,179,237,0.07) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-inner { max-width: 640px; margin: 0 auto; position: relative; }
+    .hero-title {
+      font-size: 2.8rem; font-weight: 800; color: #f7fafc;
+      margin: 0 0 0.75rem; line-height: 1.15;
+    }
+    .hero-title .hl {
+      background: linear-gradient(135deg, #63b3ed, #9f7aea);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .hero-desc {
+      font-size: 1.05rem; color: #8b949e; margin: 0 0 1.5rem; line-height: 1.6;
+    }
+    .hero-badges {
+      display: flex; gap: 0.4rem; justify-content: center; margin-bottom: 1.75rem; flex-wrap: wrap;
+    }
+    .badge {
+      padding: 0.25rem 0.75rem; background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08); border-radius: 999px;
+      font-size: 0.75rem; color: #8b949e;
+    }
+    .dl-row { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; }
+    .dl-btn {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.65rem 1.5rem; border-radius: 8px; font-size: 0.85rem; font-weight: 600;
+      transition: all 0.2s; cursor: pointer; border: none;
+    }
+    .dl-primary {
+      background: linear-gradient(135deg, #63b3ed, #4299e1); color: #fff;
+      box-shadow: 0 4px 16px rgba(66,153,225,0.2);
+    }
+    .dl-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(66,153,225,0.3); }
+    .dl-secondary {
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #a0aec0;
+    }
+    .dl-secondary:hover { background: rgba(255,255,255,0.1); }
+    .dl-note { font-size: 0.7rem; color: #484f58; margin-top: 0.5rem; }
+
+    /* === Screenshot === */
+    .screenshot {
+      max-width: 860px; margin: 2rem auto 0; padding: 0 2rem;
+    }
+    .screenshot-img {
+      width: 100%; border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      display: block;
+    }
+
+    /* === Features + About 合并 === */
+    .info-section {
+      max-width: 900px; margin: 3rem auto 0; padding: 0 2rem;
+    }
+    .section-title {
+      text-align: center; font-size: 1.25rem; font-weight: 700; color: #f7fafc;
+      margin: 0 0 0.4rem;
+    }
+    .section-desc {
+      text-align: center; font-size: 0.85rem; color: #8b949e;
+      margin: 0 0 1.75rem;
+    }
+
+    .feat-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+    .feat-card {
+      padding: 1rem; background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.06); border-radius: 10px;
+      transition: all 0.2s;
+    }
+    .feat-card:hover {
+      background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.12);
+      transform: translateY(-2px);
+    }
+    .feat-icon {
+      width: 32px; height: 32px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 0.5rem;
+    }
+    .feat-card h3 { font-size: 0.85rem; color: #e2e8f0; margin: 0 0 0.2rem; font-weight: 600; }
+    .feat-card p { font-size: 0.7rem; color: #8b949e; margin: 0; }
+
+    .about-row {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem;
+    }
+    .about-card {
+      padding: 0.75rem 1rem; background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.06); border-radius: 10px;
+      display: flex; align-items: center; gap: 0.6rem;
+    }
+    .about-icon {
+      width: 28px; height: 28px; border-radius: 7px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .about-card h4 { font-size: 0.8rem; color: #e2e8f0; margin: 0; font-weight: 600; }
+    .about-card p { font-size: 0.65rem; color: #8b949e; margin: 0; }
+
+    /* === Footer === */
+    .site-footer {
+      border-top: 1px solid rgba(255,255,255,0.06);
+      padding: 1.25rem 2rem; margin-top: 3rem;
+    }
+    .footer-inner {
+      max-width: 900px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .footer-left { font-size: 0.7rem; color: #484f58; }
+    .footer-right { display: flex; gap: 1rem; }
+    .footer-right a { font-size: 0.7rem; color: #8b949e; transition: color 0.15s; }
+    .footer-right a:hover { color: #63b3ed; }
+
+    /* === Responsive === */
+    @media (max-width: 700px) {
+      .hero-title { font-size: 1.8rem; }
+      .hero-desc { font-size: 0.9rem; }
+      .feat-grid { grid-template-columns: 1fr 1fr; }
+      .about-row { grid-template-columns: 1fr 1fr; }
+      .header-nav { display: none; }
+      .footer-inner { flex-direction: column; gap: 0.4rem; }
+    }
+    @media (max-width: 400px) {
+      .feat-grid { grid-template-columns: 1fr; }
+      .about-row { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 
 <body>
-  <div class="page-wrapper">
 
-    <!-- Preloader start -->
-    <div class="preloader">
-      <svg viewBox="0 0 1000 1000" preserveAspectRatio="none">
-        <path id="preloaderSvg" d="M0,1005S175,995,500,995s500,5,500,5V0H0Z"></path>
-      </svg>
-      <div class="preloader-heading">
-        <div class="load-text">
-          <span>L</span>
-          <span>o</span>
-          <span>a</span>
-          <span>d</span>
-          <span>i</span>
-          <span>n</span>
-          <span>g..</span>
+  <!-- Header -->
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="#" class="header-logo">
+        <img src="https://download.shlm.top/38119115" alt="启SSH" class="header-logo-img" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="header-logo-icon" style="display:none;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
         </div>
-      </div>
+        <span class="header-logo-text">启SSH</span>
+      </a>
+      <nav class="header-nav">
+        <a href="#features">功能</a>
+        <a href="https://github.com/nanxiangxi/0qssh">GitHub</a>
+      </nav>
+      <a href="https://github.com/nanxiangxi/0qssh/releases/latest" class="header-download">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        下载
+      </a>
     </div>
-    <!-- Preloader end -->
+  </header>
 
-    <!-- Back-to-top start -->
-    <div class="back-to-top-wrapper">
-      <button id="back_to_top" type="button" class="back-to-top-btn">
-        <i class="fa-solid fa-angle-up"></i>
-      </button>
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-inner">
+      <h1 class="hero-title">好看的中文 <span class="hl">SSH 工具</span></h1>
+      <p class="hero-desc">
+        我缺乏一个好看的 SSH 工具给自己用，所以自己写了一个。<br>
+        开源、便携、免安装，不追求性能，只追求好看。
+      </p>
+      <div class="hero-badges">
+        <span class="badge">开源免费</span>
+        <span class="badge">中文界面</span>
+        <span class="badge">便携免安装</span>
+        <span class="badge">Windows 10+</span>
+      </div>
+      <div class="dl-row">
+        <a href="https://github.com/nanxiangxi/0qssh/releases/latest/download/0qssh-amd64.exe" class="dl-btn dl-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          下载 AMD64
+        </a>
+        <a href="https://github.com/nanxiangxi/0qssh/releases/latest/download/0qssh-arm64.exe" class="dl-btn dl-secondary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          下载 ARM64
+        </a>
+      </div>
+      <p class="dl-note">下载后直接双击运行，无需安装</p>
     </div>
-    <!-- Back-to-top start -->
+  </section>
 
-    <!-- Main Header-->
-    <header class="main-header header-style-one">
-      <div class="container">
-        <div class="header-lower anim-fade-move" data-delay="0.25">
-          <div class="inner-container">
-            <!-- Main box -->
-            <div class="main-box">
-              <div class="logo-box">
-                <div class="logo">
-                  <a href="index.html"><img src="images/logo.png" alt="Logo"></a>
-                </div>
-              </div>
-
-              <!--Nav Box-->
-              <div class="nav-outer">
-                <nav class="nav main-menu">
-                  <ul class="navigation">
-                    <li class="current dropdown">
-                      <a href="index.html">Home</a>
-                      <ul>
-                        <li><a href="index.html">Ai Chatbot</a></li>
-                        <li><a href="index-2.html">Marketing Automation</a></li>
-                        <li><a href="index-3.html">Payment Solution</a></li>
-                        <li><a href="index-4.html">CRM Software</a></li>
-                        <li><a href="index-5.html">Helpdesk Saas</a></li>
-                      </ul>
-                    </li>
-                    <li class="dropdown">
-                      <a href="#">Pages</a>
-                      <ul>
-                        <li><a href="page-pricing.html">Pricing</a></li>
-                        <li class="dropdown">
-                          <a href="#">Team</a>
-                          <ul>
-                            <li><a href="page-team.html">Team List</a></li>
-                            <li><a href="page-team-details.html">Team Details</a></li>
-                          </ul>
-                        </li>
-                        <li><a href="page-testimonial.html">Testimonial</a></li>
-                        <li><a href="page-faq.html">FAQ</a></li>
-                        <li class="dropdown">
-                          <a href="#">Shop</a>
-                          <ul>
-                            <li><a href="shop-products.html">Products</a></li>
-                            <li><a href="shop-products-sidebar.html">Products with Sidebar</a></li>
-                            <li><a href="shop-product-details.html">Product Details</a></li>
-                            <li><a href="shop-cart.html">Cart</a></li>
-                            <li><a href="shop-checkout.html">Checkout</a></li>
-                          </ul>
-                        </li>
-                        <li><a href="page-404.html">Page 404</a></li>
-                      </ul>
-                    </li>
-                    <li><a href="page-about.html">About</a></li>
-                    <li class="dropdown">
-                      <a href="#">Blog</a>
-                      <ul>
-                        <li><a href="news-grid.html">News Grid</a></li>
-                        <li><a href="news-details.html">News Details</a></li>
-                      </ul>
-                    </li>
-                    <li><a href="page-contact.html">Contact</a></li>
-                  </ul>
-                </nav>
-              </div>
-
-              <div class="action-box">
-                <a href="page-contact.html" class="btn-style-five">Sign Up</a>
-                <!-- Mobile Nav toggler -->
-                <div class="mobile-nav-toggler">
-                  <div class="shape-line-img"><i class="fas fa-bars"></i></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Mobile Menu  -->
-      <div class="mobile-menu">
-        <div class="menu-backdrop"></div>
-        <!--Here Menu Will Come Automatically Via Javascript / Same Menu as in Header-->
-        <nav class="menu-box">
-          <div class="upper-box">
-            <div class="nav-logo">
-              <a href="index.html"><img src="images/logo.png" alt=""></a>
-            </div>
-            <div class="close-btn"><i class="icon fa fa-times"></i></div>
-          </div>
-          <ul class="navigation clearfix">
-            <!--Keep This Empty / Menu will come through Javascript-->
-          </ul>
-          <ul class="contact-list-one">
-            <li>
-              <i class="icon lnr-icon-envelope1"></i>
-              <span class="title">Send Email</span>
-              <div class="text"><a href="https://html.kodesolution.com/cdn-cgi/l/email-protection#83efe2f4f0ecedc3e6fbe2eef3efe6ade0ecee"><span class="__cf_email__" data-cfemail="b3d2dfded29ddfd2c4c0dcddf3d6cbd2dec3dfd69dd0dcde">[email&#160;protected]</span></a></div>
-            </li>
-          </ul>
-          <ul class="social-links">
-            <li><a href="#"><i class="icon fab fa-twitter"></i></a></li>
-            <li><a href="#"><i class="icon fab fa-facebook-f"></i></a></li>
-            <li><a href="#"><i class="icon fab fa-pinterest-p"></i></a></li>
-            <li><a href="#"><i class="icon fab fa-vimeo-v"></i></a></li>
-          </ul>
-        </nav>
-      </div>
-      <!-- End Mobile Menu -->
-
-      <!-- Sticky Header  -->
-      <div class="sticky-header">
-        <div class="auto-container">
-          <div class="inner-container">
-            <!--Logo-->
-            <div class="logo">
-              <a href="index.html"><img src="images/logo.png" alt=""></a>
-            </div>
-
-            <!--Right Col-->
-            <div class="nav-outer">
-              <!-- Main Menu -->
-              <nav class="main-menu">
-                <div class="navbar-collapse show collapse clearfix">
-                  <ul class="navigation clearfix">
-                    <!--Keep This Empty / Menu will come through Javascript-->
-                  </ul>
-                </div>
-              </nav>
-              <!-- Main Menu End-->
-
-              <!--Mobile Navigation Toggler-->
-              <div class="mobile-nav-toggler"><span class="icon lnr-icon-bars"></span></div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <!-- End Sticky Menu -->
-    </header>
-    <!--End Main Header -->
-
-    <!-- Banner section -->
-    <section class="banner-section-ai">
-      <div class="outer-container">
-        <div class="sec-stars1"><img class="zoom-one" src="images/banner/banner-stars-left.png" alt="Image"></div>
-        <div class="sec-stars2"><img class="zoom-two" src="images/banner/banner-stars-right.png" alt="Image"></div>
-        <div class="sec-object"><img class="animation__rotateY" src="images/banner/banner-object1.png" alt="Image"></div>
-        <div class="container">
-          <div class="row g-0 align-items-center">
-            <div class="col-lg-8 col-xxl-6">
-              <div class="content">
-                <h1 class="title wow fadeInUp" data-wow-delay="00ms" data-wow-duration="1500ms">AI <span class="text-bg"><span>Chatbots</span></span> <br>Built for Business <br> Growth</h1>
-                <a href="page-contact.html" class="btn-style-five wow fadeInUp" data-wow-delay="200ms" data-wow-duration="1500ms">Start Free Trial <i class="fa-classic fa-light fa-angle-right ms-2"></i></a>
-              </div>
-              <div class="sec-video-block wow fadeInLeft" data-wow-delay="200ms" data-wow-duration="1500ms">
-                <p class="text">Connect your apps, streamline workflows, and focus on what matters—without writing a single line of code.</p>
-                <div class="play-button">
-                  <a href="https://www.youtube.com/watch?v=gIMY37cN8AQ" data-fancybox="gallery" data-caption="">
-                    <i class="fa-solid fa-play"></i>
-                    <span class="ripple"></span>
-                  </a>
-                  <h6 class="play-title">See How <br> It Works</h6>
-                </div>
-              </div>
-            </div>
-            <div class="col-lg-4 col-xxl-6">
-              <figure class="image wow bounceIn" data-wow-delay="200ms" data-wow-duration="1500ms">
-                <img src="images/banner/hero-image-ai.png" alt="Image">
-              </figure>
-            </div>
-          </div>
-        </div>
-        <div class="sec-bg"><img src="images/banner/banner-bg.png" alt="Image"></div>
-      </div>
-    </section>
-    <!-- Banner section -->
-
-    <!-- Clients Section Ai -->
-    <section class="clients-section">
-      <div class="container">
-        <div class="outer-box">
-          <h6 class="client-title wow fadeInUp" data-wow-delay="00ms" data-wow-duration="1500ms"><img class="icon-bounce" src="images/icons/theme-icon22.png" alt="">Trusted by 1200+ founders & business owners</h6>
-          <div class="swiper-container wow fadeInUp" data-wow-delay="200ms" data-wow-duration="1500ms">
-            <div class="swiper clients-swiper">
-              <div class="swiper-wrapper">
-                <div class="swiper-slide">
-                  <div class="client-block">
-                    <div class="inner-box">
-                      <div class="image-box">
-                        <figure class="image">
-                          <img src="images/resource/client1-8.png" alt="Image">
-                          <img src="images/resource/client1-3.png" alt="Image">
-                        </figure>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div class="swiper-slide">
-                  <div class="client-block">
-                    <div class="inner-box">
-                      <div class="image-box">
-                        <figure class="image">
-                          <img src="images/resource/client1-7.png" alt="Image">
-                          <img src="images/resource/client1-2.png" alt="Image">
-                        </figure>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div class="swiper-slide">
-                  <div class="client-block">
-                    <div class="inner-box">
-                      <div class="image-box">
-                        <figure class="image">
-                          <img src="images/resource/client1-8.png" alt="Image">
-                          <img src="images/resource/client1-3.png" alt="Image">
-                        </figure>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div class="swiper-slide">
-                  <div class="client-block">
-                    <div class="inner-box">
-                      <div class="image-box">
-                        <figure class="image">
-                          <img src="images/resource/client1-9.png" alt="Image">
-                          <img src="images/resource/client1-4.png" alt="Image">
-                        </figure>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div class="swiper-slide">
-                  <div class="client-block">
-                    <div class="inner-box">
-                      <div class="image-box">
-                        <figure class="image">
-                          <img src="images/resource/client1-10.png" alt="Image">
-                          <img src="images/resource/client1-5.png" alt="Image">
-                        </figure>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div class="swiper-slide">
-                  <div class="client-block">
-                    <div class="inner-box">
-                      <div class="image-box">
-                        <figure class="image">
-                          <img src="images/resource/client1-9.png" alt="Image">
-                          <img src="images/resource/client1-4.png" alt="Image">
-                        </figure>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-    <!--End Clients Section Ai -->
-
-    <!-- Feature Section -->
-    <section class="features-section-ai">
-      <div class="sec-light">
-        <img src="images/shape/sec-light.png" alt="Image">
-      </div>
-      <div class="outer-container">
-        <div class="sec-shape"><img src="images/shape/feature-ai-shape.png" alt="Image"></div>
-        <div class="container">
-          <div class="sec-title-five text-center">
-            <span class="sub-title wow fadeInUp" data-wow-delay="00ms" data-wow-duration="1500ms"><img class="icon-img animation__rotateY" src="https://html.kodesolution.com/2025/saasive-html/images/icons/sec-title-icon5.svg" alt="Icon"> Our Features</span>
-            <h2 class="title  wow fadeInUp" data-wow-delay="200ms" data-wow-duration="1500ms">Powerful Features to <br> Simplify <span class="text-primary">Your Work Every Day</span></h2>
-          </div>
-          <div class="row g-4">
-            <div class="feature-block-ai col-xl-8 wow fadeInLeft" data-wow-delay="00ms" data-wow-duration="1500ms">
-              <div class="inner-block item1 px-0">
-                <div class="content-box pl-40 pr-40">
-                  <h4 class="title">Multilingual Support (25+ languages)</h4>
-                  <div class="text">It is a long established fact that a reader will be distracted <br> by the readable
-                  </div>
-                </div>
-                <div class="image-box mt-80">
-                  <figure class="image mb-0"><img src="images/resource/featureH1-1.png" alt="Image"></figure>
-                </div>
-                <div class="item-shape">
-                  <img src="images/shape/feature-ai-item-shape1.png" alt="Image">
-                </div>
-              </div>
-            </div>
-            <div class="feature-block-ai col-xl-4 col-lg-6 col-md-6 wow fadeInRight" data-wow-delay="200ms" data-wow-duration="1500ms">
-              <div class="inner-block item2 pb-40">
-                <div class="content-box">
-                  <h4 class="title">AI Training</h4>
-                  <div class="text">It is a long established fact that a reader will be distracted by the readable</div>
-                </div>
-                <div class="image-box mt-0">
-                  <figure class="image mb-0"><img src="images/resource/featureH1-2.png" alt="Image"></figure>
-                </div>
-                <div class="item-shape">
-                  <img src="images/shape/feature-ai-item-shape2.png" alt="Image">
-                </div>
-              </div>
-            </div>
-            <div class="feature-block-ai style-two col-xl-4 col-lg-6 col-md-6 wow fadeInLeft" data-wow-delay="00ms" data-wow-duration="1500ms">
-              <div class="inner-block pb-0 item3">
-                <div class="content-box">
-                  <h4 class="title">Integration</h4>
-                  <div class="text">It is a long established fact that a reader will be distracted by the readable</div>
-                </div>
-                <div class="image-box px-2">
-                  <figure class="image mb-0"><img src="images/resource/featureH1-3.png" alt="Image"></figure>
-                </div>
-              </div>
-            </div>
-            <div class="feature-block-ai col-xl-8 wow fadeInRight" data-wow-delay="200ms" data-wow-duration="1500ms">
-              <div class="inner-block pb-0 item4">
-                <div class="content-box">
-                  <h4 class="title">Analytics Dashboard</h4>
-                  <div class="text">It is a long established fact that a reader will be distracted by the <br>readable content of a page when looking at its layout.</div>
-                </div>
-                <div class="image-box mt-30">
-                  <figure class="image mb-0"><img src="images/resource/featureH1-4.png" alt="Image"></figure>
-                </div>
-                <div class="item-shape">
-                  <img src="images/shape/feature-ai-item-shape3.png" alt="Image">
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-    <!--End Feature Section -->
-
-    <!-- About Section -->
-    <section class="about-section pt-120 pb-120">
-      <div class="container">
-        <div class="row g-5">
-          <div class="col-xl-6 image-column">
-            <div class="inner-column">
-              <figure class="image"><img src="images/about/about-image1.jpg" alt="Image"></figure>
-              <figure class="image image2"><img src="images/about/about-image2.jpg" alt="Image"></figure>
-              <div class="circle-text count-box">
-                <span class="count-text number" data-stop="20" data-speed="2000">0</span>
-                <img class="animation__rotate" src="images/about/circle-text.png" alt="Image">
-              </div>
-            </div>
-          </div>
-          <div class="col-xl-6 content-column">
-            <div class="inner-column">
-              <div class="sec-title-five mb-40">
-                <h6 class="sub-title wow fadeInUp" data-wow-delay="00ms" data-wow-duration="1500ms"><img class="icon-img animation__rotateY" src="https://html.kodesolution.com/2025/saasive-html/images/icons/sec-title-icon5.svg" alt="Icon">Who We Are</h6>
-                <h2 class="title wow fadeInUp " data-wow-delay="200ms" data-wow-duration="1500ms">Turning Everyday Chats Into Opportunities for Growth</h2>
-                <div class="text wow fadeInUp mt-20" data-wow-delay="400ms" data-wow-duration="1500ms">It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using </div>
-              </div>
-              <div class="content">
-                <div class="text-box wow fadeInDown" data-wow-delay="200ms" data-wow-duration="1500ms">
-                  <div class="text">We combine cutting-edge AI with simple design to help businesses of all sizes. The result? Smarter conversations, happier customers, and more opportunities for growth.</div>
-                </div>
-                <div class="count-box">
-                  <div class="item wow fadeInLeft" data-wow-delay="00ms" data-wow-duration="1500ms">
-                    <h2 class="title"><span>92</span>%</h2>
-                    <span class="text">Satisfied Clients <br> Returning Often</span>
-                  </div>
-                  <div class="item wow fadeInLeft" data-wow-delay="200ms" data-wow-duration="1500ms">
-                    <h2 class="title"><span>130</span>+</h2>
-                    <span class="text">Expanding Impact <br> in 25 Countries</span>
-                  </div>
-                  <div class="item wow fadeInLeft" data-wow-delay="400ms" data-wow-duration="1500ms">
-                    <h2 class="title"><span>40</span>%</h2>
-                    <span class="text">Increase in <br> Productivity</span>
-                  </div>
-                </div>
-                <a href="page-about.html" class="btn-style-five wow fadeInDown" data-wow-delay="400ms" data-wow-duration="1500ms">Discover More <i class="fa-classic fa-light fa-angle-right ms-2"></i></a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="sec-shadow"><img src="images/about/about-shadow.png" alt="Image"></div>
-    </section>
-    <!-- About Section -->
-
-    <!-- Feature Box Layout 5 -->
-    <section class="feature-section-layout5 pt-0">
-      <div class="container">
-        <div class="sec-title-five text-center">
-          <h6 class="sub-title wow fadeInUp" data-wow-delay="00ms" data-wow-duration="1500ms"><img class="icon-img animation__rotateY" src="https://html.kodesolution.com/2025/saasive-html/images/icons/sec-title-icon5.svg" alt="Icon">How It Works</h6>
-          <h2 class="title  wow fadeInUp" data-wow-delay="200ms" data-wow-duration="1500ms">Simple Setup, Powerful <br> Performance</h2>
-        </div>
-
-        <div class="outer-box">
-          <div class="feature-box-home5">
-            <div class="inner-box">
-              <div class="step">Step 1</div>
-              <div class="icon wow bounceIn" data-wow-delay="00ms" data-wow-duration="1500ms"><img src="images/icons/theme-icon1.png" alt="icon"></div>
-              <h6 class="title"><a href="page-contact.html">Sign Up</a></h6>
-              <div class="text">Create your account with our guided setup process.</div>
-            </div>
-          </div>
-          <div class="feature-box-home5">
-            <div class="inner-box">
-              <div class="step">Step 2</div>
-              <div class="icon wow bounceIn" data-wow-delay="200ms" data-wow-duration="1500ms"><img src="images/icons/theme-icon2.png" alt="icon"></div>
-              <h6 class="title"><a href="page-about.html">Customize Your Bot</a></h6>
-              <div class="text">Create your account with our guided setup process.</div>
-            </div>
-          </div>
-          <div class="feature-box-home5">
-            <div class="inner-box">
-              <div class="step">Step 3</div>
-              <div class="icon wow bounceIn" data-wow-delay="300ms" data-wow-duration="1500ms"><img src="images/icons/theme-icon3.png" alt="icon"></div>
-              <h6 class="title"><a href="page-about.html">Integrate Easily</a></h6>
-              <div class="text">Create your account with our guided setup process.</div>
-            </div>
-          </div>
-          <div class="feature-box-home5">
-            <div class="inner-box">
-              <div class="step">Step 4</div>
-              <div class="icon wow bounceIn" data-wow-delay="400ms" data-wow-duration="1500ms"><img src="images/icons/theme-icon4.png" alt="icon"></div>
-              <h6 class="title"><a href="page-about.html">Go Live</a></h6>
-              <div class="text">Create your account with our guided setup process.</div>
-            </div>
-          </div>
-          <div class="sec-light"><img src="images/shape/feature-light.png" alt="Image"></div>
-        </div>
-        <div class="bottom-box wow fadeInUp" data-wow-delay="200ms" data-wow-duration="1500ms">
-          <div class="inner-box mt-40">
-            <div class="image-box">
-              <img src="images/resource/feature-bottom1-1.jpg" alt="">
-              <img src="images/resource/feature-bottom1-2.jpg" alt="">
-              <img src="images/resource/feature-bottom1-3.jpg" alt="">
-              <img src="images/resource/feature-bottom1-4.jpg" alt="">
-            </div>
-            <div class="text-box">Ready to grow? Let’s build something great together. <a href="page-contact.html">Get in touch</a></div>
-          </div>
-        </div>
-      </div>
-    </section>
-    <!--End Feature Box Layout 5 -->
-
-    <!-- Pricing Box Layout -->
-    <section class="pricing-section-layout5">
-      <div class="sec-light"><img src="images/shape/sec-light.png" alt="Image"></div>
-      <div class="outer-container">
-        <div class="container">
-          <div class="sec-title-five text-center mb-40">
-            <h6 class="sub-title wow fadeInUp" data-wow-delay="00ms" data-wow-duration="1500ms"><img class="icon-img animation__rotateY" src="https://html.kodesolution.com/2025/saasive-html/images/icons/sec-title-icon5.svg" alt="Icon">Pricing Plan</h6>
-            <h2 class="title  wow fadeInUp" data-wow-delay="200ms" data-wow-duration="1500ms">Scale Your Productivity <br> With the Right Plan</h2>
-          </div>
-          <div class="pricing-tab wow fadeInUp mb-60" data-wow-delay="400ms" data-wow-duration="1500ms">
-            <nav>
-              <div class="nav nav-tabs" id="nav-tab" role="tablist">
-                <button class="nav-link active" id="pt-1-tab" data-bs-toggle="tab" data-bs-target="#pt-1" type="button" role="tab" aria-controls="pt-1" aria-selected="true">Monthly</button>
-                <button class="nav-link" id="pt-2-tab" data-bs-toggle="tab" data-bs-target="#pt-2" type="button" role="tab" aria-controls="pt-2" aria-selected="false">Annually</button>
-              </div>
-            </nav>
-          </div>
-
-          <div class="tab-content" id="nav-tabContent">
-            <div class="tab-pane fade show active" id="pt-1" role="tabpanel" aria-labelledby="pt-1-tab">
-              <div class="pricing-package-wrapper">
-                <div class="row g-4">
-                  <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="00ms" data-wow-duration="1500ms">
-                    <div class="pricing-block-home5">
-                      <div class="inner-box">
-                        <div class="card-content">
-                          <div class="price-header">
-                            <div class="plan-badge">Business</div>
-                            <div class="subtitle">For Small Business</div>
-                            <div class="text">It is a long established fact that a reader will be distracted by the readable content </div>
-                            <div class="price"><span>$14.00</span>/ Monthly</div>
-                          </div>
-                          <div class="features">
-                            <ul>
-                              <li class="active"><i class="icon fa-classic far fa-check"></i> <span>Real-Time Collaboration</span></li>
-                              <li class="active"><i class="icon fa-classic far fa-check"></i> <span>Unlimited Projects</span></li>
-                              <li class="active"><i class="icon fa-classic far fa-check"></i> <span>Real-Time Analytics</span></li>
-                              <li class="active"><i class="icon fa-classic far fa-check"></i> <span>Marketing Dashboard Access</span></li>
-                              <li class="disabled"><i class="icon fa-classic far fa-check"></i> <span>CRM Integration</span></li>
-                              <li class="disabled"><i class="icon fa-classic far fa-check"></i> <span>Free Support</span></li>
-                            </ul>
-                          </div>
-                          <a href="page-pricing.html" class="pricing-btn">Get Started <i class="fa-classic fa-light fa-angle-right ms-2"></i></a>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="200ms" data-wow-duration="1500ms">
-                    <div class="pricing-block-home5">
-                      <div class="inner-box">
-                        <div class="card-content">
-                          <div class="price-header">
-                            <div class="d-flex align-items-start justify-content-between">
-                              <div>
-                                <div class="plan-badge">Professional</div>
-                                <div class="subtitle">For Large Business</div>
-                              </div>
-                              <div class="popular-tag">Popular</div>
-                            </div>
-                            <div class="text">It is a long established fact that a reader will be distracted by the readable content </div>
-                            <div class="price"><span>$20.00</span>/ Monthly</div>
-                          </div>
-                          <div class="features">
-                            <ul>
-                              <li class="active"><i class="icon fa-classic far fa-check"></i> <span>Real-Time Collaboration</span></li>
-                              <li class="active"><i class="icon fa-classic far fa-check"></i> <span>Unlimited Projects</span></li>
-                              <li class="active"><i class="icon fa-classic far fa-check"></i> <span>Real-Time Analytics</span></li>
-                              <li class="active"><i class="icon fa-classic far fa-check"></i> <span>Marketing Dashboard Access</span></li>
-                              <li class="disabled"><i class="icon fa-classic far fa-check"></i> <span>CRM Integration</span></li>
-                              <li class="disabled"><i class="icon fa-classic far fa-check"></i> <span>Free Support</span></li>
-                            </ul>
-                          </div>
-                          <a href="page-pricing.html" class="pricing-btn">Get Started <i class="fa-classic fa-light fa-angle-right ms-2"></i></a>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="400ms" data-wow-duration="1500ms">
-                    <div class="pricing-block-home5">
-                      <div class="inner-box">
-                        <div class="card-content">
-                          <div class="price-header">
-                            <div class="plan-badge">Enterprise</div>
-                            <div class="subtitle">Multiple Business</div>
-                            <div class="text">It is a long established fact that a reader will be distracted by the readable content </div>
-                            <div class="price"><span>$23.00</span>/ Monthly</div>
-                          </div>
-                          <div class="features">
-                            <ul>
-                              <li class="active"><i class="icon fa-classic far fa-check"></i> <span>Real-Time Collaboration</span></li>
-                              <li class="active"><i class="icon fa-classic far fa-check"></i> <span>Unlimited Projects</span></li>
-                              <li class="active"><i class="icon fa-classic far fa-check"></i> <span>Real-Time Analytics</span></li>
-                              <li class="active"><i class="icon fa-classic far fa-check"></i> <span>Marketing Dashboard Access</span></li>
-                              <li class="disabled"><i class="icon fa-classic far fa-check"></i> <span>CRM Integration</span></li>
-                              <li class="disabled"><i class="icon fa-classic far fa-check"></i> <span>Free Support</span></li>
-                            </ul>
-                          </div>
-                          <a href="page-pricing.html" class="pricing-btn">Get Started <i class="fa-classic fa-light fa-angle-right ms-2"></i></a>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="tab-pane fade" id="pt-2" role="tabpanel" aria-labelledby="pt-2-tab">
-              <div class="pricing-package-wrapper">
-                <div class="row g-4">
-                  <div class="col-lg-4 col-md-6">
-                    <div class="pricing-block-home5">
-                      <div class="inner-box">
-                        <div class="card-content">
-                          <div class="price-header">
-                            <div class="plan-badge">Business</div>
-                            <div class="subtitle">For Small Business</div>
-                            <div class="text">It is a long established fact that a reader will be distracted by the readable content </div>
-                            <div class="price"><span>$140</span>/ Monthly</div>
-                          </div>
-                          <div class="features">
-                            <ul>
-                              <li class="active"><i class="icon fa-classic far fa-check"></i> <span>Real-Time Collaboration</span></li>
-                              <li class="active"><i class="icon fa-classic far fa-check"></i> <span>Unlimited Projects</span></li>
-                              <li class="active"><i class="icon fa-classic far fa-check"></i> <span>Real-Time Analytics</span></li>
-                              <li class="active"><i class="icon fa-classic far fa-check"></i> <span>Marketing Dashboard Access</span></li>
-                              <li class="disabled"><i class="icon fa-classic far fa-check"></i> <span>CRM Integration</span></li>
-                              <li class="disabled"><i class="icon fa-classic far fa-check"></i> <span>Free Support</span></li>
-                            </ul>
-                          </div>
-                          <a href="page-pricing.html" class="pricing-btn">Get Started <i class="fa-classic fa-light fa-angle-right ms-2"></i></a>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="col-lg-4 col-md-6">
-                    <div class="pricing-block-home5">
-                      <div class="inner-box">
-                        <div class="card-content">
-                          <div class="price-header">
-                            <div class="d-flex align-items-start justify-content-between">
-                              <div>
-                                <div class="plan-badge">Professional</div>
-                                <div class="subtitle">For Large Business</div>
-                              </div>
-                              <div class="popular-tag">Popular</div>
-                            </div>
-                            <div class="text">It is a long established fact that a reader will be distracted by the readable content </div>
-                            <div class="price"><span>$200</span>/ Monthly</div>
-                          </div>
-                          <div class="features">
-                            <ul>
-                              <li class="active"><i class="icon fa-classic far fa-check"></i> <span>Real-Time Collaboration</span></li>
-                              <li class="active"><i class="icon fa-classic far fa-check"></i> <span>Unlimited Projects</span></li>
-                              <li class="active"><i class="icon fa-classic far fa-check"></i> <span>Real-Time Analytics</span></li>
-                              <li class="active"><i class="icon fa-classic far fa-check"></i> <span>Marketing Dashboard Access</span></li>
-                              <li class="disabled"><i class="icon fa-classic far fa-check"></i> <span>CRM Integration</span></li>
-                              <li class="disabled"><i class="icon fa-classic far fa-check"></i> <span>Free Support</span></li>
-                            </ul>
-                          </div>
-                          <a href="page-pricing.html" class="pricing-btn">Get Started <i class="fa-classic fa-light fa-angle-right ms-2"></i></a>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="col-lg-4 col-md-6">
-                    <div class="pricing-block-home5">
-                      <div class="inner-box">
-                        <div class="card-content">
-                          <div class="price-header">
-                            <div class="plan-badge">Enterprise</div>
-                            <div class="subtitle">Multiple Business</div>
-                            <div class="text">It is a long established fact that a reader will be distracted by the readable content </div>
-                            <div class="price"><span>$230</span>/ Monthly</div>
-                          </div>
-                          <div class="features">
-                            <ul>
-                              <li class="active"><i class="icon fa-classic far fa-check"></i> <span>Real-Time Collaboration</span></li>
-                              <li class="active"><i class="icon fa-classic far fa-check"></i> <span>Unlimited Projects</span></li>
-                              <li class="active"><i class="icon fa-classic far fa-check"></i> <span>Real-Time Analytics</span></li>
-                              <li class="active"><i class="icon fa-classic far fa-check"></i> <span>Marketing Dashboard Access</span></li>
-                              <li class="disabled"><i class="icon fa-classic far fa-check"></i> <span>CRM Integration</span></li>
-                              <li class="disabled"><i class="icon fa-classic far fa-check"></i> <span>Free Support</span></li>
-                            </ul>
-                          </div>
-                          <a href="page-pricing.html" class="pricing-btn">Get Started <i class="fa-classic fa-light fa-angle-right ms-2"></i></a>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="sec-shape"><img src="images/shape/pricing-shape.png" alt="Image"></div>
-      </div>
-    </section>
-    <!--End Pricing Box Layout -->
-
-    <!-- Feature Box Layout -->
-    <section class="feature-section-two-layout5 pt-120">
-      <div class="container">
-        <div class="sec-title-five text-center">
-          <h6 class="sub-title wow fadeInUp" data-wow-delay="00ms" data-wow-duration="1500ms"><img class="icon-img animation__rotateY" src="https://html.kodesolution.com/2025/saasive-html/images/icons/sec-title-icon5.svg" alt="Icon">Use Cases</h6>
-          <h2 class="title  wow fadeInUp" data-wow-delay="200ms" data-wow-duration="1500ms">Built for Every Industry </h2>
-          <div class="text wow fadeInUp" data-wow-delay="400ms" data-wow-duration="1500ms">Our chatbot adapts to your needs—no matter your business.</div>
-        </div>
-        <div class="row align-items-end">
-          <div class="col-xl-4">
-            <div class="feature-box-two-home5 mb-4 wow fadeInLeft" data-wow-delay="200ms" data-wow-duration="1500ms">
-              <div class="inner-box">
-                <div class="icon">
-                  <img src="images/icons/theme-icon5.png" alt="">
-                </div>
-                <h4 class="title"><a href="page-about.html">E-commerce</a></h4>
-                <div class="text">It is a long established fact that a reader will be distracted by the readable</div>
-              </div>
-            </div>
-            <div class="feature-box-two-style2-home5 wow fadeInRight" data-wow-delay="200ms" data-wow-duration="1500ms">
-              <div class="inner-box">
-                <div class="icon">
-                  <img src="images/icons/theme-icon7.png" alt="">
-                </div>
-                <h4 class="title"><a href="page-about.html">Healthcare</a></h4>
-                <div class="text">It is a long established fact that a reader will be distracted by the readable</div>
-              </div>
-            </div>
-          </div>
-          <div class="col-xl-4">
-            <figure class="image mb-0 text-center wow bounceIn" data-wow-delay="200ms" data-wow-duration="1500ms">
-              <img src="images/feature/feature-bot.png" alt="Image">
-            </figure>
-          </div>
-          <div class="col-xl-4">
-            <div class="feature-box-two-home5 mb-4 wow fadeInLeft" data-wow-delay="200ms" data-wow-duration="1500ms">
-              <div class="inner-box">
-                <div class="icon">
-                  <img src="images/icons/theme-icon6.png" alt="">
-                </div>
-                <h4 class="title"><a href="page-about.html">SaaS</a></h4>
-                <div class="text">It is a long established fact that a reader will be distracted by the readable</div>
-              </div>
-            </div>
-            <div class="feature-box-two-style2-home5 wow fadeInRight" data-wow-delay="200ms" data-wow-duration="1500ms">
-              <div class="inner-box">
-                <div class="icon">
-                  <img src="images/icons/theme-icon8.png" alt="">
-                </div>
-                <h4 class="title"><a href="page-about.html">Education</a></h4>
-                <div class="text">It is a long established fact that a reader will be distracted by the readable</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-    <!--End Feature Box Layout -->
-
-    <!-- Team Section -->
-    <section class="team-section-ai pt-100 pb-120">
-      <div class="outer-container">
-        <div class="container">
-          <div class="d-flex align-items-end justify-content-between flex-wrap mb-60">
-            <div class="sec-title-five mb-0">
-              <h6 class="sub-title wow fadeInUp" data-wow-delay="00ms" data-wow-duration="1500ms"><img class="icon-img animation__rotateY" src="https://html.kodesolution.com/2025/saasive-html/images/icons/sec-title-icon5.svg" alt="Icon">Our Team</h6>
-              <h2 class="title  wow fadeInUp" data-wow-delay="200ms" data-wow-duration="1500ms">Meet Our Experienced <br> Team People</h2>
-            </div>
-            <div class="text-start text-xl-end wow fadeInUp" data-wow-delay="400ms" data-wow-duration="1500ms">
-              <p class="text mb-30"> It is a long established fact that a reader will be distracted <br> by the readable content of a page when looking</p>
-              <a href="page-team.html" class="btn-style-five">View All Member <i class="fa-classic fa-light fa-angle-right ms-2"></i></a>
-            </div>
-          </div>
-          <div class="row g-4">
-            <!-- Team Block -->
-            <div class="col-xl-4 col-lg-4 col-md-6 col-sm-6 wow fadeInLeft" data-wow-delay="00ms" data-wow-duration="1500ms">
-              <div class="team-block-ai">
-                <div class="inner-box">
-                  <div class="image-box">
-                    <div class="image">
-                      <img src="images/team/team-five-image1.png" alt="Image">
-                      <div class="shape">
-                        <img src="images/team/team-dots.png" alt="Image">
-                      </div>
-                    </div>
-                    <div class="team-socials">
-                      <a href="#/"><i class="fa-brands fa-facebook-f"></i></a>
-                      <a href="#/"><i class="fa-brands fa-linkedin-in"></i></a>
-                      <a href="#/"><i class="fa-brands fa-twitter"></i></a>
-                      <a href="#/"><i class="fa-brands fa-behance"></i></a>
-                    </div>
-                  </div>
-                  <div class="content-box">
-                    <div class="title-box">
-                      <h4 class="title"><a href="page-team-details.html">Ronald Richards</a></h4>
-                      <div class="designation">Digital Marketer</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <!-- Team Block -->
-            <div class="col-xl-4 col-lg-4 col-md-6 col-sm-6 wow fadeInLeft" data-wow-delay="200ms" data-wow-duration="1500ms">
-              <div class="team-block-ai">
-                <div class="inner-box">
-                  <div class="image-box">
-                    <div class="image">
-                      <img src="images/team/team-five-image2.png" alt="Image">
-                      <div class="shape">
-                        <img src="images/team/team-dots.png" alt="Image">
-                      </div>
-                    </div>
-                    <div class="team-socials">
-                      <a href="#/"><i class="fa-brands fa-facebook-f"></i></a>
-                      <a href="#/"><i class="fa-brands fa-linkedin-in"></i></a>
-                      <a href="#/"><i class="fa-brands fa-twitter"></i></a>
-                      <a href="#/"><i class="fa-brands fa-behance"></i></a>
-                    </div>
-                  </div>
-                  <div class="content-box">
-                    <div class="title-box">
-                      <h4 class="title"><a href="page-team-details.html">Darrell Steward</a></h4>
-                      <div class="designation">Digital Marketer</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <!-- Team Block -->
-            <div class="col-xl-4 col-lg-4 col-md-6 col-sm-6 wow fadeInLeft" data-wow-delay="300ms" data-wow-duration="1500ms">
-              <div class="team-block-ai">
-
-                <div class="inner-box">
-                  <div class="image-box">
-                    <div class="image">
-                      <img src="images/team/team-five-image3.png" alt="Image">
-                      <div class="shape">
-                        <img src="images/team/team-dots.png" alt="Image">
-                      </div>
-                    </div>
-                    <div class="team-socials">
-                      <a href="#/"><i class="fa-brands fa-facebook-f"></i></a>
-                      <a href="#/"><i class="fa-brands fa-linkedin-in"></i></a>
-                      <a href="#/"><i class="fa-brands fa-twitter"></i></a>
-                      <a href="#/"><i class="fa-brands fa-behance"></i></a>
-                    </div>
-                  </div>
-                  <div class="content-box">
-                    <div class="title-box">
-                      <h4 class="title"><a href="page-team-details.html">Esther Howard</a></h4>
-                      <div class="designation">Digital Marketer</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="sec-shape"><img src="images/shape/team-shape.png" alt="Image"></div>
-      </div>
-    </section>
-    <!-- End Team Section -->
-
-    <!-- Growth Section -->
-    <section class="growth-section pb-120">
-      <div class="container">
-        <div class="sec-title-five text-center">
-          <h6 class="sub-title wow fadeInUp" data-wow-delay="00ms" data-wow-duration="1500ms"><img class="icon-img animation__rotateY" src="https://html.kodesolution.com/2025/saasive-html/images/icons/sec-title-icon5.svg" alt="Icon">Growth</h6>
-          <h2 class="title  wow fadeInUp" data-wow-delay="200ms" data-wow-duration="1500ms">Scale Customer <br> Conversations Effortlessly</h2>
-        </div>
-        <div class="row g-4">
-          <div class="col-lg-9">
-            <div class="outer-box">
-              <div class="row g-0 align-items-end">
-                <div class="col-lg-5 col-xl-4 content-column">
-                  <div class="inner-column">
-                    <div class="sec-title-five mb-0">
-                      <h6 class="sub-title wow fadeInUp" data-wow-delay="00ms" data-wow-duration="1500ms"><img class="icon-img animation__rotateY" src="https://html.kodesolution.com/2025/saasive-html/images/icons/sec-title-icon5.svg" alt="Icon">Saasive App</h6>
-                      <h2 class="title wow fadeInUp" data-wow-delay="200ms" data-wow-duration="1500ms">Start Your Journey ToDigital Success Today</h2>
-                      <div class="text wow fadeInUp" data-wow-delay="200ms" data-wow-duration="1500ms"> It is a long established fact that a reader will be distracted by the readable content</div>
-                    </div>
-                    <div class="arry text-right mb-30 mt-20">
-                      <img class="bounce-x" src="images/icons/growth-arry.png" alt="Icon">
-                    </div>
-                    <div class="download-btn wow fadeInDown mb-10" data-wow-delay="00ms" data-wow-duration="1500ms">
-                      <a href="page-contact.html" class="btn-style-five playstore-btn">
-                        <svg width="21" height="25" viewBox="0 0 21 25" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M17.537 13.225c0 .112-.167 3.404 3.463 5.134C20.33 20.423 17.984 25 15.247 25c-1.564 0-2.458-1.004-4.245-1.004C9.159 23.996 8.154 25 6.758 25 4.077 25.11 1.508 20.088.782 18.023A13.14 13.14 0 0 1 0 13.504C0 8.537 3.295 6.138 6.423 6.082c1.508 0 3.407 1.06 4.245 1.06.782 0 2.96-1.283 4.97-.115a5.6 5.6 0 0 1 4.692 2.554c-1.843 1.172-2.793 2.678-2.793 4.743ZM14.41 4.073C13.293 5.357 11.952 6.082 10.5 5.97c-.112-1.506.446-2.901 1.452-4.017C12.846.949 14.41.112 15.75 0c0 .614.168 2.288-1.341 4.073Z" fill="#fff" />
-                        </svg>
-                        App Store
-                      </a>
-                    </div>
-                    <div class="download-btn wow fadeInDown" data-wow-delay="200ms" data-wow-duration="1500ms">
-                      <a href="page-contact.html" class="btn-style-five">
-                        <svg width="21" height="24" viewBox="0 0 21 24" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M11.012 10.8 14.095 7.2 2.128.16c-.073-.08-.22-.08-.44-.16L11.012 10.8Z" fill="#fff" />
-                          <path d="M15.417 16 19.749 13.44c.514-.32.808-.8.808-1.44s-.294-1.2-.808-1.44L15.417 8l-3.45 4 3.45 4Z" fill="#fff" />
-                          <path d="M.294.719A1.6 1.6 0 0 0 0 1.599v20.8c0 .32.073.64.294.96L9.985 11.999.294.719Z" fill="#fff" />
-                          <path d="M11.012 13.199 1.688 23.999c.147 0 .294-.08.44-.16l11.968-7.04-3.084-3.6Z" fill="#fff" />
-                        </svg>
-                        Google Play
-                      </a>
-                    </div>
-                  </div>
-                </div>
-                <div class="col-lg-7 col-xl-8 image-column">
-                  <div class="inner-column">
-                    <figure class="image wow fadeInRight" data-wow-delay="200ms" data-wow-duration="1500ms"><img src="images/resource/growth-image.png" alt="Image"></figure>
-                  </div>
-                </div>
-              </div>
-              <div class="sec-bg"><img src="images/shape/growth-bg.png" alt="Image"></div>
-            </div>
-          </div>
-          <div class="col-lg-3">
-            <div class="growth-block">
-              <div class="icon"><img src="images/icons/growth-icon1.png" alt="Icon"></div>
-              <h3 class="title"><span>3.0</span>M+</h3>
-              <p class="text">Downloaded & Installation</p>
-            </div>
-            <div class="growth-block middle-block">
-              <div class="icon"><img src="images/icons/growth-icon2.png" alt="Icon"></div>
-              <h3 class="title">4.7/5</h3>
-              <p class="text">Based on 2,302 reviews</p>
-            </div>
-            <div class="growth-block">
-              <div class="icon"><img src="images/icons/growth-icon3.png" alt="Icon"></div>
-              <h3 class="title"><span>70</span>%</h3>
-              <p class="text">Cost Savings</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-    <!-- Growth Section -->
-
-    <!-- Testimonial Section start -->
-    <section class="testimonial-section-five pb-120">
-      <div class="container">
-        <div class="d-flex align-items-end justify-content-between gap-4 flex-wrap mb-60">
-          <div class="sec-title-five mb-0">
-            <h6 class="sub-title wow fadeInUp" data-wow-delay="00ms" data-wow-duration="1500ms"><img class="icon-img animation__rotateY" src="https://html.kodesolution.com/2025/saasive-html/images/icons/sec-title-icon5.svg" alt="Icon">Testimonials</h6>
-            <h2 class="title  wow fadeInUp" data-wow-delay="200ms" data-wow-duration="1500ms">Trusted by Over <br> <span class="text-primary">25,000+</span> Teams Worldwide</h2>
-          </div>
-          <div>
-            <div class="arry-btns wow fadeInUp mb-10" data-wow-delay="400ms" data-wow-duration="1500ms">
-              <button class="testimonial-ai-arry-prev"><i class="fa-light fa-arrow-left"></i></button>
-              <button class="testimonial-ai-arry-next"><i class="fa-light fa-arrow-right"></i></button>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="container-fluid">
-        <div class="inner-container">
-          <div class="swiper testimonial-ai-slider-top wow fadeInUp" data-wow-delay="200ms" data-wow-duration="1500ms">
-            <div class="swiper-wrapper">
-              <div class="swiper-slide">
-                <div class="testimonial-block-five">
-                  <div class="testimonial-thumb">
-                    <img src="images/resource/testi5-video1.jpg" alt="thumb">
-                    <div class="banner-play-button play-button">
-                      <a class="play-now-two" href="https://www.youtube.com/watch?v=gIMY37cN8AQ" data-fancybox="gallery" data-caption="">
-                        <i class="fa-solid fa-play"></i>
-                        <span class="ripple"></span>
-                      </a>
-                    </div>
-                  </div>
-                  <div class="content-box">
-                    <div class="testimonial-content">
-                      <div class="author-info">
-                        <div class="testimonial-bio-content">
-                          <h5 class="author">Leslie Alexander</h5>
-                          <div class="desigation">Project Manager</div>
-                        </div>
-                        <div class="iconbox-quote"><img src="images/icons/quote1.png" alt=""></div>
-                      </div>
-                      <p class="text">As a fast-growing e-commerce business, keeping track of orders, inventory, and customer emails was becoming impossible. After switching to this automation tool everything syncs automatically. Our team now spends less time </p>
-                    </div>
-                    <div class="author-logo">
-                      <div class="image1">
-                        <img src="images/resource/testi5-logo1.png" alt="">
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="swiper-slide">
-                <div class="testimonial-block-five">
-                  <div class="testimonial-thumb">
-                    <img src="images/resource/testi5-video1.jpg" alt="thumb">
-                    <div class="banner-play-button play-button">
-                      <a class="play-now-two" href="https://www.youtube.com/watch?v=gIMY37cN8AQ" data-fancybox="gallery" data-caption="">
-                        <i class="fa-solid fa-play"></i>
-                        <span class="ripple"></span>
-                      </a>
-                    </div>
-                  </div>
-                  <div class="content-box">
-                    <div class="testimonial-content">
-                      <div class="author-info">
-                        <div class="testimonial-bio-content">
-                          <h5 class="author">Leslie Alexander</h5>
-                          <div class="desigation">Project Manager</div>
-                        </div>
-                        <div class="iconbox-quote"><img src="images/icons/quote1.png" alt=""></div>
-                      </div>
-                      <p class="text">As a fast-growing e-commerce business, keeping track of orders, inventory, and customer emails was becoming impossible. After switching to this automation tool everything syncs automatically. Our team now spends less time </p>
-                    </div>
-                    <div class="author-logo">
-                      <div class="image1">
-                        <img src="images/resource/testi5-logo1.png" alt="">
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="swiper-slide">
-                <div class="testimonial-block-five">
-                  <div class="testimonial-thumb">
-                    <img src="images/resource/testi5-video1.jpg" alt="thumb">
-                    <div class="banner-play-button play-button">
-                      <a class="play-now-two" href="https://www.youtube.com/watch?v=gIMY37cN8AQ" data-fancybox="gallery" data-caption="">
-                        <i class="fa-solid fa-play"></i>
-                        <span class="ripple"></span>
-                      </a>
-                    </div>
-                  </div>
-                  <div class="content-box">
-                    <div class="testimonial-content">
-                      <div class="author-info">
-                        <div class="testimonial-bio-content">
-                          <h5 class="author">Leslie Alexander</h5>
-                          <div class="desigation">Project Manager</div>
-                        </div>
-                        <div class="iconbox-quote"><img src="images/icons/quote1.png" alt=""></div>
-                      </div>
-                      <p class="text">As a fast-growing e-commerce business, keeping track of orders, inventory, and customer emails was becoming impossible. After switching to this automation tool everything syncs automatically. Our team now spends less time </p>
-                    </div>
-                    <div class="author-logo">
-                      <div class="image1">
-                        <img src="images/resource/testi5-logo1.png" alt="">
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="swiper-slide">
-                <div class="testimonial-block-five">
-                  <div class="testimonial-thumb">
-                    <img src="images/resource/testi5-video1.jpg" alt="thumb">
-                    <div class="banner-play-button play-button">
-                      <a class="play-now-two" href="https://www.youtube.com/watch?v=gIMY37cN8AQ" data-fancybox="gallery" data-caption="">
-                        <i class="fa-solid fa-play"></i>
-                        <span class="ripple"></span>
-                      </a>
-                    </div>
-                  </div>
-                  <div class="content-box">
-                    <div class="testimonial-content">
-                      <div class="author-info">
-                        <div class="testimonial-bio-content">
-                          <h5 class="author">Leslie Alexander</h5>
-                          <div class="desigation">Project Manager</div>
-                        </div>
-                        <div class="iconbox-quote"><img src="images/icons/quote1.png" alt=""></div>
-                      </div>
-                      <p class="text">As a fast-growing e-commerce business, keeping track of orders, inventory, and customer emails was becoming impossible. After switching to this automation tool everything syncs automatically. Our team now spends less time </p>
-                    </div>
-                    <div class="author-logo">
-                      <div class="image1">
-                        <img src="images/resource/testi5-logo1.png" alt="">
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="swiper testimonial-ai-slider-bottom pb-0 wow fadeInUp" data-wow-delay="200ms" data-wow-duration="1500ms">
-            <div class="swiper-wrapper">
-              <div class="swiper-slide">
-                <div class="testimonial-block-five">
-                  <div class="content-box ps-0">
-                    <div class="testimonial-content">
-                      <div class="author-info">
-                        <div class="testimonial-bio-content">
-                          <h5 class="author">Leslie Alexander</h5>
-                          <div class="desigation">Project Manager</div>
-                        </div>
-                        <div class="iconbox-quote"><img src="images/icons/quote1-light.png" alt=""></div>
-                      </div>
-                      <p class="text">As a fast-growing e-commerce business, keeping track of orders, inventory, and customer emails was becoming impossible. After switching to this automation tool everything syncs automatically.</p>
-                    </div>
-                    <div class="author-logo">
-                      <div class="image1"><img src="images/resource/testi5-logo1.png" alt=""></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="swiper-slide">
-                <div class="testimonial-block-five">
-                  <div class="content-box ps-0">
-                    <div class="testimonial-content">
-                      <div class="author-info">
-                        <div class="testimonial-bio-content">
-                          <h5 class="author">Leslie Alexander</h5>
-                          <div class="desigation">Project Manager</div>
-                        </div>
-                        <div class="iconbox-quote"><img src="images/icons/quote1-light.png" alt=""></div>
-                      </div>
-                      <p class="text">As a fast-growing e-commerce business, keeping track of orders, inventory, and customer emails was becoming impossible. After switching to this automation tool everything syncs automatically.</p>
-                    </div>
-                    <div class="author-logo">
-                      <div class="image1"><img src="images/resource/testi5-logo1.png" alt=""></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="swiper-slide">
-                <div class="testimonial-block-five">
-                  <div class="content-box ps-0">
-                    <div class="testimonial-content">
-                      <div class="author-info">
-                        <div class="testimonial-bio-content">
-                          <h5 class="author">Leslie Alexander</h5>
-                          <div class="desigation">Project Manager</div>
-                        </div>
-                        <div class="iconbox-quote"><img src="images/icons/quote1-light.png" alt=""></div>
-                      </div>
-                      <p class="text">As a fast-growing e-commerce business, keeping track of orders, inventory, and customer emails was becoming impossible. After switching to this automation tool everything syncs automatically.</p>
-                    </div>
-                    <div class="author-logo">
-                      <div class="image1">
-                        <img src="images/resource/testi5-logo1.png" alt="">
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="swiper-slide">
-                <div class="testimonial-block-five">
-                  <div class="content-box ps-0">
-                    <div class="testimonial-content">
-                      <div class="author-info">
-                        <div class="testimonial-bio-content">
-                          <h5 class="author">Leslie Alexander</h5>
-                          <div class="desigation">Project Manager</div>
-                        </div>
-                        <div class="iconbox-quote"><img src="images/icons/quote1-light.png" alt=""></div>
-                      </div>
-                      <p class="text">As a fast-growing e-commerce business, keeping track of orders, inventory, and customer emails was becoming impossible. After switching to this automation tool everything syncs automatically.</p>
-                    </div>
-                    <div class="author-logo">
-                      <div class="image1">
-                        <img src="images/resource/testi5-logo1.png" alt="">
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="swiper-slide">
-                <div class="testimonial-block-five">
-                  <div class="content-box ps-0">
-                    <div class="testimonial-content">
-                      <div class="author-info">
-                        <div class="testimonial-bio-content">
-                          <h5 class="author">Leslie Alexander</h5>
-                          <div class="desigation">Project Manager</div>
-                        </div>
-                        <div class="iconbox-quote"><img src="images/icons/quote1-light.png" alt=""></div>
-                      </div>
-                      <p class="text">As a fast-growing e-commerce business, keeping track of orders, inventory, and customer emails was becoming impossible. After switching to this automation tool everything syncs automatically.</p>
-                    </div>
-                    <div class="author-logo">
-                      <div class="image1">
-                        <img src="images/resource/testi5-logo1.png" alt="">
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="swiper-slide">
-                <div class="testimonial-block-five">
-                  <div class="content-box ps-0">
-                    <div class="testimonial-content">
-                      <div class="author-info">
-                        <div class="testimonial-bio-content">
-                          <h5 class="author">Leslie Alexander</h5>
-                          <div class="desigation">Project Manager</div>
-                        </div>
-                        <div class="iconbox-quote"><img src="images/icons/quote1-light.png" alt=""></div>
-                      </div>
-                      <p class="text">As a fast-growing e-commerce business, keeping track of orders, inventory, and customer emails was becoming impossible. After switching to this automation tool everything syncs automatically.</p>
-                    </div>
-                    <div class="author-logo">
-                      <div class="image1">
-                        <img src="images/resource/testi5-logo1.png" alt="">
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="sec-glob">
-        <img src="images/shape/testimonial5-glob.png" alt="Image">
-      </div>
-    </section>
-    <!-- Testimonial Section end -->
-
-    <!-- FAQ's Section start -->
-    <section class="faqs-section-layout2 pb-120">
-      <div class="sec-shadow">
-        <img src="images/shape/faq5-shadow.png" alt="Image">
-      </div>
-      <div class="container">
-        <div class="sec-title-five text-center">
-          <h6 class="sub-title wow fadeInUp" data-wow-delay="00ms" data-wow-duration="1500ms"><img class="icon-img animation__rotateY" src="https://html.kodesolution.com/2025/saasive-html/images/icons/sec-title-icon5.svg" alt="Icon">FAQS</h6>
-          <h2 class="title  wow fadeInUp" data-wow-delay="200ms" data-wow-duration="1500ms">Have Questions in Your <br> Mind? Get the Answers Now </h2>
-        </div>
-        <div class="row">
-          <div class="col-lg-10 mx-auto">
-            <div class="accordion-home-two">
-              <ul class="accordion-box wow fadeInRight" data-wow-delay="200ms" data-wow-duration="1500ms">
-                <!--Block-->
-                <li class="accordion block">
-                  <div class="acc-btn">Do you offer custom website or app
-                    development?
-                    <div class="icon fal fa-plus"></div>
-                  </div>
-                  <div class="acc-content">
-                    <div class="content">
-                      <div class="text">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries</div>
-                    </div>
-                  </div>
-                </li>
-                <!--Block-->
-                <li class="accordion block active-block">
-                  <div class="acc-btn active">How do you approach a new project?
-                    <div class="icon fal fa-plus"></div>
-                  </div>
-                  <div class="acc-content current">
-                    <div class="content">
-                      <div class="text">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries</div>
-                    </div>
-                  </div>
-                </li>
-                <!--Block-->
-                <li class="accordion block">
-                  <div class="acc-btn">Can you help with ongoing support and
-                    maintenance?
-                    <div class="icon fal fa-plus"></div>
-                  </div>
-                  <div class="acc-content">
-                    <div class="content">
-                      <div class="text">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries</div>
-                    </div>
-                  </div>
-                </li>
-                <!--Block-->
-                <li class="accordion block">
-                  <div class="acc-btn">Do you work with startups or only established
-                    brands?
-                    <div class="icon fal fa-plus"></div>
-                  </div>
-                  <div class="acc-content">
-                    <div class="content">
-                      <div class="text">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries</div>
-                    </div>
-                  </div>
-                </li>
-                <!--Block-->
-                <li class="accordion block">
-                  <div class="acc-btn">On which platforms is the app available?
-                    <div class="icon fal fa-plus"></div>
-                  </div>
-                  <div class="acc-content">
-                    <div class="content">
-                      <div class="text">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries</div>
-                    </div>
-                  </div>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-    <!-- FAQ's Section end -->
-
-    <!-- Subscribe Section end -->
-    <section class="subscribe-section">
-      <div class="sec-light">
-        <img src="images/shape/sec-light.png" alt="Image">
-      </div>
-      <div class="outer-box">
-        <div class="content">
-          <div class="sec-title-five text-center mb-30">
-            <span class="text-primary mb-15 text-capitalize d-block wow fadeInUp" data-wow-delay="00ms" data-wow-duration="1500ms">Get the best ai chatbot</span>
-            <h2 class="title  wow fadeInUp" data-wow-delay="200ms" data-wow-duration="1500ms">Ready to Supercharge Your <br> Conversations?</h2>
-          </div>
-          <div class="input-fuild wow fadeInDown" data-wow-delay="00ms" data-wow-duration="1500ms">
-            <input type="text" placeholder="Enter email">
-            <a href="page-contact.html" class="btn-style-five">Get Started Free <i class="fa-classic fa-light fa-angle-right ms-2"></i></a>
-          </div>
-          <ul class="list mt-30 wow fadeInDown" data-wow-delay="200ms" data-wow-duration="1500ms">
-            <li>
-              <svg width="14" height="14" viewBox="0 0 14 14" xmlns="http://www.w3.org/2000/svg">
-                <path d="M6.074 11.678a.28.28 0 0 1-.183-.08L1.202 6.5c-.08-.088-.088-.22-.017-.316a.26.26 0 0 1 .308-.078l4.49 2.01a.18.18 0 0 0 .106-.02l6.546-6.84a.27.27 0 0 1 .334-.023c.1.08.123.223.053.33L6.31 11.537a.36.36 0 0 1-.06.08l-.029.029a.28.28 0 0 1-.147.032Z" fill="#2289FE" />
-              </svg>
-              Free 14-day trial
-            </li>
-            <li>
-              <svg width="14" height="14" viewBox="0 0 14 14" xmlns="http://www.w3.org/2000/svg">
-                <path fill="#2289FE" d="M6.074 11.678a.28.28 0 0 1-.183-.08L1.202 6.5c-.08-.088-.088-.22-.017-.316a.26.26 0 0 1 .309-.078l4.288 1.91a.18.18 0 0 0 .108-.02l6.544-6.743a.27.27 0 0 1 .336-.023c.1.08.123.223.053.33L6.31 11.537a.36.36 0 0 1-.06.08l-.029.029a.28.28 0 0 1-.147.032Z" />
-              </svg>
-              No credit card required
-            </li>
-          </ul>
-        </div>
-        <div class="sec-object1"><img class="bounce-y" src="images/shape/subscribe-plan.png" alt="Image"></div>
-        <div class="sec-object2"><img class="bounce-x" src="images/shape/subscribe-mobile.png" alt="Image"></div>
-        <div class="sec-shape"><img src="images/shape/subscribe-shape.png" alt="Image"></div>
-      </div>
-    </section>
-    <!-- Subscribe Section end -->
-
-    <!-- Contact Section start -->
-    <section class="contact-section pt-120 pb-120">
-      <div class="container">
-        <div class="row g-5 g-lg-0">
-          <div class="col-lg-6">
-            <div class="outer-box pt-50 pb-50">
-              <div class="sec-title-five">
-                <h6 class="sub-title wow fadeInUp" data-wow-delay="00ms" data-wow-duration="1500ms"><img class="icon-img animation__rotateY" src="https://html.kodesolution.com/2025/saasive-html/images/icons/sec-title-icon5.svg" alt="Icon">Contact us</h6>
-                <h2 class="title wow fadeInUp" data-wow-delay="200ms" data-wow-duration="1500ms">Your Free Growth Chat <br class="d-none d-xl-block"> Starts Here</h2>
-                <div class="text wow fadeInUp" data-wow-delay="400ms" data-wow-duration="1500ms">It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using </div>
-              </div>
-              <div class="row g-5">
-                <div class="col-sm-6 wow fadeInLeft" data-wow-delay="00ms" data-wow-duration="1500ms">
-                  <div class="contact-block">
-                    <h6 class="title">Email</h6>
-                    <p class="text"><a href="../../cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="3b5f5e56547b5e435a564b575e15585456">[email&#160;protected]</a></p>
-                  </div>
-                </div>
-                <div class="col-sm-6 wow fadeInLeft" data-wow-delay="200ms" data-wow-duration="1500ms">
-                  <div class="contact-block">
-                    <h6 class="title">Phone</h6>
-                    <p class="text">+629 555-0129</p>
-                  </div>
-                </div>
-                <div class="col-sm-6 wow fadeInLeft" data-wow-delay="300ms" data-wow-duration="1500ms">
-                  <div class="contact-block">
-                    <h6 class="title">Address</h6>
-                    <p class="text">1901 Thornridge Cir. Shiloh, Hawaii 81063</p>
-                  </div>
-                </div>
-                <div class="col-sm-6 wow fadeInLeft" data-wow-delay="400ms" data-wow-duration="1500ms">
-                  <div class="contact-block">
-                    <h6 class="title">Follow us</h6>
-                    <ul class="social-link">
-                      <li><a href="#"><i class="fa-solid fa-x"></i></a></li>
-                      <li><a href="#"><i class="fa-brands fa-facebook-f"></i></a></li>
-                      <li><a href="#"><i class="fa-brands fa-pinterest"></i></a></li>
-                      <li><a href="#"><i class="fa-brands fa-instagram"></i></a></li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="col-lg-6">
-            <div class="contact-form wow fadeInRight" data-wow-delay="200ms" data-wow-duration="1500ms">
-              <h4 class="title">Say, Hello</h4>
-              <p class="text">It is a long established fact that a reader will be distracted by the readable content of a page when looking</p>
-              <form action="#">
-                <div class="row g-4">
-                  <div class="col-md-6">
-                    <input type="text" name="name" placeholder="Your Name" required>
-                  </div>
-                  <div class="col-md-6">
-                    <input type="email" name="name" placeholder="Email" required>
-                  </div>
-                  <div class="col-md-12">
-                    <input type="text" name="name" placeholder="Subject" required>
-                  </div>
-                  <div class="col-md-12">
-                    <textarea name="message" placeholder="Write a Message"></textarea>
-                  </div>
-                </div>
-                <button class="btn-style-five mt-20">Send Message <i class="fa-classic fa-light fa-angle-right ms-2"></i></button>
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="sec-shadow">
-        <img src="images/shape/contact-shadow.png" alt="Image">
-      </div>
-    </section>
-    <!-- Contact Section end -->
-
-    <!-- Main Footer -->
-    <footer class="main-footer footer-style-ai pt-120">
-      <div class="widgets-section">
-        <div class="footer-middle">
-          <div class="container">
-            <div class="row g-4">
-              <!-- Footer Column -->
-              <div class="col-lg-6 wow fadeInUp" data-wow-delay="00ms" data-wow-duration="1500ms">
-                <div class="footer-widget about-widget">
-                  <div class="logo"><img src="images/logo.png" alt=""></div>
-                  <div class="text">The Intelligent Way to Connect with Customers </div>
-                </div>
-              </div>
-              <!-- footer column -->
-              <div class="footer-column col-sm-6 col-lg-3 wow fadeInUp" data-wow-delay="200ms" data-wow-duration="1500ms">
-                <div class="footer-widget">
-                  <h6 class="widget-title">Company</h6>
-                  <div class="widget-content">
-                    <ul class="user-links">
-                      <li><a href="#">About </a></li>
-                      <li><a href="#">Careers</a></li>
-                      <li><a href="#">Privacy Policy</a></li>
-                      <li><a href="#">Terms & Condition</a></li>
-                      <li><a href="#">Contact Us</a></li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-              <!-- footer column -->
-              <div class="footer-column col-sm-6 col-lg-3 wow fadeInUp" data-wow-delay="400ms" data-wow-duration="1500ms">
-                <div class="footer-widget links-widget contact-widget">
-                  <h6 class="widget-title">Contact</h6>
-                  <div class="widget-content">
-                    <ul class="user-links">
-                      <li><a href="#">+629 555-0129 </a></li>
-                      <li><a href="#"><span class="__cf_email__" data-cfemail="fe9a9b9391be9b869f938e929bd09d9193">[email&#160;protected]</span></a></li>
-                      <li><a href="#">1901 Thornridge Cir. Shiloh, <br> Hawaii 81063</a></li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="footer-bottom">
-          <div class="container">
-            <div class="inner-container">
-              <div class="copyright-text wow fadeInUp" data-wow-delay="200ms" data-wow-duration="1500ms">© Copyright
-                2025 By <a href="https://www.bootstrapmb.com">bootstrapMB</a></div>
-              <ul class="social-link wow fadeInUp" data-wow-delay="400ms" data-wow-duration="1500ms">
-                <li><a href="#"><i class="fa-solid fa-x"></i>Twitter</a></li>
-                <li><a href="#"><i class="fa-brands fa-facebook-f"></i>Facebook</a></li>
-                <li><a href="#"><i class="fa-brands fa-pinterest"></i>Pinterest</a></li>
-                <li><a href="#"><i class="fa-brands fa-instagram"></i>Instagram</a></li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="sec-text wow slideInUp" data-wow-delay="200ms" data-wow-duration="1000ms">
-        <img src="images/footer/footer-ai-text.png" alt="Image">
-      </div>
-      <div class="sec-shape">
-        <img src="images/footer/footer-ai-shape.png" alt="Image">
-      </div>
-      <div class="sec-shadow">
-        <img src="images/shape/footer-shadow.png" alt="Image">
-      </div>
-    </footer>
-    <!--End Main Footer -->
-
+  <!-- Screenshot -->
+  <div class="screenshot">
+    <img class="screenshot-img" src="https://download.shlm.top/assets/ssh/21e6a334eddba8563cf7b25f29cd293a.png" alt="启SSH 界面截图" onerror="this.style.display='none'">
   </div>
-  <!-- End Page Wrapper -->
 
-  <script src="js/jquery.js"></script>
-  <script src="js/popper.min.js"></script>
-  <script src="js/bootstrap.min.js"></script>
-  <script src="js/jquery.fancybox.js"></script>
-  <script src="js/jquery-ui.js"></script>
-  <script src="js/wow.js"></script>
-  <script src="js/select2.min.js"></script>
-  <script src="js/appear.js"></script>
-  <script src="js/knob.js"></script>
-  <script src="js/swiper.min.js"></script>
-  <script src="js/aos.js"></script>
-  <script src="js/gsap.min.js"></script>
-  <script src="js/ScrollTrigger.min.js"></script>
-  <script src="js/splitType.js"></script>
-  <script src="js/gsap-scroll-smoother.js"></script>
-  <script src="js/gsap-scroll-to-plugin.js"></script>
-  <script src="js/SplitText.min.js"></script>
-  <script src="js/custom-gsap.js"></script>
-  <script src="js/script.js"></script>
+  <!-- Features + About -->
+  <section class="info-section" id="features">
+    <h2 class="section-title">功能 & 关于</h2>
+    <p class="section-desc">一个工具解决 SSH 远程管理的所有需求</p>
+
+    <div class="feat-grid">
+      <div class="feat-card">
+        <div class="feat-icon" style="background:rgba(99,179,237,0.1);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#63b3ed" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+        </div>
+        <h3>多终端</h3>
+        <p>多标签终端，批量命令</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon" style="background:rgba(72,187,120,0.1);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#48bb78" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <h3>文件管理</h3>
+        <p>SFTP 上传下载</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon" style="background:rgba(237,137,54,0.1);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ed8936" stroke-width="2"><path d="M12 2L9.5 8.5 3 9.5l4.5 5L6 21l6-3.5L18 21l-1.5-6.5L21 9.5l-6.5-1z"/></svg>
+        </div>
+        <h3>AI 助手</h3>
+        <p>智能命令执行</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon" style="background:rgba(159,122,234,0.1);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9f7aea" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <h3>进程守护</h3>
+        <p>systemd 服务管理</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon" style="background:rgba(246,173,85,0.1);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f6ad55" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        </div>
+        <h3>端口转发</h3>
+        <p>本地 / 远程转发</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon" style="background:rgba(252,129,129,0.1);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fc8181" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <h3>防火墙</h3>
+        <p>iptables / ufw 管理</p>
+      </div>
+    </div>
+
+    <div class="about-row">
+      <div class="about-card">
+        <div class="about-icon" style="background:rgba(99,179,237,0.1);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#63b3ed" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        </div>
+        <div>
+          <h4>仅 Windows</h4>
+          <p>理论支持 macOS/Linux</p>
+        </div>
+      </div>
+      <div class="about-card">
+        <div class="about-icon" style="background:rgba(72,187,120,0.1);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#48bb78" stroke-width="2"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M12 6v6l4 2"/></svg>
+        </div>
+        <div>
+          <h4>按需更新</h4>
+          <p>可提 issue</p>
+        </div>
+      </div>
+      <div class="about-card">
+        <div class="about-icon" style="background:rgba(159,122,234,0.1);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9f7aea" stroke-width="2"><path d="M12 2L9.5 8.5 3 9.5l4.5 5L6 21l6-3.5L18 21l-1.5-6.5L21 9.5l-6.5-1z"/></svg>
+        </div>
+        <div>
+          <h4>好看第一</h4>
+          <p>不追求性能</p>
+        </div>
+      </div>
+      <div class="about-card">
+        <div class="about-icon" style="background:rgba(246,173,85,0.1);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f6ad55" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+        </div>
+        <div>
+          <h4>开源免费</h4>
+          <p>MIT License</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <span class="footer-left">© 2026 南翔希</span>
+      <div class="footer-right">
+        <a href="https://github.com/nanxiangxi/0qssh">GitHub</a>
+        <a href="https://github.com/nanxiangxi/0qssh/issues">反馈</a>
+        <a href="https://github.com/nanxiangxi/0qssh/releases">下载</a>
+      </div>
+    </div>
+  </footer>
 
 </body>
-
 </html>
