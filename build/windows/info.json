@@ -1,0 +1,15 @@
+{
+	"fixed": {
+		"file_version": "0.1.0"
+	},
+	"info": {
+		"0000": {
+			"ProductVersion": "0.1.0",
+			"CompanyName": "南翔希",
+			"FileDescription": "一个中文的SSH工具，便携，简单，开源",
+			"LegalCopyright": "© 2026 南翔希",
+			"ProductName": "启SSH",
+			"Comments": "一个中文的SSH工具，便携，简单，开源"
+		}
+	}
+}

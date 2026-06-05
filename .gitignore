@@ -1,0 +1,28 @@
+# Build output
+.task/
+bin/
+frontend/dist/
+*.exe
+*.syso
+
+# Dependencies
+frontend/node_modules/
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Runtime data
+bin/data/
+
+# Go
+*.test
+*.out
+
+# Build artifacts
+build/windows/nsis/MicrosoftEdgeWebview2Setup.exe
+build/linux/appimage/build

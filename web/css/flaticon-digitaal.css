@@ -1,0 +1,111 @@
+@font-face {
+    font-family: "flaticon";
+    src: url("../fonts/flaticon_digitaal.woff2") format("woff2"),
+    url("../fonts/flaticon_digitaal.woff") format("woff"),
+    url("../fonts/flaticon_digitaal.eot") format("embedded-opentype"),
+    url("../fonts/flaticon_digitaal.ttf") format("truetype"),
+    url("../fonts/flaticon_digitaal.svg") format("svg")
+}
+
+i[class^="flaticon-"]:before, i[class*=" flaticon-"]:before {
+    font-family: flaticon !important;
+    font-style: normal;
+    font-weight: normal !important;
+    font-variant: normal;
+    text-transform: none;
+    line-height: 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.flaticon-scribble:before {
+    content: "\f101";
+}
+.flaticon-search:before {
+    content: "\f102";
+}
+.flaticon-menu:before {
+    content: "\f103";
+}
+.flaticon-star:before {
+    content: "\f104";
+}
+.flaticon-quote:before {
+    content: "\f105";
+}
+.flaticon-next:before {
+    content: "\f106";
+}
+.flaticon-technical-support:before {
+    content: "\f107";
+}
+.flaticon-notes:before {
+    content: "\f108";
+}
+.flaticon-database:before {
+    content: "\f109";
+}
+.flaticon-top-right:before {
+    content: "\f10a";
+}
+.flaticon-paper-plane:before {
+    content: "\f10b";
+}
+.flaticon-facebook-app-symbol:before {
+    content: "\f10c";
+}
+.flaticon-twitter:before {
+    content: "\f10d";
+}
+.flaticon-instagram:before {
+    content: "\f10e";
+}
+.flaticon-linkedin:before {
+    content: "\f10f";
+}
+.flaticon-share:before {
+    content: "\f110";
+}
+.flaticon-digitalization:before {
+    content: "\f111";
+}
+.flaticon-digital-marketing:before {
+    content: "\f112";
+}
+.flaticon-call:before {
+    content: "\f113";
+}
+.flaticon-target:before {
+    content: "\f114";
+}
+.flaticon-3d-speaker:before {
+    content: "\f115";
+}
+.flaticon-3d-notes:before {
+    content: "\f116";
+}
+.flaticon-right-down:before {
+    content: "\f117";
+}
+.flaticon-film:before {
+    content: "\f118";
+}
+.flaticon-seo:before {
+    content: "\f119";
+}
+.flaticon-mobile-development:before {
+    content: "\f11a";
+}
+.flaticon-target-1:before {
+    content: "\f11b";
+}
+.flaticon-mission:before {
+    content: "\f11c";
+}
+.flaticon-hand-pointer:before {
+    content: "\f11d";
+}
+.flaticon-paint-roller:before {
+    content: "\f11e";
+}
+

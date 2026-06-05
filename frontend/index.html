@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/wails.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>pzssh 国产开源ssh工具</title>
+      <style>
+          html, body {
+              margin: 0;
+              padding: 0;
+              width: 100vw;
+              min-width: 100vw;
+              max-width: 100vw;
+              height: 100vh;
+              min-height: 100vh;
+              max-height: 100vh;
+              overflow: hidden; /* 隐藏滚动条 */
+              /* 关键：设置背景为透明 */
+              background: rgb(255, 255, 255); /* 等价于 rgba(0,0,0,0) */
+              /* 使用标准值和浏览器特定前缀 */
+              image-rendering: -moz-crisp-edges;
+              image-rendering: auto; /* 默认行为，大多数情况下足够 */
+              -ms-interpolation-mode: nearest-neighbor; /* IE/Edge */
+          }
+          #app {
+              width: 100%;
+              height: 100%;
+          }
+      </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
