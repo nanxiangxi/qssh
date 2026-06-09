@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/pkg/sftp"
@@ -31,7 +32,7 @@ type shellSession struct {
 	stdout    io.Reader
 	readBuf   []byte
 	bufMutex  sync.Mutex
-	closing   bool
+	closing   int32 // atomic: 0=active, 1=closing
 }
 
 // SSHClient SSH客户端结构体
@@ -52,6 +53,10 @@ type SSHClient struct {
 	// 搜索取消标志
 	searchCancelMap map[string]bool
 	searchMutex     sync.RWMutex
+
+	// 连接状态回调
+	onDisconnect func(connID string) // 断线回调
+	connID       string              // 当前连接 ID（用于回调）
 }
 
 // CommandResult 命令执行结果
@@ -85,6 +90,27 @@ func NewSSHClient(config *SSHConfig) *SSHClient {
 		latency:     0,
 		sessions:    make(map[string]*shellSession),
 		searchCancelMap: make(map[string]bool),
+	}
+}
+
+// SetDisconnectCallback 设置断线回调
+func (s *SSHClient) SetDisconnectCallback(connID string, callback func(string)) {
+	s.connID = connID
+	s.onDisconnect = callback
+}
+
+// handleDisconnect 处理断线
+func (s *SSHClient) handleDisconnect() {
+	if s.closing || !s.isConnected {
+		return
+	}
+
+	fmt.Printf("[SSHClient] ⚠️ 检测到连接断开: %s\n", s.connID)
+	s.isConnected = false
+
+	// 通知外部
+	if s.onDisconnect != nil {
+		go s.onDisconnect(s.connID)
 	}
 }
 
@@ -335,11 +361,15 @@ func (s *SSHClient) CreateShell(sessionID string) (*ssh.Session, error) {
 // readShellOutput 持续读取单个 session 的输出
 func (s *SSHClient) readShellOutput(sessionID string, sh *shellSession) {
 	buf := make([]byte, 4096)
-	for !sh.closing {
+	for atomic.LoadInt32(&sh.closing) == 0 {
 		n, err := sh.stdout.Read(buf)
 		if err != nil {
-			if !sh.closing {
+			if atomic.LoadInt32(&sh.closing) == 0 {
 				fmt.Printf("[SSHClient] Session %s 输出读取退出: %v\n", sessionID, err)
+				// 检测到连接断开（EOF 或网络错误）
+				if err == io.EOF || !s.closing {
+					s.handleDisconnect()
+				}
 			}
 			break
 		}
@@ -386,7 +416,7 @@ func (s *SSHClient) IsShellActive(sessionID string) bool {
 	s.sessMu.RLock()
 	sh, ok := s.sessions[sessionID]
 	s.sessMu.RUnlock()
-	return ok && !sh.closing
+	return ok && atomic.LoadInt32(&sh.closing) == 0
 }
 
 // CloseShell 关闭指定 session
@@ -394,7 +424,7 @@ func (s *SSHClient) CloseShell(sessionID string) {
 	s.sessMu.Lock()
 	sh, ok := s.sessions[sessionID]
 	if ok {
-		sh.closing = true
+		atomic.StoreInt32(&sh.closing, 1)
 		delete(s.sessions, sessionID)
 	}
 	s.sessMu.Unlock()
@@ -413,7 +443,7 @@ func (s *SSHClient) CloseAllShells() {
 	s.sessions = make(map[string]*shellSession)
 	s.sessMu.Unlock()
 	for _, sh := range sessions {
-		sh.closing = true
+		atomic.StoreInt32(&sh.closing, 1)
 		if sh.session != nil {
 			sh.session.Close()
 		}

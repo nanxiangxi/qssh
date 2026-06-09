@@ -370,6 +370,28 @@ func (sm *StorageManager) DeleteConnection(id string) error {
 	return sm.saveConnectionsLocked()
 }
 
+// DeleteFromCache 从缓存中删除连接（保留永久记录，已保存的连接保留在内存中）
+func (sm *StorageManager) DeleteFromCache(id string) error {
+	sm.mu.Lock()
+	defer sm.mu.Unlock()
+
+	conn, exists := sm.connections[id]
+	if !exists {
+		return fmt.Errorf("连接不存在: %s", id)
+	}
+
+	if conn.Saved {
+		// 已保存的连接：重置状态为断开，但保留在内存中
+		conn.Status = "disconnected"
+	} else {
+		// 未保存的连接：从内存中移除
+		delete(sm.connections, id)
+	}
+
+	// 只保存缓存文件，不修改永久文件
+	return sm.saveConnectionsLocked()
+}
+
 // removeFromPermanent 从永久文件中移除指定连接
 func (sm *StorageManager) removeFromPermanent(host string, port int, username string) {
 	existing := sm.loadSavedConns()

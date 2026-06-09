@@ -100,7 +100,26 @@ func NewAIService() *AIService {
 	}
 }
 
-func (s *AIService) SetApp(app *application.App) { s.app = app }
+func (s *AIService) SetApp(app *application.App) {
+	s.app = app
+
+	// 监听前端提交工具结果的事件
+	app.Event.On("ai:submit-tool-result", func(event *application.CustomEvent) {
+		data, ok := event.Data.(map[string]interface{})
+		if !ok {
+			fmt.Printf("[AI] ⚠️ 无效的 ai:submit-tool-result 事件数据\n")
+			return
+		}
+		callID, _ := data["callId"].(string)
+		result, _ := data["result"].(string)
+		if callID == "" {
+			fmt.Printf("[AI] ⚠️ ai:submit-tool-result: callId 为空\n")
+			return
+		}
+		fmt.Printf("[AI] 收到工具结果提交: callId=%s, result长度=%d\n", callID, len(result))
+		s.SubmitToolResult(callID, result)
+	})
+}
 
 // InitDeps 初始化外部依赖（包级函数，不生成 Wails 绑定）
 func InitDeps(s *AIService, info ServerInfoProvider, runner SSHCommandRunner) {

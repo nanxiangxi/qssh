@@ -117,12 +117,15 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, inject } from 'vue'
 import { useSSHTabsStore } from '../../../stores/sshTabs'
+import { useTerminalSessionStore } from '../../../stores/terminalSessions'
+import { Events } from '@wailsio/runtime'
 import * as SSHService from '../../../../bindings/changeme/ssh/sshservice.js'
 import { showMessage } from '../../../utils/message'
 import { addLog, LogLevel } from '../../../utils/logger'
 
 const connId = inject('connId')
 const tabsStore = useSSHTabsStore()
+const sessionStore = useTerminalSessionStore()
 
 const command = ref('')
 const executing = ref(false)
@@ -133,7 +136,7 @@ const refreshing = ref(false)
 const selectedIds = ref(new Set())
 // 每个连接选择的终端 { connId: sessionId | 'auto' }
 const terminalSelections = ref({})
-// 每个连接的可用终端列表 { connId: [{ sessionId, panelId, title, isAI }, ...] }
+// 每个连接的可用终端列表 { connId: [{ sessionId, title, isAI, panelId }, ...] }
 const connTerminals = ref({})
 
 // 当前组的所有连接（来自 tabs store）
@@ -162,34 +165,34 @@ const selectNone = () => {
   selectedIds.value = new Set()
 }
 
-const getSelectedTerminal = (connId) => terminalSelections.value[connId] || 'auto'
-const setSelectedTerminal = (connId, val) => { terminalSelections.value[connId] = val }
-const getConnTerminals = (connId) => connTerminals.value[connId] || []
-const getTerminalTitle = (t) => t.title
+const getSelectedTerminal = (cid) => terminalSelections.value[cid] || 'auto'
+const setSelectedTerminal = (cid, val) => { terminalSelections.value[cid] = val }
+const getConnTerminals = (cid) => getReadyTerminals(cid)
+const getTerminalTitle = (t) => t.isAI ? `[AI] ${t.title}` : t.title
 
-// 刷新所有连接的终端列表（含显示名称）
-const refreshAll = async () => {
+// 刷新（请求 DockviewLayout 重发终端列表）
+const refreshAll = () => {
   refreshing.value = true
-  const map = {}
-  let counter = 0
-  for (const conn of connections.value) {
-    if (conn.status === 'connected') {
-      try {
-        const sids = await SSHService.GetSessionIDs(conn.id)
-        const terminals = (sids || []).map((sid, i) => {
-          counter++
-          return {
-            sessionId: sid,
-            title: `终端 ${i + 1}`,
-            isAI: false
-          }
-        })
-        map[conn.id] = terminals
-      } catch { map[conn.id] = [] }
-    }
+  // 终端列表由 dockview:terminals-changed 事件自动更新
+  setTimeout(() => { refreshing.value = false }, 500)
+}
+
+// 监听终端列表变化（来自 DockviewLayout 的 emitChange）
+const onTerminalsChanged = (e) => {
+  const d = e?.data
+  if (!d || !d.connId || !Array.isArray(d.terminals)) return
+  connTerminals.value = {
+    ...connTerminals.value,
+    [d.connId]: d.terminals.filter(t => t.sessionId)
   }
-  connTerminals.value = map
-  refreshing.value = false
+}
+
+// 获取可用终端列表（只包含 shell 已启动的）
+const getReadyTerminals = (cid) => {
+  return (connTerminals.value[cid] || []).filter(t => {
+    const sess = sessionStore.getSession(t.id)
+    return sess && sess.ready
+  })
 }
 
 const executeCommand = async () => {
@@ -203,15 +206,22 @@ const executeCommand = async () => {
 
   const promises = targets.map(async (conn) => {
     try {
-      // 获取终端
       let sid = terminalSelections.value[conn.id]
       if (!sid || sid === 'auto') {
-        const sids = connTerminals.value[conn.id] || await SSHService.GetSessionIDs(conn.id)
-        if (!sids || sids.length === 0) {
-          return { name: conn.name, success: false, error: '无可用终端' }
+        const ready = getReadyTerminals(conn.id)
+        if (ready.length === 0) {
+          return { name: conn.name, success: false, error: '无就绪终端' }
         }
-        sid = sids[0]
+        sid = ready[0].sessionId
+      } else {
+        // 检查指定终端是否就绪
+        const ready = getReadyTerminals(conn.id)
+        if (!ready.find(t => t.sessionId === sid)) {
+          return { name: conn.name, success: false, error: '终端未就绪' }
+        }
       }
+      // 通知终端创建结构化块
+      Events.Emit('ai:terminal-exec-start', { connId: conn.id, sessionID: sid, command: cmd })
       await SSHService.WriteToTerminalByID(conn.id, sid, cmd + '\n')
       return { name: conn.name, success: true }
     } catch (e) {
@@ -226,13 +236,12 @@ const executeCommand = async () => {
   showMessage(`命令已发送到 ${ok}/${targets.length} 个连接`, ok > 0 ? 'success' : 'error')
 }
 
-// 生命周期
-let refreshTimer = null
 onMounted(() => {
-  refreshAll()
-  refreshTimer = setInterval(refreshAll, 5000)
+  Events.On('dockview:terminals-changed', onTerminalsChanged)
 })
-onUnmounted(() => { if (refreshTimer) clearInterval(refreshTimer) })
+onUnmounted(() => {
+  Events.Off('dockview:terminals-changed', onTerminalsChanged)
+})
 </script>
 
 <style scoped>

@@ -2,17 +2,29 @@
   <header class="top-bar">
     <!-- 左侧：SSH 连接标签页 -->
     <div class="tab-container">
-      <div 
-        v-for="tab in tabs" 
+      <div
+        v-for="tab in tabs"
         :key="tab.id"
         class="tab-item"
-        :class="{ active: tab.id === activeTabId }"
+        :class="{ active: tab.id === activeTabId, disconnected: tab.status === 'disconnected' }"
         @click="openConnection(tab.id)"
         draggable="true"
         @dragstart="handleDragStart($event, tab)"
       >
         <span class="tab-status" :class="tab.status"></span>
         <span class="tab-name" :title="'ID: ' + tab.id">{{ getTabDisplayName(tab) }}</span>
+        <!-- 重连按钮（仅断线时显示） -->
+        <button
+          v-if="tab.status === 'disconnected'"
+          class="tab-reconnect"
+          @click.stop="reconnectTab(tab.id)"
+          title="重新连接"
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M23 4v6h-6"/>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+          </svg>
+        </button>
         <button class="tab-close" @click.stop="closeTab(tab.id)">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="18" y1="6" x2="6" y2="18"/>
@@ -73,7 +85,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Window } from '@wailsio/runtime'
+import { Window, Events } from '@wailsio/runtime'
 import { useSSHTabsStore } from '../../../stores/sshTabs'
 import { useSSHConnectionsStore } from '../../../stores/sshConnections'
 import { useSSHLayoutStore } from '../../../stores/sshLayout'
@@ -92,6 +104,9 @@ const { tabs, activeTabId } = storeToRefs(tabsStore)
 // 从路由参数获取 groupID
 const groupID = computed(() => route.query.group || '')
 const isMaximised = ref(false)
+
+// 断线状态映射
+const disconnectedTabs = ref(new Set())
 
 // 模态框状态
 const showCloseTabModal = ref(false)
@@ -163,29 +178,26 @@ const closeTab = (connId) => {
 // 确认关闭标签
 const confirmCloseTab = async () => {
   if (!tabToClose.value) return
-  
+
   try {
-    await Disconnect(tabToClose.value.id)
-    
-    // ✅ 先记录关闭前的状态
-    const wasActive = tabToClose.value.active
-    const remainingTabs = tabs.value.filter(t => t.id !== tabToClose.value.id)
-    
-    // 关闭标签（内部会激活下一个标签）
-    tabsStore.closeTab(tabToClose.value.id)
-    
-    // ✅ 如果关闭的是激活标签，需要同步更新 currentConnectionId
+    const tab = tabToClose.value
+    const wasActive = tab.active
+    const remainingTabs = tabs.value.filter(t => t.id !== tab.id)
+
+    // ✅ 不再调用 Disconnect（断开整个SSH连接），而是关闭 DockviewLayout 窗口
+    // DockviewLayout 内部的 onDidRemovePanel 会清理 session
+    // 关闭标签
+    tabsStore.closeTab(tab.id)
+
+    // ✅ 如果关闭的是激活标签，切换到下一个标签
     if (wasActive && remainingTabs.length > 0) {
-      // closeTab 已经激活了下一个标签，获取新的 activeTabId
       const newActiveId = tabsStore.activeTabId
       if (newActiveId) {
         sshLayoutStore.setCurrentConnection(newActiveId)
-        console.log('[TopBookmarkBar] ✅ 已切换到连接:', newActiveId)
       }
     }
-    
+
     await connectionsStore.refresh()
-    
     showCloseTabModal.value = false
     tabToClose.value = null
   } catch (error) {
@@ -196,6 +208,18 @@ const confirmCloseTab = async () => {
 
 // 处理关闭按钮点击 - 需要确认
 const showCloseWindowModal = ref(false)
+
+// 重连标签
+const reconnectTab = async (connId) => {
+  console.log('[TopBookmarkBar] 🔄 尝试重连:', connId)
+  try {
+    const { Reconnect } = await import('../../../../bindings/changeme/ssh/sshservice.js')
+    await Reconnect(connId)
+    console.log('[TopBookmarkBar] ✅ 重连请求已发送')
+  } catch (error) {
+    console.error('[TopBookmarkBar] ❌ 重连失败:', error)
+  }
+}
 
 const handleClose = () => {
   showCloseWindowModal.value = true
@@ -219,7 +243,7 @@ const handleDragStart = (event, tab) => {
 onMounted(() => {
   updateMaximiseButton()
   setInterval(updateMaximiseButton, 500)
-  
+
   // 监听 tabs 变化，如果全部关闭则自动关闭窗口
   watch(tabs, (newTabs) => {
     if (newTabs.length === 0) {
@@ -229,6 +253,32 @@ onMounted(() => {
       }, 100)
     }
   }, { deep: true })
+
+  // 监听断线事件
+  Events.On('ssh:connection-disconnected', (event) => {
+    const data = event?.data
+    if (!data) return
+    console.log('[TopBookmarkBar] ⚠️ 连接断开:', data.connID)
+    disconnectedTabs.value.add(data.connID)
+    tabsStore.updateTabStatus(data.connID, 'disconnected')
+  })
+
+  // 监听重连成功事件
+  Events.On('ssh:connection-reconnected', (event) => {
+    const data = event?.data
+    if (!data) return
+    console.log('[TopBookmarkBar] ✅ 重连成功:', data.connID)
+    disconnectedTabs.value.delete(data.connID)
+    tabsStore.updateTabStatus(data.connID, 'connected')
+  })
+
+  // 监听重连中事件
+  Events.On('ssh:connection-reconnecting', (event) => {
+    const data = event?.data
+    if (!data) return
+    console.log('[TopBookmarkBar] 🔄 重连中:', data.connID)
+    tabsStore.updateTabStatus(data.connID, 'reconnecting')
+  })
   
   // 监听当前分组的更新事件
   if (groupID.value) {
@@ -283,6 +333,11 @@ onUnmounted(() => {
     cleanupGroupListener()
     console.log('[TopBookmarkBar] 🔇 已移除分组监听器')
   }
+
+  // 清理断线事件监听
+  Events.Off('ssh:connection-disconnected')
+  Events.Off('ssh:connection-reconnected')
+  Events.Off('ssh:connection-reconnecting')
 })
 </script>
 
@@ -327,6 +382,14 @@ onUnmounted(() => {
   background: rgba(60, 60, 60, 0.6);
 }
 
+.tab-item.disconnected {
+  border-bottom-color: #fc8181;
+}
+
+.tab-item.disconnected .tab-name {
+  color: #fc8181;
+}
+
 .tab-item.active {
   background: rgba(45, 45, 45, 0.95);
   border-color: rgba(255, 255, 255, 0.1);
@@ -346,7 +409,19 @@ onUnmounted(() => {
 }
 
 .tab-status.disconnected {
-  background: #a0aec0;
+  background: #fc8181;
+  box-shadow: 0 0 0.375rem rgba(252, 129, 129, 0.5);
+}
+
+.tab-status.reconnecting {
+  background: #fbd38d;
+  box-shadow: 0 0 0.375rem rgba(251, 211, 141, 0.5);
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 
 .tab-name {
@@ -371,6 +446,31 @@ onUnmounted(() => {
   opacity: 0;
   transition: all 0.2s;
   flex-shrink: 0;
+}
+
+.tab-reconnect {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  background: transparent;
+  border: none;
+  border-radius: 0.25rem;
+  color: #fbd38d;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.tab-item:hover .tab-reconnect {
+  opacity: 1;
+}
+
+.tab-reconnect:hover {
+  background: rgba(251, 211, 141, 0.2);
+  color: #f6e05e;
 }
 
 .tab-item:hover .tab-close {

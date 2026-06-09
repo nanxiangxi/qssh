@@ -39,6 +39,15 @@ export function AddToGroup(groupID, connID) {
 }
 
 /**
+ * AutoReconnect 自动重连（后台执行，不阻塞前端）
+ * @param {string} connID
+ * @returns {$CancellablePromise<void>}
+ */
+export function AutoReconnect(connID) {
+    return $Call.ByID(2337444059, connID);
+}
+
+/**
  * CancelDirectoryUpload 取消目录上传
  * @returns {$CancellablePromise<void>}
  */
@@ -54,6 +63,15 @@ export function CancelDirectoryUpload() {
  */
 export function CancelSearch(connID, searchID) {
     return $Call.ByID(1409975503, connID, searchID);
+}
+
+/**
+ * CheckConnectionHealth 检查连接健康状态（心跳检测）
+ * @param {string} connID
+ * @returns {$CancellablePromise<boolean>}
+ */
+export function CheckConnectionHealth(connID) {
+    return $Call.ByID(2407550917, connID);
 }
 
 /**
@@ -181,7 +199,7 @@ export function DeleteTempFile(connID, filePath) {
 }
 
 /**
- * Disconnect 断开SSH连接并删除缓存记录
+ * Disconnect 断开SSH连接（删除缓存记录，保留永久记录）
  * @param {string} connID
  * @returns {$CancellablePromise<void>}
  */
@@ -491,6 +509,15 @@ export function ReadFromShellSession(connID, sessionID, buf) {
 }
 
 /**
+ * Reconnect 重新连接（前端调用）
+ * @param {string} connID
+ * @returns {$CancellablePromise<void>}
+ */
+export function Reconnect(connID) {
+    return $Call.ByID(1506103354, connID);
+}
+
+/**
  * RemoveFromGroup 从分组中移除连接
  * @param {string} groupID
  * @param {string} connID
@@ -610,6 +637,14 @@ export function SetApp(app) {
  */
 export function SetWindowManager(wm) {
     return $Call.ByID(2749348190, wm);
+}
+
+/**
+ * StartHealthCheck 启动健康检查定时器
+ * @returns {$CancellablePromise<void>}
+ */
+export function StartHealthCheck() {
+    return $Call.ByID(2883819847);
 }
 
 /**

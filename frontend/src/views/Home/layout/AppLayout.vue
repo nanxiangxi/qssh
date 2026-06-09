@@ -5,6 +5,7 @@
       <div class="logo-container">
         <img src="../../../零启.svg" alt="启SSH Logo" class="logo" />
         <span class="app-name">启SSH</span>
+        <span class="version">v{{ version }}</span>
       </div>
     </div>
     
@@ -38,8 +39,18 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { Window } from '@wailsio/runtime'
+import { GetVersion } from '../../../../bindings/changeme/ssh/greetservice.js'
 
 const isMaximised = ref(false)
+const version = ref('0.2.0')
+
+onMounted(async () => {
+  try {
+    version.value = await GetVersion()
+  } catch (e) {
+    console.warn('获取版本失败:', e)
+  }
+})
 
 // 切换最大化/恢复
 async function toggleMaximise() {
@@ -99,6 +110,15 @@ onMounted(() => {
   font-size: 1.3em;
   font-weight: 700;
   letter-spacing: 0.03125rem;
+}
+
+.version {
+  color: #565f89;
+  font-size: 0.7em;
+  font-weight: 400;
+  padding: 2px 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
 }
 
 .header-right {

@@ -59,17 +59,19 @@ func (wm *WindowManager) CreateSSHWindow(groupID string, groupName string, activ
 
 	newWindow := wm.app.Window.NewWithOptions(application.WebviewWindowOptions{
 		Title:            windowTitle,
-		Width:            1600,
-		MinWidth:         1600,
-		Height:           1000,
-		MinHeight:        1000,
 		URL:              url,
 		DisableResize:    false,
 		Frameless:        true,
 		BackgroundColour: application.NewRGB(30, 30, 30),
 	})
 
-	fmt.Printf("[WindowManager] 窗口创建成功\n")
+	// 根据屏幕大小设置窗口尺寸
+	w, h := wm.calculateWindowSize()
+	newWindow.SetSize(w, h)
+	// 居中显示
+	newWindow.Center()
+
+	fmt.Printf("[WindowManager] 窗口创建成功，大小: %dx%d\n", w, h)
 
 	// 保存窗口引用
 	wm.windowMutex.Lock()
@@ -95,6 +97,44 @@ func (wm *WindowManager) CreateSSHWindow(groupID string, groupName string, activ
 	})
 
 	return nil
+}
+
+// calculateWindowSize 根据屏幕大小计算合适的窗口尺寸
+func (wm *WindowManager) calculateWindowSize() (int, int) {
+	// 档位定义
+	type size struct {
+		width  int
+		height int
+	}
+	sizes := []size{
+		{1920, 1080},
+		{1600, 1000},
+		{1400, 900},
+		{1200, 800},
+	}
+
+	// 获取主屏幕
+	primary := wm.app.Screen.GetPrimary()
+	if primary == nil {
+		return 1400, 900
+	}
+
+	screenW := primary.Size.Width
+	screenH := primary.Size.Height
+
+	// 选择不超过屏幕 85% 的最大档位
+	maxW := int(float64(screenW) * 0.85)
+	maxH := int(float64(screenH) * 0.85)
+
+	fmt.Printf("[WindowManager] 屏幕大小: %dx%d, 最大窗口: %dx%d\n", screenW, screenH, maxW, maxH)
+
+	for _, s := range sizes {
+		if s.width <= maxW && s.height <= maxH {
+			return s.width, s.height
+		}
+	}
+
+	return 1200, 800
 }
 
 // CloseWindow 关闭分组窗口并清理

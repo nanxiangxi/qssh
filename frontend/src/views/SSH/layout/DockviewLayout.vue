@@ -39,9 +39,11 @@ import { DockviewVue } from 'dockview-vue'
 import 'dockview-vue/dist/styles/dockview.css'
 import { PANEL_CONFIG } from '../../../stores/sshLayout'
 import { useTerminalSessionStore } from '../../../stores/terminalSessions'
+import { useConfigStore } from '../../../stores/config'
 import { Events } from '@wailsio/runtime'
 import { initAIToolExecutor, destroyAIToolExecutor } from '../../../utils/aiToolExecutor'
-import TerminalPanel from '../panels/TerminalPanel.vue'
+
+import StructuredTerminalPanel from '../panels/Terminal/StructuredTerminalPanel.vue'
 import FileManagerPanel from '../panels/FileManager/FileManagerPanel.vue'
 import MonitorPanel from '../panels/MonitorPanel.vue'
 import AIChatPanel from '../panels/AIChatPanel.vue'
@@ -55,7 +57,8 @@ export default defineComponent({
   name: 'DockviewLayout',
   components: {
     DockviewVue,
-    terminal: TerminalPanel,
+    terminal: StructuredTerminalPanel,  // 结构化终端（默认）
+    
     fileManager: FileManagerPanel,
     monitor: MonitorPanel,
     aiChat: AIChatPanel,
@@ -74,6 +77,7 @@ export default defineComponent({
     let dockviewApi = null
 
     const ctxMenu = reactive({ show: false, x: 0, y: 0, panelId: '', panelType: '' })
+    const configStore = useConfigStore()
 
     const defaultLayout = {
       orientation: 'HORIZONTAL',
@@ -82,6 +86,12 @@ export default defineComponent({
 
     const getPanelTitle = (type) => PANEL_CONFIG[type]?.title || type
     const sessionStore = useTerminalSessionStore()
+
+    // 获取终端组件名称
+    const getTerminalComponent = () => {
+      const type = configStore.getDefaultTerminalType()
+      return 'terminal'
+    }
 
     // --- 面板管理 ---
 
@@ -106,6 +116,7 @@ export default defineComponent({
       let panelId = panelType
       let title = config.title
       let sessionId = null
+      let component = panelType
 
       if (panelType === 'terminal') {
         if (isAI) {
@@ -117,6 +128,8 @@ export default defineComponent({
           panelId = `terminal_${num}`
           title = `终端 ${num}`
         }
+        // 使用配置的终端类型
+        component = getTerminalComponent()
         // 分配 sessionId（不启动 shell，shell 由 TerminalPanel 挂载后启动）
         sessionId = sessionStore.createSession(panelId, props.connId, isAI)
         if (!sessionId) {
@@ -134,7 +147,7 @@ export default defineComponent({
       try {
         const addOpts = {
           id: panelId,
-          component: panelType,
+          component,
           title,
           params: { connId: props.connId, sessionId, isAI }
         }
@@ -161,7 +174,7 @@ export default defineComponent({
       const panel = dockviewApi.getPanel(panelId)
       if (panel) {
         dockviewApi.removePanel(panel)
-        emitChange()
+        // emitChange 由 onDidRemovePanel 触发
       }
       ctxMenu.show = false
     }
@@ -169,9 +182,9 @@ export default defineComponent({
     const closeOtherPanels = (keepPanelId) => {
       if (!dockviewApi) return
       ;[...dockviewApi.panels].forEach(p => {
-        if (p.id !== keepPanelId) dockviewApi.removePanel(p)
+        if (p.id !== keepPanelId && !p.id.startsWith('terminal_ai_')) dockviewApi.removePanel(p)
       })
-      emitChange()
+      // emitChange 由 onDidRemovePanel 逐个触发
       ctxMenu.show = false
     }
 
@@ -180,7 +193,7 @@ export default defineComponent({
       dockviewApi.panels
         .filter(p => panelType === 'terminal' ? p.id.startsWith('terminal_') && !p.id.startsWith('terminal_ai_') : p.id === panelType)
         .forEach(p => dockviewApi.removePanel(p))
-      emitChange()
+      // emitChange 由 onDidRemovePanel 逐个触发
       ctxMenu.show = false
     }
 
@@ -194,7 +207,7 @@ export default defineComponent({
         dockviewApi.panels
           .filter(p => panelType === 'terminal' ? p.id.startsWith('terminal_') && !p.id.startsWith('terminal_ai_') : p.id === panelType)
           .forEach(p => dockviewApi.removePanel(p))
-        emitChange()
+        // emitChange 由 onDidRemovePanel 逐个触发
       } else {
         addPanel(panelType)
       }
@@ -235,7 +248,8 @@ export default defineComponent({
             id: p.id,
             title: p.title || p.id,
             sessionId: sess?.sessionId || null,
-            isAI: sess?.isAI || false
+            isAI: sess?.isAI || false,
+            connId: props.connId
           })
         } else {
           types.add(p.id)
@@ -300,14 +314,15 @@ export default defineComponent({
         }
       })
 
-      // 监听终端 shell 启动完成 → 如果是 AI 终端，通知 aiToolExecutor
+      // 监听终端 shell 启动完成
       Events.On('terminal:session-ready', (e) => {
         const d = e?.data
         if (!d || d.connId !== props.connId) return
-        const sess = sessionStore.getSessionBySessionId(d.sessionId)
-        if (sess?.isAI) {
-          Events.Emit('terminal:ai-session-ready', { connId: d.connId, sessionId: d.sessionId })
-          console.log('[DockviewLayout] AI 终端 shell 就绪:', d.sessionId)
+        // 标记 session 就绪
+        sessionStore.markSessionReady(d.sessionId)
+        if (d.isAI) {
+          Events.Emit('ai:ai-terminal-ready', { connId: d.connId, sessionId: d.sessionId })
+          console.log('[DockviewLayout] AI 终端就绪:', d.sessionId)
         }
         emitChange()
       })

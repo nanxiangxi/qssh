@@ -19,6 +19,12 @@ const routes = [
         name: 'NewConnection',
         component: () => import('../views/Home/NewConnection.vue'),
         meta: { title: '新建连接' }
+      },
+      {
+        path: 'settings',
+        name: 'Settings',
+        component: () => import('../views/Home/Settings.vue'),
+        meta: { title: '设置' }
       }
       // 后续可以添加更多 Home 子路由
     ]

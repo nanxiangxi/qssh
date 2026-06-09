@@ -11,6 +11,86 @@ import { Create as $Create } from "@wailsio/runtime";
 import * as time$0 from "../../time/models.js";
 
 /**
+ * AIConfig AI 配置（预留）
+ */
+export class AIConfig {
+    /**
+     * Creates a new AIConfig instance.
+     * @param {Partial<AIConfig>} [$$source = {}] - The source object to create the AIConfig.
+     */
+    constructor($$source = {}) {
+        if (!("enabled" in $$source)) {
+            /**
+             * @member
+             * @type {boolean}
+             */
+            this["enabled"] = false;
+        }
+        if (!("autoExecute" in $$source)) {
+            /**
+             * @member
+             * @type {boolean}
+             */
+            this["autoExecute"] = false;
+        }
+        if (!("confirmExecution" in $$source)) {
+            /**
+             * @member
+             * @type {boolean}
+             */
+            this["confirmExecution"] = false;
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new AIConfig instance from a string or object.
+     * @param {any} [$$source = {}]
+     * @returns {AIConfig}
+     */
+    static createFrom($$source = {}) {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new AIConfig(/** @type {Partial<AIConfig>} */($$parsedSource));
+    }
+}
+
+/**
+ * AppConfig 应用配置（仅保留实际使用的字段）
+ */
+export class AppConfig {
+    /**
+     * Creates a new AppConfig instance.
+     * @param {Partial<AppConfig>} [$$source = {}] - The source object to create the AppConfig.
+     */
+    constructor($$source = {}) {
+        if (!("terminal" in $$source)) {
+            /**
+             * @member
+             * @type {TerminalConfig}
+             */
+            this["terminal"] = (new TerminalConfig());
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new AppConfig instance from a string or object.
+     * @param {any} [$$source = {}]
+     * @returns {AppConfig}
+     */
+    static createFrom($$source = {}) {
+        const $$createField0_0 = $$createType0;
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("terminal" in $$parsedSource) {
+            $$parsedSource["terminal"] = $$createField0_0($$parsedSource["terminal"]);
+        }
+        return new AppConfig(/** @type {Partial<AppConfig>} */($$parsedSource));
+    }
+}
+
+/**
  * CPUStats CPU 统计
  */
 export class CPUStats {
@@ -61,8 +141,8 @@ export class CPUStats {
      * @returns {CPUStats}
      */
     static createFrom($$source = {}) {
-        const $$createField2_0 = $$createType0;
-        const $$createField3_0 = $$createType1;
+        const $$createField2_0 = $$createType1;
+        const $$createField3_0 = $$createType2;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("perCpuUsage" in $$parsedSource) {
             $$parsedSource["perCpuUsage"] = $$createField2_0($$parsedSource["perCpuUsage"]);
@@ -398,8 +478,8 @@ export class DiskStats {
      * @returns {DiskStats}
      */
     static createFrom($$source = {}) {
-        const $$createField0_0 = $$createType3;
-        const $$createField1_0 = $$createType4;
+        const $$createField0_0 = $$createType4;
+        const $$createField1_0 = $$createType5;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("partitions" in $$parsedSource) {
             $$parsedSource["partitions"] = $$createField0_0($$parsedSource["partitions"]);
@@ -492,6 +572,58 @@ export class FileInfo {
 }
 
 /**
+ * FileManagerConfig 文件管理配置（预留，供 Wails 绑定使用）
+ */
+export class FileManagerConfig {
+    /**
+     * Creates a new FileManagerConfig instance.
+     * @param {Partial<FileManagerConfig>} [$$source = {}] - The source object to create the FileManagerConfig.
+     */
+    constructor($$source = {}) {
+        if (!("showHidden" in $$source)) {
+            /**
+             * @member
+             * @type {boolean}
+             */
+            this["showHidden"] = false;
+        }
+        if (!("sortBy" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["sortBy"] = "";
+        }
+        if (!("sortOrder" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["sortOrder"] = "";
+        }
+        if (!("confirmDelete" in $$source)) {
+            /**
+             * @member
+             * @type {boolean}
+             */
+            this["confirmDelete"] = false;
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new FileManagerConfig instance from a string or object.
+     * @param {any} [$$source = {}]
+     * @returns {FileManagerConfig}
+     */
+    static createFrom($$source = {}) {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new FileManagerConfig(/** @type {Partial<FileManagerConfig>} */($$parsedSource));
+    }
+}
+
+/**
  * FirewallInfo 防火墙信息
  */
 export class FirewallInfo {
@@ -549,8 +681,8 @@ export class FirewallInfo {
      * @returns {FirewallInfo}
      */
     static createFrom($$source = {}) {
-        const $$createField2_0 = $$createType6;
-        const $$createField4_0 = $$createType7;
+        const $$createField2_0 = $$createType7;
+        const $$createField4_0 = $$createType8;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("rules" in $$parsedSource) {
             $$parsedSource["rules"] = $$createField2_0($$parsedSource["rules"]);
@@ -988,7 +1120,7 @@ export class NetworkStats {
      * @returns {NetworkStats}
      */
     static createFrom($$source = {}) {
-        const $$createField0_0 = $$createType9;
+        const $$createField0_0 = $$createType10;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("interfaces" in $$parsedSource) {
             $$parsedSource["interfaces"] = $$createField0_0($$parsedSource["interfaces"]);
@@ -1414,12 +1546,78 @@ export class SSHGroup {
      * @returns {SSHGroup}
      */
     static createFrom($$source = {}) {
-        const $$createField2_0 = $$createType7;
+        const $$createField2_0 = $$createType8;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("conn_ids" in $$parsedSource) {
             $$parsedSource["conn_ids"] = $$createField2_0($$parsedSource["conn_ids"]);
         }
         return new SSHGroup(/** @type {Partial<SSHGroup>} */($$parsedSource));
+    }
+}
+
+/**
+ * SSHSettings SSH 设置（预留）
+ */
+export class SSHSettings {
+    /**
+     * Creates a new SSHSettings instance.
+     * @param {Partial<SSHSettings>} [$$source = {}] - The source object to create the SSHSettings.
+     */
+    constructor($$source = {}) {
+        if (!("defaultPort" in $$source)) {
+            /**
+             * @member
+             * @type {number}
+             */
+            this["defaultPort"] = 0;
+        }
+        if (!("connectTimeout" in $$source)) {
+            /**
+             * @member
+             * @type {number}
+             */
+            this["connectTimeout"] = 0;
+        }
+        if (!("keepAlive" in $$source)) {
+            /**
+             * @member
+             * @type {boolean}
+             */
+            this["keepAlive"] = false;
+        }
+        if (!("keepAliveInterval" in $$source)) {
+            /**
+             * @member
+             * @type {number}
+             */
+            this["keepAliveInterval"] = 0;
+        }
+        if (!("autoReconnect" in $$source)) {
+            /**
+             * @member
+             * @type {boolean}
+             */
+            this["autoReconnect"] = false;
+        }
+        if (!("maxReconnectAttempts" in $$source)) {
+            /**
+             * @member
+             * @type {number}
+             */
+            this["maxReconnectAttempts"] = 0;
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new SSHSettings instance from a string or object.
+     * @param {any} [$$source = {}]
+     * @returns {SSHSettings}
+     */
+    static createFrom($$source = {}) {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new SSHSettings(/** @type {Partial<SSHSettings>} */($$parsedSource));
     }
 }
 
@@ -1485,10 +1683,10 @@ export class SystemStats {
      * @returns {SystemStats}
      */
     static createFrom($$source = {}) {
-        const $$createField2_0 = $$createType10;
-        const $$createField3_0 = $$createType11;
-        const $$createField4_0 = $$createType12;
-        const $$createField5_0 = $$createType13;
+        const $$createField2_0 = $$createType11;
+        const $$createField3_0 = $$createType12;
+        const $$createField4_0 = $$createType13;
+        const $$createField5_0 = $$createType14;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("cpu" in $$parsedSource) {
             $$parsedSource["cpu"] = $$createField2_0($$parsedSource["cpu"]);
@@ -1503,6 +1701,114 @@ export class SystemStats {
             $$parsedSource["network"] = $$createField5_0($$parsedSource["network"]);
         }
         return new SystemStats(/** @type {Partial<SystemStats>} */($$parsedSource));
+    }
+}
+
+/**
+ * TerminalConfig 终端配置
+ */
+export class TerminalConfig {
+    /**
+     * Creates a new TerminalConfig instance.
+     * @param {Partial<TerminalConfig>} [$$source = {}] - The source object to create the TerminalConfig.
+     */
+    constructor($$source = {}) {
+        if (!("defaultType" in $$source)) {
+            /**
+             * structured, classic
+             * @member
+             * @type {string}
+             */
+            this["defaultType"] = "";
+        }
+        if (!("autoSwitchClassic" in $$source)) {
+            /**
+             * 交互式操作自动切经典
+             * @member
+             * @type {boolean}
+             */
+            this["autoSwitchClassic"] = false;
+        }
+        if (!("switchMode" in $$source)) {
+            /**
+             * prompt | auto | inline
+             * @member
+             * @type {string}
+             */
+            this["switchMode"] = "";
+        }
+        if (!("fontSize" in $$source)) {
+            /**
+             * 终端字体大小
+             * @member
+             * @type {number}
+             */
+            this["fontSize"] = 0;
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new TerminalConfig instance from a string or object.
+     * @param {any} [$$source = {}]
+     * @returns {TerminalConfig}
+     */
+    static createFrom($$source = {}) {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new TerminalConfig(/** @type {Partial<TerminalConfig>} */($$parsedSource));
+    }
+}
+
+/**
+ * UIConfig 界面配置（预留）
+ */
+export class UIConfig {
+    /**
+     * Creates a new UIConfig instance.
+     * @param {Partial<UIConfig>} [$$source = {}] - The source object to create the UIConfig.
+     */
+    constructor($$source = {}) {
+        if (!("language" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["language"] = "";
+        }
+        if (!("theme" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["theme"] = "";
+        }
+        if (!("sidebarCollapsed" in $$source)) {
+            /**
+             * @member
+             * @type {boolean}
+             */
+            this["sidebarCollapsed"] = false;
+        }
+        if (!("showStatusBar" in $$source)) {
+            /**
+             * @member
+             * @type {boolean}
+             */
+            this["showStatusBar"] = false;
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new UIConfig instance from a string or object.
+     * @param {any} [$$source = {}]
+     * @returns {UIConfig}
+     */
+    static createFrom($$source = {}) {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new UIConfig(/** @type {Partial<UIConfig>} */($$parsedSource));
     }
 }
 
@@ -1531,17 +1837,18 @@ export class WindowManager {
 }
 
 // Private type creation functions
-const $$createType0 = $Create.Array($Create.Any);
-const $$createType1 = LoadAvg.createFrom;
-const $$createType2 = DiskPartition.createFrom;
-const $$createType3 = $Create.Array($$createType2);
-const $$createType4 = DiskIOStats.createFrom;
-const $$createType5 = FirewallRule.createFrom;
-const $$createType6 = $Create.Array($$createType5);
-const $$createType7 = $Create.Array($Create.Any);
-const $$createType8 = NetInterface.createFrom;
-const $$createType9 = $Create.Array($$createType8);
-const $$createType10 = CPUStats.createFrom;
-const $$createType11 = MemoryStats.createFrom;
-const $$createType12 = DiskStats.createFrom;
-const $$createType13 = NetworkStats.createFrom;
+const $$createType0 = TerminalConfig.createFrom;
+const $$createType1 = $Create.Array($Create.Any);
+const $$createType2 = LoadAvg.createFrom;
+const $$createType3 = DiskPartition.createFrom;
+const $$createType4 = $Create.Array($$createType3);
+const $$createType5 = DiskIOStats.createFrom;
+const $$createType6 = FirewallRule.createFrom;
+const $$createType7 = $Create.Array($$createType6);
+const $$createType8 = $Create.Array($Create.Any);
+const $$createType9 = NetInterface.createFrom;
+const $$createType10 = $Create.Array($$createType9);
+const $$createType11 = CPUStats.createFrom;
+const $$createType12 = MemoryStats.createFrom;
+const $$createType13 = DiskStats.createFrom;
+const $$createType14 = NetworkStats.createFrom;

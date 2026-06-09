@@ -253,6 +253,8 @@ func (s *SSHService) CreateAndConnectWithGroup(config *SSHConfig, groupID string
 	
 	go func() {
 		client := NewSSHClient(config)
+		// 设置断线回调
+		client.SetDisconnectCallback(connID, s.onConnectionDisconnected)
 		err := client.Connect()
 		resultChan <- connectResult{client: client, err: err}
 	}()
@@ -267,8 +269,8 @@ func (s *SSHService) CreateAndConnectWithGroup(config *SSHConfig, groupID string
 	case result := <-resultChan:
 		if result.err != nil {
 			fmt.Printf("[SSHService] 连接失败: %v\n", result.err)
-			// 连接失败，删除已保存的配置
-			s.storage.DeleteConnection(connID)
+			// 连接失败，从缓存中删除（保留永久记录）
+			s.storage.DeleteFromCache(connID)
 			return nil, formatSSHError(result.err)
 		}
 		
@@ -280,8 +282,8 @@ func (s *SSHService) CreateAndConnectWithGroup(config *SSHConfig, groupID string
 		
 	case <-time.After(timeout):
 		fmt.Printf("[SSHService] ⏱️ 连接超时 (%v)\n", timeout)
-		// 超时，删除已保存的配置
-		s.storage.DeleteConnection(connID)
+		// 超时，从缓存中删除（保留永久记录）
+		s.storage.DeleteFromCache(connID)
 		return nil, &FriendlyError{Message: fmt.Sprintf("连接超时：服务器在 %v 内未响应，请检查网络连接", timeout)}
 	}
 
@@ -314,31 +316,34 @@ func (s *SSHService) CreateAndConnectWithGroup(config *SSHConfig, groupID string
 	return result, nil
 }
 
-// Disconnect 断开SSH连接并删除缓存记录
+// Disconnect 断开SSH连接（删除缓存记录，保留永久记录）
 func (s *SSHService) Disconnect(connID string) error {
 	fmt.Printf("[SSHService] ========== 开始断开连接: %s ==========\n", connID)
-	
+
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	if client, exists := s.clients[connID]; exists {
-		// 1. 关闭 SSH 连接（包括 Shell、SFTP、Session、Client）
+		// 1. 关闭 SSH 连接
 		client.Close()
 		delete(s.clients, connID)
 		fmt.Printf("[SSHService] ✓ SSH 连接已关闭\n")
-		
+
 		// 2. 清理 Shell 会话标记
 		delete(s.shellSessions, connID)
 		fmt.Printf("[SSHService] ✓ Shell 会话标记已清理\n")
-		
-		// 3. 从存储中删除缓存记录
-		if err := s.storage.DeleteConnection(connID); err != nil {
+
+		// 3. 从缓存中删除（保留永久记录）
+		if err := s.storage.DeleteFromCache(connID); err != nil {
 			fmt.Printf("[SSHService] ⚠️ 删除缓存记录失败: %v\n", err)
 		} else {
 			fmt.Printf("[SSHService] ✓ 缓存记录已删除\n")
 		}
-		
-		fmt.Printf("[SSHService] ========== 连接已完全断开: %s ==========\n", connID)
+
+		// 4. 广播连接状态更新
+		s.broadcastConnections()
+
+		fmt.Printf("[SSHService] ========== 连接已断开: %s ==========\n", connID)
 		return nil
 	}
 
@@ -1028,8 +1033,8 @@ func (s *SSHService) CloseGroup(groupID string) error {
 			delete(s.clients, connID)
 			fmt.Printf("[SSHService] SSH 连接已关闭\n")
 			
-			// 从存储中删除缓存记录
-			if err := s.storage.DeleteConnection(connID); err != nil {
+			// 从缓存中删除（保留永久记录）
+			if err := s.storage.DeleteFromCache(connID); err != nil {
 				fmt.Printf("[SSHService] ⚠️ 删除缓存记录失败: %v\n", err)
 			} else {
 				fmt.Printf("[SSHService] ✓ 缓存记录已删除\n")
@@ -1353,6 +1358,208 @@ func (s *SSHService) CancelSearch(connID string, searchID string) error {
 
 	client.CancelSearch(searchID)
 	return nil
+}
+
+// ========== 断线重连功能 ==========
+
+// reconnectConfigs 保存已断开连接的配置（用于重连）
+var reconnectConfigs = struct {
+	mu      sync.RWMutex
+	configs map[string]*SSHConfig
+}{configs: make(map[string]*SSHConfig)}
+
+// onConnectionDisconnected 连接断开回调
+func (s *SSHService) onConnectionDisconnected(connID string) {
+	fmt.Printf("[SSHService] 📡 连接断开回调: %s\n", connID)
+
+	// 保存配置用于重连
+	s.mu.RLock()
+	client, exists := s.clients[connID]
+	if !exists {
+		s.mu.RUnlock()
+		return
+	}
+	config := client.config
+	s.mu.RUnlock()
+
+	// 保存配置
+	reconnectConfigs.mu.Lock()
+	reconnectConfigs.configs[connID] = config
+	reconnectConfigs.mu.Unlock()
+
+	// 更新存储状态
+	s.storage.UpdateConnectionStatus(connID, "disconnected")
+
+	// 广播断线事件
+	if s.app != nil {
+		s.app.Event.Emit("ssh:connection-disconnected", map[string]interface{}{
+			"connID":    connID,
+			"host":      config.Host,
+			"timestamp": time.Now().UnixMilli(),
+		})
+	}
+
+	// 广播连接状态更新
+	s.broadcastConnections()
+}
+
+// Reconnect 重新连接（前端调用）
+func (s *SSHService) Reconnect(connID string) error {
+	fmt.Printf("[SSHService] 🔄 尝试重连: %s\n", connID)
+
+	// 1. 获取配置
+	reconnectConfigs.mu.RLock()
+	config, exists := reconnectConfigs.configs[connID]
+	reconnectConfigs.mu.RUnlock()
+
+	if !exists {
+		// 尝试从存储获取配置
+		connInfo, err := s.storage.GetConnection(connID)
+		if err != nil || connInfo == nil {
+			return &FriendlyError{Message: "无法找到连接配置，请重新连接"}
+		}
+		config = &SSHConfig{
+			Name:       connInfo.Name,
+			Host:       connInfo.Host,
+			Port:       connInfo.Port,
+			Username:   connInfo.Username,
+			Password:   connInfo.Password,
+			KeyPath:    connInfo.KeyPath,
+			PrivateKey: connInfo.PrivateKey,
+		}
+	}
+
+	// 2. 清理旧连接
+	s.mu.Lock()
+	if oldClient, exists := s.clients[connID]; exists {
+		oldClient.Close()
+		delete(s.clients, connID)
+	}
+	delete(s.shellSessions, connID)
+	s.mu.Unlock()
+
+	// 3. 创建新连接
+	client := NewSSHClient(config)
+	client.SetDisconnectCallback(connID, s.onConnectionDisconnected)
+
+	// 广播重连中状态
+	if s.app != nil {
+		s.app.Event.Emit("ssh:connection-reconnecting", map[string]interface{}{
+			"connID": connID,
+		})
+	}
+
+	// 4. 尝试连接
+	if err := client.Connect(); err != nil {
+		// 连接失败
+		if s.app != nil {
+			s.app.Event.Emit("ssh:connection-reconnect-failed", map[string]interface{}{
+				"connID": connID,
+				"error":  formatSSHError(err).Error(),
+			})
+		}
+		return formatSSHError(err)
+	}
+
+	// 5. 连接成功
+	s.mu.Lock()
+	s.clients[connID] = client
+	s.mu.Unlock()
+
+	// 更新状态
+	s.storage.UpdateConnectionStatus(connID, "connected")
+
+	// 清理重连配置
+	reconnectConfigs.mu.Lock()
+	delete(reconnectConfigs.configs, connID)
+	reconnectConfigs.mu.Unlock()
+
+	// 广播重连成功
+	if s.app != nil {
+		s.app.Event.Emit("ssh:connection-reconnected", map[string]interface{}{
+			"connID": connID,
+		})
+	}
+
+	// 广播连接状态更新
+	s.broadcastConnections()
+
+	fmt.Printf("[SSHService] ✅ 重连成功: %s\n", connID)
+	return nil
+}
+
+// AutoReconnect 自动重连（后台执行，不阻塞前端）
+func (s *SSHService) AutoReconnect(connID string) {
+	go func() {
+		fmt.Printf("[SSHService] 🔄 开始自动重连: %s\n", connID)
+
+		maxRetries := 3
+		retryDelay := 2 * time.Second
+
+		for i := 0; i < maxRetries; i++ {
+			if i > 0 {
+				fmt.Printf("[SSHService] ⏳ 等待 %v 后重试 (%d/%d)...\n", retryDelay, i+1, maxRetries)
+				time.Sleep(retryDelay)
+				retryDelay *= 2 // 指数退避
+			}
+
+			err := s.Reconnect(connID)
+			if err == nil {
+				fmt.Printf("[SSHService] ✅ 自动重连成功: %s\n", connID)
+				return
+			}
+
+			fmt.Printf("[SSHService] ⚠️ 自动重连失败 (%d/%d): %v\n", i+1, maxRetries, err)
+		}
+
+		fmt.Printf("[SSHService] ❌ 自动重连失败，已达到最大重试次数: %s\n", connID)
+
+		// 通知前端自动重连失败
+		if s.app != nil {
+			s.app.Event.Emit("ssh:connection-reconnect-failed", map[string]interface{}{
+				"connID":  connID,
+				"error":   "自动重连失败，请手动重连",
+				"autoMax": true,
+			})
+		}
+	}()
+}
+
+// CheckConnectionHealth 检查连接健康状态（心跳检测）
+func (s *SSHService) CheckConnectionHealth(connID string) bool {
+	s.mu.RLock()
+	client, exists := s.clients[connID]
+	s.mu.RUnlock()
+
+	if !exists {
+		return false
+	}
+
+	return client.IsConnected()
+}
+
+// StartHealthCheck 启动健康检查定时器
+func (s *SSHService) StartHealthCheck() {
+	go func() {
+		ticker := time.NewTicker(30 * time.Second) // 每30秒检查一次
+		defer ticker.Stop()
+
+		for range ticker.C {
+			s.mu.RLock()
+			connIDs := make([]string, 0, len(s.clients))
+			for id := range s.clients {
+				connIDs = append(connIDs, id)
+			}
+			s.mu.RUnlock()
+
+			for _, connID := range connIDs {
+				if !s.CheckConnectionHealth(connID) {
+					fmt.Printf("[HealthCheck] ⚠️ 连接不健康: %s\n", connID)
+					s.onConnectionDisconnected(connID)
+				}
+			}
+		}
+	}()
 }
 
 // DownloadFile 下载文件

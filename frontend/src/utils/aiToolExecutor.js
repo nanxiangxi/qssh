@@ -1,203 +1,119 @@
 /**
  * AI 工具执行器
- * 命令通过终端 shell session 执行
  *
- * 核心原则：
- * 1. AI 不负责关闭终端，终端生命周期完全由用户管理
- * 2. 单命令：复用已有 AI 终端，没有则创建
- * 3. 多终端：复用已有终端 + 只补创缺少的，不关闭任何终端
+ * AI 通过终端 shell 执行命令（像用户输入一样）。
+ * 复用结构化终端的提示符检测判断命令完成。
+ *
+ * 单命令：确保有 AI 终端（或使用用户指定终端），通过终端执行。
+ * 并列任务：为每个命令创建/分配独立 AI 终端，通过终端并行执行。
  */
 
 import { Events } from '@wailsio/runtime'
-import { AIService } from '../../bindings/changeme/ai/index.js'
 import * as SSHService from '../../bindings/changeme/ssh/sshservice.js'
 
 let initialized = false
-let creatingTerminal = false
 
-// sessionId → connId（每个终端绑定到创建它的连接）
-const terminalConnMap = new Map()
+// AI 终端管理
+const aiTerminals = new Map() // sessionId → { connId, ready }
+const pendingCreates = new Map() // requestId → { resolve, timeout, connId }
+let requestCounter = 0
 
-// AI 终端 sessionId 列表（按创建顺序）
-let aiTerminals = []
+// 用户在 AIChatPanel 选择的目标终端
+let userSelectedTerminal = null
 
-// 用户选择的目标终端
-let userTarget = null
+/** 由 AIChatPanel 调用，设置用户选择的终端 */
+export function setTargetTerminal(sessionId) {
+  userSelectedTerminal = sessionId || null
+  console.log(`[AIToolExecutor] 用户选择终端: ${userSelectedTerminal || '自动'}`)
+}
+
+// 提示符检测（与 useBlockManager 一致）
+const PROMPT_RE = /[\$#]\s*$/
+const ANSI_RE = /\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])/g
 
 export function initAIToolExecutor() {
   if (initialized) return
   initialized = true
-
   Events.On('ai:execute-tool', handleToolRequest)
-
-  // AI 终端就绪
-  Events.On('terminal:ai-session-ready', (e) => {
-    const d = e?.data
-    if (!d || !d.sessionId) return
-    if (!aiTerminals.includes(d.sessionId)) {
-      aiTerminals.push(d.sessionId)
-    }
-    if (d.connId) {
-      terminalConnMap.set(d.sessionId, d.connId)
-    }
-    creatingTerminal = false
-    console.log(`[AIToolExecutor] AI 终端就绪: ${d.sessionId} (共 ${aiTerminals.length} 个)`)
-  })
-
-  // 用户手动关闭终端时清理记录
-  Events.On('terminal:session-closed', (e) => {
-    const d = e?.data
-    if (!d) return
-    aiTerminals = aiTerminals.filter(id => id !== d.sessionId)
-    terminalConnMap.delete(d.sessionId)
-    if (userTarget === d.sessionId) userTarget = null
-    console.log(`[AIToolExecutor] 终端关闭: ${d.sessionId}, AI终端剩余: ${aiTerminals.length}`)
-  })
-
+  Events.On('ai:ai-terminal-ready', handleAITerminalReady)
+  Events.On('terminal:session-closed', handleTerminalClosed)
   console.log('[AIToolExecutor] 已初始化')
 }
 
 export function destroyAIToolExecutor() {
   Events.Off('ai:execute-tool', handleToolRequest)
-  Events.Off('terminal:ai-session-ready')
-  Events.Off('terminal:session-closed')
+  Events.Off('ai:ai-terminal-ready', handleAITerminalReady)
+  Events.Off('terminal:session-closed', handleTerminalClosed)
   initialized = false
+  aiTerminals.clear()
+  pendingCreates.clear()
 }
 
-export function setTargetTerminal(sessionId) {
-  userTarget = sessionId || null
-}
+// ==================== AI 终端事件 ====================
 
-export function getTerminalList() {
-  return aiTerminals.map(id => ({ sessionId: id, connId: terminalConnMap.get(id), isAI: true }))
-}
+function handleAITerminalReady(event) {
+  const data = event?.data
+  if (!data) return
+  console.log(`[AIToolExecutor] AI 终端就绪: ${data.sessionId}`)
+  aiTerminals.set(data.sessionId, { connId: data.connId, ready: true })
 
-// ==================== 终端管理 ====================
-
-/** 获取指定连接的所有可用 AI 终端 */
-async function getAvailableAITerminals(targetConnId) {
-  try {
-    const available = await SSHService.GetSessionIDs(targetConnId)
-    // 清理已失效的
-    aiTerminals = aiTerminals.filter(id => available.includes(id))
-    // 返回属于该连接的
-    return aiTerminals.filter(id => {
-      return available.includes(id) && terminalConnMap.get(id) === targetConnId
-    })
-  } catch (e) {
-    return aiTerminals.filter(id => terminalConnMap.get(id) === targetConnId)
-  }
-}
-
-/** 获取一个可用的 AI 终端（复用优先） */
-async function getOneAITerminal(targetConnId) {
-  const terminals = await getAvailableAITerminals(targetConnId)
-  return terminals.length > 0 ? terminals[terminals.length - 1] : null
-}
-
-/** 创建新的 AI 终端，返回 sessionId */
-async function createAITerminal(targetConnId) {
-  if (creatingTerminal) {
-    for (let i = 0; i < 50; i++) {
-      await new Promise(r => setTimeout(r, 100))
-      if (!creatingTerminal) {
-        const connTerminals = aiTerminals.filter(id => terminalConnMap.get(id) === targetConnId)
-        return connTerminals.length > 0 ? connTerminals[connTerminals.length - 1] : null
-      }
-    }
-    return null
-  }
-
-  creatingTerminal = true
-  const prevCount = aiTerminals.length
-  Events.Emit('ai:create-terminal', { connId: targetConnId })
-
-  for (let i = 0; i < 50; i++) {
-    await new Promise(r => setTimeout(r, 100))
-    if (aiTerminals.length > prevCount) {
-      const newTerminal = aiTerminals[aiTerminals.length - 1]
-      if (!terminalConnMap.has(newTerminal)) {
-        terminalConnMap.set(newTerminal, targetConnId)
-      }
-      return newTerminal
+  for (const [reqId, req] of pendingCreates) {
+    if (req.connId === data.connId) {
+      clearTimeout(req.timeout)
+      pendingCreates.delete(reqId)
+      req.resolve(data.sessionId)
+      break
     }
   }
-
-  creatingTerminal = false
-  return null
 }
 
-/** 验证 session 是否存在 */
-async function verifySession(connId, sid) {
-  try {
-    return await SSHService.IsShellSessionActive(connId, sid)
-  } catch (e) {
-    return false
+function handleTerminalClosed(event) {
+  const data = event?.data
+  if (!data || !data.isAI) return
+  aiTerminals.delete(data.sessionId)
+  console.log(`[AIToolExecutor] AI 终端已关闭: ${data.sessionId}`)
+}
+
+// ==================== AI 终端管理 ====================
+
+function getExistingAITerminals(connId) {
+  const result = []
+  for (const [sessionId, info] of aiTerminals.entries()) {
+    if (info.ready && info.connId === connId) result.push(sessionId)
   }
+  return result
 }
 
-/** 获取或创建一个 AI 终端（优先复用） */
-async function getOrCreateOneTerminal(connId) {
-  const existing = await getOneAITerminal(connId)
-  if (existing) return existing
-  return await createAITerminal(connId)
-}
-
-// ==================== 命令执行 ====================
-
-/** 向终端发送命令并等待结果（marker 方式） */
-function executeOnTerminal(connId, sid, command) {
-  return new Promise((resolve) => {
-    const marker = `__AI_${Date.now()}_${Math.random().toString(36).slice(2, 6)}__`
-    const markerRe = new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
-    let output = ''
-    let resolved = false
-    let timeoutId = null
-
-    const handler = (ev) => {
-      if (resolved) return
-      const d = ev?.data
-      if (!d || d.sessionID !== sid) return
-      const text = typeof d === 'string' ? d : (d.data || '')
-      if (typeof text !== 'string' || !text) return
-      output += text
-      const clean = output.replace(/\x1b\[[0-9;]*[a-zA-Z]/g, '').replace(/\x1b\].*?\x07/g, '')
-      if (markerRe.test(clean)) {
-        cleanup()
-        resolved = true
-        resolve(cleanOutput(output))
-      }
-    }
-
-    const cleanup = () => {
-      if (timeoutId) clearTimeout(timeoutId)
-      Events.Off('ssh:terminal-output', handler)
-    }
-
-    Events.On('ssh:terminal-output', handler)
-
-    SSHService.WriteToTerminalByID(connId, sid, command + '\n').then(() => {
-      setTimeout(() => {
-        if (!resolved) {
-          SSHService.WriteToTerminalByID(connId, sid, `echo "${marker}"\n`).catch(() => {})
-        }
-      }, 200)
-    }).catch(e => {
-      cleanup()
-      if (!resolved) {
-        resolved = true
-        resolve(`写入终端失败: ${e.message}`)
-      }
-    })
-
-    timeoutId = setTimeout(() => {
-      if (!resolved) {
-        cleanup()
-        resolved = true
-        resolve(cleanOutput(output) || '(超时)')
-      }
-    }, 30000)
+function requestCreateAITerminal(connId) {
+  return new Promise((resolve, reject) => {
+    const requestId = `req_${++requestCounter}`
+    const timeout = setTimeout(() => {
+      pendingCreates.delete(requestId)
+      reject(new Error('创建 AI 终端超时'))
+    }, 15000)
+    pendingCreates.set(requestId, { connId, resolve, timeout })
+    Events.Emit('ai:create-terminal', { connId, requestId })
+    console.log(`[AIToolExecutor] 请求创建 AI 终端`)
   })
+}
+
+/** 确保有 N 个可用的 AI 终端，返回 sessionId 列表 */
+async function ensureAITerminals(connId, count) {
+  const existing = getExistingAITerminals(connId)
+  const need = count - existing.length
+  if (need <= 0) return existing.slice(0, count)
+
+  console.log(`[AIToolExecutor] 需要创建 ${need} 个 AI 终端`)
+  const created = []
+  for (let i = 0; i < need; i++) {
+    try {
+      const sid = await requestCreateAITerminal(connId)
+      created.push(sid)
+    } catch (e) {
+      console.warn('[AIToolExecutor] 创建 AI 终端失败:', e.message)
+    }
+  }
+  return [...existing, ...created]
 }
 
 // ==================== 工具请求处理 ====================
@@ -207,7 +123,13 @@ async function handleToolRequest(event) {
   if (!data) return
 
   const { connId, callId, tool, command, args } = data
-  console.log(`[AIToolExecutor] 工具请求: ${tool} → ${command || ''} (connId: ${connId})`)
+  console.log(`[AIToolExecutor] 工具请求: ${tool} → ${command || ''}`)
+
+  // 解析参数
+  let parsedArgs = {}
+  try {
+    parsedArgs = typeof args === 'string' ? JSON.parse(args) : (args || {})
+  } catch (e) {}
 
   let result = ''
   try {
@@ -215,17 +137,10 @@ async function handleToolRequest(event) {
       case 'execute_command':
       case 'get_server_info':
       case 'get_system_status':
-        result = await execCommand(connId, tool, command)
-        break
-      case 'open_terminal':
-        const sid = await createAITerminal(connId)
-        result = sid ? 'AI 终端已创建' : '创建终端失败'
-        break
-      case 'close_terminal':
-        result = '终端关闭由用户操作，AI 不再自动关闭终端'
+        result = await handleSingleCommand(connId, tool, command, parsedArgs)
         break
       case 'multi_execute':
-        result = await handleMultiExecute(connId, args)
+        result = await handleMultiExecute(connId, parsedArgs)
         break
       default:
         result = `未知工具: ${tool}`
@@ -234,18 +149,36 @@ async function handleToolRequest(event) {
     result = `执行失败: ${e.message}`
   }
 
-  try {
-    await AIService.SubmitToolResult(callId, result)
-  } catch (e) {
-    console.error('[AIToolExecutor] 提交结果失败:', e)
-  }
+  Events.Emit('ai:submit-tool-result', { callId: String(callId), result: String(result) })
 }
 
-/**
- * 单命令执行
- * 逻辑：用户指定终端 → 直接用；AI自动 → 复用已有AI终端 → 没有则创建
- */
-async function execCommand(connId, tool, command) {
+// ==================== 单命令 ====================
+
+// 终端名称到 sessionId 的缓存
+let terminalNameMap = {} // "终端 1" → sessionId, "AI 终端-1" → sessionId
+
+// 监听终端列表变化，更新名称映射
+Events.On('dockview:terminals-changed', (e) => {
+  const terminals = e?.data?.terminals
+  if (!Array.isArray(terminals)) return
+  terminalNameMap = {}
+  terminals.forEach(t => {
+    if (t.title && t.sessionId) {
+      terminalNameMap[t.title] = t.sessionId
+    }
+  })
+})
+
+/** 将用户/AI 指定的终端名解析为 sessionId */
+function resolveTerminal(target) {
+  if (!target) return null
+  // 直接是 sessionId
+  if (target.startsWith('term_')) return target
+  // 按名称查找
+  return terminalNameMap[target] || null
+}
+
+async function handleSingleCommand(connId, tool, command, args) {
   let actualCommand = command
   if (tool === 'get_server_info') {
     actualCommand = 'echo "=== 主机名 ===" && hostname && echo "=== 系统信息 ===" && uname -a && echo "=== 运行时间 ===" && uptime && echo "=== 内核版本 ===" && cat /proc/version 2>/dev/null || uname -r'
@@ -253,43 +186,27 @@ async function execCommand(connId, tool, command) {
     actualCommand = 'echo "=== CPU ===" && top -bn1 | head -5 2>/dev/null && echo "" && echo "=== 内存 ===" && free -h 2>/dev/null && echo "" && echo "=== 磁盘 ===" && df -h 2>/dev/null && echo "" && echo "=== 负载 ===" && cat /proc/loadavg 2>/dev/null'
   }
 
-  let sid = null
-
-  // 1. 用户指定了终端 → 直接使用
-  if (userTarget) {
-    const valid = await verifySession(connId, userTarget)
-    if (valid) {
-      sid = userTarget
-    } else {
-      userTarget = null
+  // 优先级：AI 参数指定 > 用户在面板选择 > 自动 AI 终端
+  let sessionId = resolveTerminal(args.targetTerminal) || userSelectedTerminal
+  if (!sessionId) {
+    try {
+      const terminals = await ensureAITerminals(connId, 1)
+      sessionId = terminals[0]
+    } catch (e) {
+      console.warn('[AIToolExecutor] AI 终端创建失败:', e.message)
     }
   }
 
-  // 2. AI自动 → 复用已有AI终端
-  if (!sid) {
-    sid = await getOneAITerminal(connId)
-  }
+  console.log(`[AIToolExecutor] 使用终端: ${sessionId} (AI指定: ${args.targetTerminal || '无'}, 用户选择: ${userSelectedTerminal || '无'})`)
 
-  // 3. 没有可用终端 → 创建新的AI终端
-  if (!sid) {
-    sid = await createAITerminal(connId)
-    if (!sid) return '错误：无法创建终端（可能已达到SSH会话上限，请关闭一些终端后重试）'
-  }
-
-  console.log(`[AIToolExecutor] 执行: ${actualCommand} (session: ${sid})`)
-
-  return executeOnTerminal(connId, sid, actualCommand)
+  return await executeInTerminal(connId, sessionId, actualCommand)
 }
 
-/**
- * 多终端并行执行
- * 逻辑：复用已有终端 + 只补创缺少的 → 并行执行 → 不关闭终端
- * 终端生命周期完全由用户管理
- */
-async function handleMultiExecute(connId, argsJSON) {
+// ==================== 并列任务 ====================
+
+async function handleMultiExecute(connId, args) {
   let commands = []
   try {
-    const args = typeof argsJSON === 'string' ? JSON.parse(argsJSON) : argsJSON
     commands = args.commands || []
   } catch (e) {
     return '错误：无法解析命令列表'
@@ -303,50 +220,118 @@ async function handleMultiExecute(connId, argsJSON) {
     return '错误：最多支持 5 个并行命令'
   }
 
-  console.log(`[AIToolExecutor] 多终端并行执行: ${commands.length} 个命令`)
+  console.log(`[AIToolExecutor] 并列执行 ${commands.length} 个命令`)
 
-  // 1. 获取已有 AI 终端
-  const existingTerminals = await getAvailableAITerminals(connId)
-  console.log(`[AIToolExecutor] 已有 ${existingTerminals.length} 个 AI 终端`)
+  // 为每个命令分配一个 AI 终端
+  const terminals = await ensureAITerminals(connId, commands.length)
+  console.log(`[AIToolExecutor] 分配 ${terminals.length} 个终端`)
 
-  // 2. 计算需要补创的数量
-  const needCreate = Math.max(0, commands.length - existingTerminals.length)
-
-  // 3. 补创缺少的终端
-  const newTerminals = []
-  for (let i = 0; i < needCreate; i++) {
-    const sid = await createAITerminal(connId)
-    if (!sid) {
-      return `错误：无法创建第 ${i + 1} 个终端`
+  // 并行执行：每个命令在自己的终端中执行
+  const results = await Promise.all(commands.map(async (cmd, index) => {
+    const label = cmd.label || `命令 ${index + 1}`
+    const sessionId = terminals[index] || terminals[terminals.length - 1]
+    try {
+      const output = await executeInTerminal(connId, sessionId, cmd.command)
+      return `=== ${label} ===\n${output}`
+    } catch (e) {
+      return `=== ${label} ===\n执行失败: ${e.message}`
     }
-    newTerminals.push(sid)
-    await new Promise(r => setTimeout(r, 200))
-  }
-
-  // 4. 合并：已有终端 + 新终端
-  const allTerminals = [...existingTerminals, ...newTerminals]
-
-  // 5. 分配命令到终端
-  const assignments = commands.map((cmd, i) => ({
-    sessionId: allTerminals[i],
-    label: cmd.label || `命令${i + 1}`,
-    command: cmd.command
   }))
 
-  // 6. 并行执行
-  const results = await Promise.all(
-    assignments.map(t => executeOnTerminal(connId, t.sessionId, t.command))
-  )
-
-  // 7. 汇总结果（不关闭终端）
-  const summary = assignments.map((t, i) => {
-    return `=== ${t.label} ===\n${results[i] || '(无输出)'}`
-  }).join('\n\n')
-
-  console.log(`[AIToolExecutor] 多终端执行完成，终端保留供用户使用`)
-  return summary
+  return results.join('\n\n')
 }
 
-function cleanOutput(text) {
-  return text.replace(/\x1b\[[0-9;]*[a-zA-Z]/g, '').replace(/\x1b\].*?\x07/g, '').trim()
+// ==================== 在终端中执行命令 ====================
+
+function executeInTerminal(connId, sessionId, command) {
+  if (!sessionId) {
+    console.log(`[AIToolExecutor] 无终端，回退到 ExecuteCommand`)
+    return SSHService.ExecuteCommand(connId, command).then(res =>
+      res?.success ? (res.stdout || '(无输出)') : (res?.stderr || res?.stdout || '(执行失败)')
+    ).catch(e => `执行失败: ${e.message}`)
+  }
+
+  console.log(`[AIToolExecutor] 在终端 ${sessionId} 执行: ${command}`)
+
+  return new Promise((resolve) => {
+    let output = ''
+    let resolved = false
+    let timeoutId = null
+    let commandSent = false
+    let flushDone = false
+
+    const handler = (event) => {
+      if (resolved) return
+      const d = event?.data
+      if (!d || d.sessionID !== sessionId) return
+      const text = typeof d === 'string' ? d : (d.data || '')
+      if (typeof text !== 'string' || !text) return
+
+      // 命令发送前的输出是初始输出（登录横幅等），丢弃
+      if (!commandSent) return
+
+      output += text
+
+      // 复用结构化终端的提示符检测
+      const clean = output.replace(ANSI_RE, '')
+      const lines = clean.split('\n')
+      for (let i = Math.max(0, lines.length - 3); i < lines.length; i++) {
+        if (PROMPT_RE.test(lines[i].trim())) {
+          cleanup()
+          resolved = true
+          resolve(cleanOutput(output, command))
+          return
+        }
+      }
+    }
+
+    const cleanup = () => {
+      if (timeoutId) clearTimeout(timeoutId)
+      Events.Off('ssh:terminal-output', handler)
+    }
+
+    Events.On('ssh:terminal-output', handler)
+
+    // 等待初始输出（登录横幅、提示符）清空后再发送命令
+    setTimeout(() => {
+      if (resolved) return
+      commandSent = true
+      flushDone = true
+
+      // 通知终端创建块
+      Events.Emit('ai:terminal-exec-start', { connId, sessionID: sessionId, command })
+
+      SSHService.WriteToTerminalByID(connId, sessionId, command + '\n').catch(e => {
+        cleanup()
+        if (!resolved) {
+          resolved = true
+          resolve(`写入失败: ${e.message}`)
+        }
+      })
+    }, 500)
+
+    timeoutId = setTimeout(() => {
+      if (!resolved) {
+        cleanup()
+        resolved = true
+        resolve(cleanOutput(output, command) || '(超时，无输出)')
+      }
+    }, 30000)
+  })
+}
+
+/** 清理输出：去 ANSI、去命令回显、去提示符 */
+function cleanOutput(raw, command) {
+  let s = raw.replace(ANSI_RE, '')
+  // 去命令回显
+  if (command) {
+    s = s.replace(command + '\r\n', '')
+    s = s.replace(command + '\n', '')
+  }
+  // 去提示符行
+  const lines = s.split('\n')
+  while (lines.length > 0 && PROMPT_RE.test(lines[lines.length - 1].trim())) {
+    lines.pop()
+  }
+  return lines.join('\n').trim()
 }

@@ -20,6 +20,12 @@ import (
 //go:embed all:frontend/dist
 var assets embed.FS
 
+// 版本信息
+const (
+	AppVersion = "0.2.0"
+	AppName    = "启SSH"
+)
+
 func init() {
 	// 注册一个自定义事件，其关联的数据类型为 string。
 	// 这不是必需的，但绑定生成器会拾取注册的事件，
@@ -37,8 +43,8 @@ func main() {
 
 	// 创建应用实例
 	app := application.New(application.Options{
-		Name:        "启SSH",
-		Description: "一个中文的SSH工具，便携，简单，开源",
+		Name:        AppName,
+		Description: fmt.Sprintf("一个中文的SSH工具，便携，简单，开源 (v%s)", AppVersion),
 		Assets: application.AssetOptions{
 			Handler: application.AssetFileServerFS(assets),
 		},
@@ -53,6 +59,10 @@ func main() {
 	// 创建AI服务
 	aiService := ai.NewAIService()
 
+	// 创建配置服务
+	configService := ssh.NewConfigService()
+	configService.SetApp(app)
+
 	// 创建窗口管理器（传入分组关闭回调）
 	windowManager := ssh.NewWindowManager(app, func(groupID string) {
 		fmt.Printf("[Main] 🗑️ 窗口销毁，关闭分组: %s\n", groupID)
@@ -62,10 +72,13 @@ func main() {
 	})
 	sshService.SetWindowManager(windowManager)
 	sshService.SetApp(app)
-	
+
 	// 设置AI服务
 	aiService.SetApp(app)
 	ai.InitDeps(aiService, sshService, sshService)
+
+	// 启动健康检查
+	sshService.StartHealthCheck()
 
 	// 创建端口转发服务
 	portForwardService := ssh.NewPortForwardService(sshService)
@@ -80,24 +93,25 @@ func main() {
 	app.RegisterService(application.NewService(&ssh.GreetService{}))
 	app.RegisterService(application.NewService(sshService))
 	app.RegisterService(application.NewService(aiService))
+	app.RegisterService(application.NewService(configService))
 	app.RegisterService(application.NewService(portForwardService))
 	app.RegisterService(application.NewService(firewallService))
 	app.RegisterService(application.NewService(guardianService))
 
 	// 使用必要的选项创建一个新窗口。
-	// 'Title' 是窗口的标题。
-	// 'Mac' 选项在 macOS 上运行时定制窗口。
-	// 'BackgroundColour' 是窗口的背景颜色。
-	// 'URL' 是将加载到 webview 中的 URL。
-	app.Window.NewWithOptions(application.WebviewWindowOptions{
-		Title:            "启SSH - SSH工具",
-		Width:            1200, // 窗口宽度
-		Height:           800,  // 窗口高度
+	mainWindow := app.Window.NewWithOptions(application.WebviewWindowOptions{
+		Title:            fmt.Sprintf("启SSH - SSH工具 (v%s)", AppVersion),
 		URL:              "/",
-		DisableResize:    true, // 是否允许用户调整窗口大小
-		Frameless:        true, // 是否隐藏窗口边框
+		DisableResize:    false,
+		Frameless:        true,
 		BackgroundColour: application.NewRGB(255, 255, 255),
 	})
+
+	// 根据屏幕大小设置窗口尺寸
+	w, h := calculateWindowSize(app)
+	mainWindow.SetSize(w, h)
+	mainWindow.Center()
+	fmt.Printf("[Main] 主窗口大小: %dx%d\n", w, h)
 
 	// 创建一个 goroutine，每秒发射一个包含当前时间的事件。
 	// 前端可以监听此事件并相应地更新 UI。
@@ -164,9 +178,9 @@ func main() {
 					}
 					if n > 0 {
 						app.Event.Emit("ssh:terminal-output", map[string]interface{}{
-							"connID":   connID,
+							"connID":    connID,
 							"sessionID": sessionID,
-							"data":     string(buf[:n]),
+							"data":      string(buf[:n]),
 						})
 					}
 				}
@@ -181,6 +195,41 @@ func main() {
 	if appErr != nil {
 		log.Fatal(appErr)
 	}
+}
+
+// calculateWindowSize 根据屏幕大小计算合适的窗口尺寸
+func calculateWindowSize(app *application.App) (int, int) {
+	type size struct {
+		width  int
+		height int
+	}
+	sizes := []size{
+		{1920, 1080},
+		{1600, 1000},
+		{1400, 900},
+		{1200, 800},
+	}
+
+	primary := app.Screen.GetPrimary()
+	if primary == nil {
+		return 1400, 900
+	}
+
+	screenW := primary.Size.Width
+	screenH := primary.Size.Height
+
+	maxW := int(float64(screenW) * 0.85)
+	maxH := int(float64(screenH) * 0.85)
+
+	fmt.Printf("[Main] 屏幕大小: %dx%d, 最大窗口: %dx%d\n", screenW, screenH, maxW, maxH)
+
+	for _, s := range sizes {
+		if s.width <= maxW && s.height <= maxH {
+			return s.width, s.height
+		}
+	}
+
+	return 1200, 800
 }
 
 // readFromShell 从Shell读取数据（非阻塞）

@@ -7,6 +7,22 @@
 import { Call as $Call, CancellablePromise as $CancellablePromise, Create as $Create } from "@wailsio/runtime";
 
 /**
+ * GetAppName 获取应用名称
+ * @returns {$CancellablePromise<string>}
+ */
+export function GetAppName() {
+    return $Call.ByID(2258410938);
+}
+
+/**
+ * GetVersion 获取软件版本
+ * @returns {$CancellablePromise<string>}
+ */
+export function GetVersion() {
+    return $Call.ByID(2969803278);
+}
+
+/**
  * @param {string} name
  * @returns {$CancellablePromise<string>}
  */

@@ -20,6 +20,10 @@ func GetToolDefinitions() []map[string]interface{} {
 							"type":        "string",
 							"description": "要执行的完整 shell 命令",
 						},
+						"targetTerminal": map[string]interface{}{
+							"type":        "string",
+							"description": "指定在哪个终端执行，填终端名称（如\"终端 1\"、\"AI 终端-1\"）。留空则自动使用 AI 终端。",
+						},
 					},
 					"required": []string{"command"},
 				},
