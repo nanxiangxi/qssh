@@ -18,6 +18,32 @@
     </div>
 
     <div class="config-section">
+      <div class="section-title">界面</div>
+
+      <div class="config-list">
+        <!-- 主题 -->
+        <div class="config-item">
+          <div class="config-info">
+            <div class="config-label">主题</div>
+            <div class="config-desc">
+              切换应用程序的整体外观。浅色主题下终端也会同步切换。
+            </div>
+          </div>
+          <div class="config-control">
+            <select
+              :value="theme"
+              @change="handleThemeChange($event)"
+              class="select-input"
+            >
+              <option value="dark">深色</option>
+              <option value="light">浅色</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="config-section">
       <div class="section-title">终端</div>
 
       <div class="config-list">
@@ -132,6 +158,7 @@ const version = ref('0.2.0')
 const defaultType = ref('classic')
 const switchMode = ref('prompt')
 const fontSize = ref(14)
+const theme = ref('dark')
 const showImport = ref(false)
 const importJson = ref('')
 
@@ -149,6 +176,7 @@ onMounted(async () => {
   defaultType.value = configStore.getDefaultTerminalType()
   switchMode.value = configStore.get('terminal', 'switchMode') || 'prompt'
   fontSize.value = configStore.get('terminal', 'fontSize') || 14
+  theme.value = configStore.get('ui', 'theme') || 'dark'
 })
 
 async function handleChange(e) {
@@ -161,6 +189,12 @@ async function handleSwitchModeChange(e) {
   switchMode.value = e.target.value
   await configStore.set('terminal', 'switchMode', e.target.value)
   showToast('设置已保存')
+}
+
+async function handleThemeChange(e) {
+  theme.value = e.target.value
+  await configStore.setTheme(e.target.value)
+  showToast('主题已切换')
 }
 
 async function changeFontSize(delta) {
@@ -221,31 +255,31 @@ async function handleImport() {
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--surface-2);
+  border: 1px solid var(--border-default);
   border-radius: 6px;
-  color: #a9b1d6;
+  color: var(--text-secondary);
   font-size: 13px;
   cursor: pointer;
   transition: all 0.15s;
 }
 
 .back-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #c0caf5;
+  background: var(--surface-hover);
+  color: var(--text-primary);
 }
 
 .page-title {
   margin: 0 0 8px;
   font-size: 24px;
   font-weight: 600;
-  color: #c0caf5;
+  color: var(--text-primary);
 }
 
 .page-description {
   margin: 0;
   font-size: 14px;
-  color: #565f89;
+  color: var(--text-muted);
 }
 
 .version-info {
@@ -257,14 +291,14 @@ async function handleImport() {
 
 .version-label {
   font-size: 12px;
-  color: #565f89;
+  color: var(--text-muted);
 }
 
 .version-value {
   font-size: 12px;
-  color: #7aa2f7;
+  color: var(--primary-light);
   padding: 2px 8px;
-  background: rgba(122, 162, 247, 0.1);
+  background: var(--primary-bg);
   border-radius: 4px;
 }
 
@@ -275,10 +309,10 @@ async function handleImport() {
 .section-title {
   font-size: 14px;
   font-weight: 600;
-  color: #a9b1d6;
+  color: var(--text-secondary);
   margin-bottom: 12px;
   padding-bottom: 8px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .config-list {
@@ -292,14 +326,14 @@ async function handleImport() {
   align-items: center;
   justify-content: space-between;
   padding: 14px 16px;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   transition: border-color 0.15s;
 }
 
 .config-item:hover {
-  border-color: rgba(255, 255, 255, 0.1);
+  border-color: var(--border-default);
 }
 
 .config-info {
@@ -310,13 +344,13 @@ async function handleImport() {
 
 .config-label {
   font-size: 14px;
-  color: #c0caf5;
+  color: var(--text-primary);
   margin-bottom: 4px;
 }
 
 .config-desc {
   font-size: 12px;
-  color: #565f89;
+  color: var(--text-muted);
   line-height: 1.5;
 }
 
@@ -326,26 +360,26 @@ async function handleImport() {
 
 .select-input {
   padding: 6px 32px 6px 12px;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-input);
+  border: 1px solid var(--border-default);
   border-radius: 6px;
-  color: #c0caf5;
+  color: var(--text-primary);
   font-size: 13px;
   cursor: pointer;
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23565f89' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%2394a3b8' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 10px center;
 }
 
 .select-input:focus {
   outline: none;
-  border-color: #7aa2f7;
+  border-color: var(--accent-primary);
 }
 
 .select-input option {
-  background: #1a1b26;
-  color: #c0caf5;
+  background: var(--bg-input);
+  color: var(--text-primary);
 }
 
 .section-hint {
@@ -354,10 +388,10 @@ async function handleImport() {
   gap: 8px;
   margin-top: 16px;
   padding: 10px 14px;
-  background: rgba(122, 162, 247, 0.05);
-  border: 1px solid rgba(122, 162, 247, 0.1);
+  background: var(--primary-bg);
+  border: 1px solid var(--border-accent);
   border-radius: 8px;
-  color: #7aa2f7;
+  color: var(--primary-light);
   font-size: 12px;
 }
 
@@ -365,7 +399,7 @@ async function handleImport() {
   display: flex;
   gap: 8px;
   padding-top: 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: 1px solid var(--border-subtle);
 }
 
 .action-btn {
@@ -373,27 +407,28 @@ async function handleImport() {
   align-items: center;
   gap: 6px;
   padding: 8px 16px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--surface-2);
+  border: 1px solid var(--border-default);
   border-radius: 6px;
-  color: #a9b1d6;
+  color: var(--text-secondary);
   font-size: 13px;
   cursor: pointer;
   transition: all 0.15s;
 }
 
 .action-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--surface-hover);
+  color: var(--text-primary);
 }
 
 .import-textarea {
   width: 100%;
   min-height: 200px;
   padding: 12px;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-input);
+  border: 1px solid var(--border-default);
   border-radius: 8px;
-  color: #c0caf5;
+  color: var(--text-primary);
   font-family: 'Cascadia Code', monospace;
   font-size: 12px;
   resize: vertical;
@@ -401,14 +436,14 @@ async function handleImport() {
 
 .import-textarea:focus {
   outline: none;
-  border-color: #7aa2f7;
+  border-color: var(--accent-primary);
 }
 .toggle{position:relative;display:inline-block;width:40px;height:22px;cursor:pointer}
 .toggle input{opacity:0;width:0;height:0}
-.toggle-slider{position:absolute;inset:0;background:#333;border-radius:11px;transition:.2s}
-.toggle-slider::before{content:'';position:absolute;height:16px;width:16px;left:3px;bottom:3px;background:#aaa;border-radius:50%;transition:.2s}
-.toggle input:checked+.toggle-slider{background:#4caf50}
-.toggle input:checked+.toggle-slider::before{transform:translateX(18px);background:#fff}
+.toggle-slider{position:absolute;inset:0;background:var(--border-default);border-radius:11px;transition:.2s}
+.toggle-slider::before{content:'';position:absolute;height:16px;width:16px;left:3px;bottom:3px;background:var(--text-muted);border-radius:50%;transition:.2s}
+.toggle input:checked+.toggle-slider{background:var(--accent-success)}
+.toggle input:checked+.toggle-slider::before{transform:translateX(18px);background:var(--text-on-accent)}
 
 .number-control {
   display: flex;
@@ -422,18 +457,18 @@ async function handleImport() {
   justify-content: center;
   width: 28px;
   height: 28px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--surface-2);
+  border: 1px solid var(--border-default);
   border-radius: 4px;
-  color: #a9b1d6;
+  color: var(--text-secondary);
   font-size: 16px;
   cursor: pointer;
   transition: all 0.15s;
 }
 
 .number-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.1);
-  color: #c0caf5;
+  background: var(--surface-hover);
+  color: var(--text-primary);
 }
 
 .number-btn:disabled {
@@ -445,7 +480,7 @@ async function handleImport() {
   min-width: 24px;
   text-align: center;
   font-size: 14px;
-  color: #c0caf5;
+  color: var(--text-primary);
   font-variant-numeric: tabular-nums;
 }
 </style>

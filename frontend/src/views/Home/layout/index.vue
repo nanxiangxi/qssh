@@ -27,7 +27,7 @@ import SidebarPanel from './SidebarPanel.vue'
   flex-direction: column;
   height: 100vh;
   overflow: hidden;
-  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1f1f1f 100%);
+  background: var(--bg-app);
 }
 
 /* 主体区域 */
@@ -51,9 +51,9 @@ import SidebarPanel from './SidebarPanel.vue'
 .content-area > * {
   width: 100%;
   height: 100%;
-  background: rgba(45, 45, 45, 0.9);
+  background: var(--bg-panel);
   backdrop-filter: blur(20px);
-  border: 0.0625rem solid rgba(255, 255, 255, 0.1);
+  border: 0.0625rem solid var(--border-default);
   border-top-left-radius: 1rem;
   overflow-y: auto;
   overflow-x: hidden;
@@ -71,11 +71,11 @@ import SidebarPanel from './SidebarPanel.vue'
 }
 
 .content-area > *::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--scrollbar-thumb);
   border-radius: 0.1875rem;
 }
 
 .content-area > *::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--scrollbar-thumb-hover);
 }
 </style>

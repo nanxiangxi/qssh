@@ -128,15 +128,15 @@ const props = defineProps({
   },
   overlayColor: {
     type: String,
-    default: 'rgba(0, 0, 0, 0.7)'
+    default: 'var(--bg-overlay)'
   },
   backgroundColor: {
     type: String,
-    default: 'rgba(45, 45, 45, 0.98)'
+    default: 'var(--bg-panel)'
   },
   borderColor: {
     type: String,
-    default: 'rgba(255, 255, 255, 0.15)'
+    default: 'var(--border-strong)'
   },
   
   // ========== 显示控制 ==========
@@ -275,7 +275,9 @@ const bodyPaddingValue = computed(() => {
 })
 
 const overlayStyle = computed(() => ({
-  backgroundColor: props.overlayColor.replace(/\d+\.\d+\)$/, `${props.overlayOpacity})`),
+  backgroundColor: props.overlayColor.startsWith('var(')
+    ? props.overlayColor
+    : props.overlayColor.replace(/\d+\.\d+\)$/, `${props.overlayOpacity})`),
   backdropFilter: `blur(${props.overlayBlur}px)`
 }))
 
@@ -346,7 +348,7 @@ watch(() => props.visible, (newVal) => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-lg);
   border: 1px solid v-bind('props.borderColor');
   animation: modalSlideIn v-bind('props.animationDuration + "ms"') ease-out;
 }
@@ -368,13 +370,13 @@ watch(() => props.visible, (newVal) => {
   align-items: center;
   justify-content: space-between;
   padding: 1rem 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--border-default);
   flex-shrink: 0;
 }
 
 .modal-title {
   margin: 0;
-  color: #e2e8f0;
+  color: var(--text-primary);
   font-size: 1rem;
   font-weight: 600;
 }
@@ -388,21 +390,21 @@ watch(() => props.visible, (newVal) => {
   background: transparent;
   border: none;
   border-radius: 6px;
-  color: #a0aec0;
+  color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.2s;
   flex-shrink: 0;
 }
 
 .modal-close-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #e2e8f0;
+  background: var(--surface-hover);
+  color: var(--text-primary);
 }
 
 /* ========== 内容区 ========== */
 .modal-body {
   flex: 1;
-  color: #cbd5e0;
+  color: var(--text-secondary);
   font-size: 0.9375rem;
   line-height: 1.6;
   overflow-y: auto;
@@ -412,7 +414,7 @@ watch(() => props.visible, (newVal) => {
 /* ========== 底部按钮区 ========== */
 .modal-footer {
   padding: 1rem 1.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--border-default);
   flex-shrink: 0;
 }
 
@@ -450,21 +452,21 @@ watch(() => props.visible, (newVal) => {
 }
 
 .btn-cancel {
-  background: rgba(255, 255, 255, 0.1);
-  color: #e2e8f0;
+  background: var(--surface-2);
+  color: var(--text-primary);
 }
 
 .btn-cancel:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--surface-hover);
 }
 
 .btn-confirm {
-  background: #4299e1;
-  color: white;
+  background: var(--accent-primary);
+  color: var(--text-on-accent);
 }
 
 .btn-confirm:hover {
-  background: #3182ce;
+  background: var(--primary-light);
 }
 
 .btn-confirm:disabled {
@@ -473,11 +475,11 @@ watch(() => props.visible, (newVal) => {
 }
 
 .btn-danger {
-  background: #e53e3e;
+  background: var(--accent-danger);
 }
 
 .btn-danger:hover {
-  background: #c53030;
+  background: var(--danger-light);
 }
 
 /* ========== 动画过渡 ========== */

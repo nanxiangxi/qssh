@@ -1,0 +1,240 @@
+:root,
+[data-theme="dark"] {
+  /* ===== Backgrounds ===== */
+  --bg-app: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1f1f1f 100%);
+  --bg-panel: rgba(45, 45, 45, 0.95);
+  --bg-panel-solid: #2d2d2d;
+  --bg-sidebar: rgba(24, 24, 24, 0.98);
+  --bg-sidebar-solid: #181818;
+  --bg-toolbar: #1e1e1e;
+  --bg-toolbar-hover: #2a2a2a;
+  --bg-input: #1e1e1e;
+  --bg-input-focus: #252525;
+  --bg-hover: rgba(255, 255, 255, 0.05);
+  --bg-active: rgba(255, 255, 255, 0.08);
+  --bg-selected: rgba(66, 153, 225, 0.15);
+  --bg-overlay: rgba(0, 0, 0, 0.7);
+  --bg-tooltip: rgba(30, 30, 30, 0.95);
+  --bg-terminal: #121212;
+
+  /* ===== Surfaces / Elevated cards ===== */
+  --surface-1: rgba(255, 255, 255, 0.03);
+  --surface-2: rgba(255, 255, 255, 0.05);
+  --surface-3: rgba(255, 255, 255, 0.08);
+  --surface-hover: rgba(255, 255, 255, 0.1);
+
+  /* ===== Text ===== */
+  --text-primary: #e2e8f0;
+  --text-secondary: #a0aec0;
+  --text-muted: #718096;
+  --text-disabled: #4a5568;
+  --text-on-accent: #ffffff;
+
+  /* ===== Accents ===== */
+  --accent-primary: #4299e1;
+  --primary-light: #63b3ed;
+  --primary-bg: rgba(66, 153, 225, 0.2);
+  --primary-bg-hover: rgba(66, 153, 225, 0.35);
+  --accent-success: #48bb78;
+  --success-light: #68d391;
+  --success-bg: rgba(72, 187, 120, 0.2);
+  --accent-warning: #fbd38d;
+  --warning-light: #f6ad55;
+  --warning-bg: rgba(251, 211, 141, 0.2);
+  --accent-danger: #fc8181;
+  --danger-light: #f56565;
+  --danger-bg: rgba(245, 101, 101, 0.2);
+  --accent-info: #90cdf4;
+  --accent-purple: #9f7aea;
+
+  /* ===== Borders ===== */
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-default: rgba(255, 255, 255, 0.1);
+  --border-strong: rgba(255, 255, 255, 0.15);
+  --border-accent: rgba(66, 153, 225, 0.4);
+  --border-danger: rgba(245, 101, 101, 0.4);
+
+  /* ===== Shadows ===== */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.5);
+
+  /* ===== Scrollbar ===== */
+  --scrollbar-track: transparent;
+  --scrollbar-thumb: rgba(255, 255, 255, 0.2);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.3);
+  --scrollbar-width: 6px;
+}
+
+[data-theme="light"] {
+  /* ===== Backgrounds ===== */
+  --bg-app: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 50%, #f8fafc 100%);
+  --bg-panel: #ffffff;
+  --bg-panel-solid: #ffffff;
+  --bg-sidebar: #f8fafc;
+  --bg-sidebar-solid: #f8fafc;
+  --bg-toolbar: #f1f5f9;
+  --bg-toolbar-hover: #e2e8f0;
+  --bg-input: #ffffff;
+  --bg-input-focus: #f8fafc;
+  --bg-hover: rgba(0, 0, 0, 0.04);
+  --bg-active: rgba(0, 0, 0, 0.06);
+  --bg-selected: rgba(59, 130, 246, 0.12);
+  --bg-overlay: rgba(0, 0, 0, 0.4);
+  --bg-tooltip: rgba(255, 255, 255, 0.98);
+  --bg-terminal: #fafafa;
+
+  /* ===== Surfaces / Elevated cards ===== */
+  --surface-1: rgba(0, 0, 0, 0.02);
+  --surface-2: rgba(0, 0, 0, 0.04);
+  --surface-3: rgba(0, 0, 0, 0.06);
+  --surface-hover: rgba(0, 0, 0, 0.08);
+
+  /* ===== Text ===== */
+  --text-primary: #1e293b;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --text-disabled: #cbd5e1;
+  --text-on-accent: #ffffff;
+
+  /* ===== Accents ===== */
+  --accent-primary: #3b82f6;
+  --primary-light: #60a5fa;
+  --primary-bg: rgba(59, 130, 246, 0.12);
+  --primary-bg-hover: rgba(59, 130, 246, 0.2);
+  --accent-success: #22c55e;
+  --success-light: #4ade80;
+  --success-bg: rgba(34, 197, 94, 0.12);
+  --accent-warning: #f59e0b;
+  --warning-light: #fbbf24;
+  --warning-bg: rgba(245, 158, 11, 0.12);
+  --accent-danger: #ef4444;
+  --danger-light: #f87171;
+  --danger-bg: rgba(239, 68, 68, 0.12);
+  --accent-info: #38bdf8;
+  --accent-purple: #8b5cf6;
+
+  /* ===== Borders ===== */
+  --border-subtle: rgba(0, 0, 0, 0.06);
+  --border-default: rgba(0, 0, 0, 0.1);
+  --border-strong: rgba(0, 0, 0, 0.15);
+  --border-accent: rgba(59, 130, 246, 0.4);
+  --border-danger: rgba(239, 68, 68, 0.4);
+
+  /* ===== Shadows ===== */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.15);
+
+  /* ===== Scrollbar ===== */
+  --scrollbar-track: transparent;
+  --scrollbar-thumb: rgba(0, 0, 0, 0.15);
+  --scrollbar-thumb-hover: rgba(0, 0, 0, 0.25);
+  --scrollbar-width: 6px;
+}
+
+/* ===== Base styles ===== */
+html,
+body {
+  color: var(--text-primary);
+  background: transparent;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+*::-webkit-scrollbar {
+  width: var(--scrollbar-width);
+  height: var(--scrollbar-width);
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 3px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* ===== Utility classes ===== */
+.btn-primary {
+  background: var(--primary-bg);
+  border: 1px solid var(--border-accent);
+  color: var(--primary-light);
+}
+
+.btn-primary:hover {
+  background: var(--primary-bg-hover);
+}
+
+.btn-secondary {
+  background: var(--surface-2);
+  border: 1px solid var(--border-default);
+  color: var(--text-secondary);
+}
+
+.btn-secondary:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+}
+
+.btn-danger {
+  background: var(--danger-bg);
+  border: 1px solid var(--border-danger);
+  color: var(--accent-danger);
+}
+
+.input-base {
+  background: var(--bg-input);
+  border: 1px solid var(--border-default);
+  color: var(--text-primary);
+}
+
+.input-base:focus {
+  border-color: var(--border-accent);
+  outline: none;
+  background: var(--bg-input-focus);
+}
+
+.card-base {
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+}
+
+.panel-base {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-default);
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid var(--border-default);
+}
+
+.text-primary { color: var(--text-primary); }
+.text-secondary { color: var(--text-secondary); }
+.text-muted { color: var(--text-muted); }
+.text-disabled { color: var(--text-disabled); }
+
+/* ===== Transitions for smooth theme switching ===== */
+* {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Prevent transition on page load */
+.no-theme-transition,
+.no-theme-transition * {
+  transition: none !important;
+}

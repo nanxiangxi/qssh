@@ -176,12 +176,12 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(30, 30, 30, 0.95);
+  background: var(--bg-panel);
 }
 
 .terminal-placeholder {
   text-align: center;
-  color: #a0aec0;
+  color: var(--text-secondary);
 }
 
 .placeholder-content {
@@ -193,10 +193,11 @@ onUnmounted(() => {
 
 .icon {
   opacity: 0.3;
+  color: var(--text-secondary);
 }
 
 h3 {
-  color: #e2e8f0;
+  color: var(--text-primary);
   font-size: 1.25rem;
   font-weight: 600;
   margin: 0;
@@ -205,14 +206,15 @@ h3 {
 p {
   font-size: 0.875rem;
   margin: 0;
+  color: var(--text-secondary);
 }
 
 /* 加载动画 */
 .loading-spinner {
   width: 3rem;
   height: 3rem;
-  border: 0.25rem solid rgba(66, 153, 225, 0.2);
-  border-top-color: #4299e1;
+  border: 0.25rem solid color-mix(in srgb, var(--accent-primary) 20%, transparent);
+  border-top-color: var(--accent-primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -233,21 +235,21 @@ p {
 
 .terminal-header {
   padding: 1rem 1.5rem;
-  background: rgba(40, 40, 40, 0.9);
-  border-bottom: 0.0625rem solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-toolbar);
+  border-bottom: 0.0625rem solid var(--border-default);
   display: flex;
   align-items: center;
   gap: 1rem;
 }
 
 .connection-badge {
-  color: #48bb78;
+  color: var(--accent-success);
   font-size: 0.875rem;
   font-weight: 500;
 }
 
 .connection-name {
-  color: #e2e8f0;
+  color: var(--text-primary);
   font-size: 0.9375rem;
   font-weight: 600;
 }
@@ -260,7 +262,7 @@ p {
   align-items: center;
   justify-content: center;
   gap: 1rem;
-  color: #a0aec0;
+  color: var(--text-secondary);
 }
 
 .terminal-body p {
@@ -269,7 +271,7 @@ p {
 
 .hint {
   font-size: 0.875rem !important;
-  color: #718096;
+  color: var(--text-muted);
   font-style: italic;
 }
 </style>

@@ -1,5 +1,6 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
+import './styles/theme.css'
 import App from './App.vue'
 import router from './router'
 
@@ -12,6 +13,6 @@ app.use(router)
 // 初始化配置
 import { useConfigStore } from './stores/config'
 const configStore = useConfigStore()
-configStore.init()
+await configStore.init()
 
 app.mount('#app')

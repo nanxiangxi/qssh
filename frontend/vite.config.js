@@ -16,6 +16,7 @@ export default defineConfig({
     exclude: ['monaco-editor'] // 不预构建 monaco-editor
   },
   build: {
+    target: 'es2022',
     rollupOptions: {
       output: {
         manualChunks: {

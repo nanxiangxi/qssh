@@ -189,6 +189,7 @@ import InteractivePrompt from './components/InteractivePrompt.vue'
 import CommandHistoryDialog from './components/CommandHistoryDialog.vue'
 import ShortcutsDialog from './components/ShortcutsDialog.vue'
 import { useRecording } from './composables/useRecording'
+import { getThemeForUI } from './utils/terminalThemes.js'
 
 const props = defineProps({ params: { type: Object, default: () => ({}) } })
 const connId = inject('connId')
@@ -246,6 +247,11 @@ const view = ref(cfg.getDefaultTerminalType() === 'classic' ? 'classic' : 'block
 const statusLabel = computed(() => ({ idle:'空闲', starting:'连接中', active:'已连接', disconnected:'已断开', error:'错误' }[status.value]||''))
 const stats = computed(() => bm.getStats())
 
+// 同时监听 Pinia 配置和 DOM data-theme，确保跨窗口/跨方式都能同步
+const uiTheme = ref(cfg.config?.ui?.theme || document.documentElement.dataset.theme || 'dark')
+const terminalTheme = computed(() => getThemeForUI('default', uiTheme.value || 'dark'))
+let themeObserver = null
+
 // xterm 实例（始终初始化，始终接收输出）
 let xterm = null
 let fitAddon = null
@@ -254,6 +260,12 @@ let xtermBuf = ''
 let yankBuf = ''
 let isUserScrolling = false
 let scrollTimer = null
+
+function applyTerminalTheme() {
+  if (!xterm) return
+  xterm.options.theme = { ...terminalTheme.value }
+  xterm.refresh(0, xterm.rows - 1)
+}
 
 // 滚动到底部
 function scrollToBottom() {
@@ -280,6 +292,16 @@ watch(() => bm.blocks.value.length, (newLen) => {
 watch(() => bm.rawOutput.value, () => {
   scrollToBottom()
 })
+
+// UI 主题变化时同步更新终端主题
+watch(
+  () => terminalTheme.value,
+  () => {
+    console.log('[Terminal] 终端主题变更:', uiTheme.value, terminalTheme.value.background)
+    applyTerminalTheme()
+  },
+  { deep: false }
+)
 
 // 监听滚动位置
 function onBlocksScroll() {
@@ -339,6 +361,17 @@ function onReconnected(e) {
 
 // ========== 初始化 ==========
 onMounted(async () => {
+  // 监听 html 的 data-theme 属性变化，作为 Pinia 之外的兜底同步手段
+  themeObserver = new MutationObserver((mutations) => {
+    for (const m of mutations) {
+      if (m.attributeName === 'data-theme') {
+        uiTheme.value = document.documentElement.dataset.theme || 'dark'
+        console.log('[Terminal] data-theme 变化:', uiTheme.value)
+      }
+    }
+  })
+  themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
+
   sm.createSession(sessionId, connId, { type: isAI ? SESSION_TYPE.AI : SESSION_TYPE.NORMAL })
 
   // 始终初始化 xterm
@@ -391,6 +424,7 @@ onUnmounted(() => {
   // handler 内部检查 disposed，不会处理已关闭终端的事件
   SSHService.CloseShellSessionByID(connId, sessionId).catch(() => {})
   resizeObs?.disconnect()
+  themeObserver?.disconnect()
   xterm?.dispose()
   sm.removeSession(sessionId)
   Events.Emit('terminal:session-closed', { connId, sessionId, isAI })
@@ -408,17 +442,7 @@ function initXterm() {
   xterm = new Terminal({
     fontSize,
     fontFamily: '"Cascadia Code","Fira Code",Consolas,monospace',
-    theme: {
-      background: '#121212',
-      foreground: '#d4d4d4',
-      cursor: '#d4d4d4',
-      selectionBackground: '#333',
-      // 搜索高亮颜色
-      findMatch: '#ff9800',
-      findMatchSelected: '#ff9800',
-      findMatchHighlight: 'rgba(255, 152, 0, 0.4)',
-      findMatchHighlightSelected: 'rgba(255, 152, 0, 0.6)'
-    },
+    theme: { ...terminalTheme.value },
     cursorBlink: true,
     scrollback: 10000
   })
@@ -1014,7 +1038,7 @@ function clearAll() {
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: #121212;
+  background: var(--bg-terminal);
 }
 
 .tb {
@@ -1023,8 +1047,8 @@ function clearAll() {
   align-items: center;
   justify-content: space-between;
   padding: 0 8px;
-  background: #1e1e1e;
-  border-bottom: 1px solid #2a2a2a;
+  background: var(--bg-toolbar);
+  border-bottom: 1px solid var(--border-default);
   flex-shrink: 0;
 }
 
@@ -1035,24 +1059,24 @@ function clearAll() {
 }
 
 .led { width: 6px; height: 6px; border-radius: 50%; }
-.led.active { background: #4caf50; box-shadow: 0 0 4px rgba(76,175,80,.5); }
-.led.disconnected, .led.error { background: #f44336; }
-.led.starting { background: #ff9800; animation: pulse 1s infinite; }
-.st { font-size: 11px; color: #aaa; }
-.st.active { color: #4caf50; }
-.s2 { font-size: 10px; color: #888; }
+.led.active { background: var(--accent-success); box-shadow: 0 0 4px color-mix(in srgb, var(--accent-success) 50%, transparent); }
+.led.disconnected, .led.error { background: var(--accent-danger); }
+.led.starting { background: var(--accent-warning); animation: pulse 1s infinite; }
+.st { font-size: 11px; color: var(--text-secondary); }
+.st.active { color: var(--accent-success); }
+.s2 { font-size: 10px; color: var(--text-muted); }
 
 .tbb {
   display: flex; align-items: center; justify-content: center;
   width: 24px; height: 24px; border: none; border-radius: 4px;
-  color: #888; cursor: pointer; font-size: 12px; background: transparent;
+  color: var(--text-muted); cursor: pointer; font-size: 12px; background: transparent;
 }
-.tbb:hover { background: #333; color: #ddd; }
-.tbb.recording { color: #f44336; animation: pulse 1s infinite; }
+.tbb:hover { background: var(--surface-hover); color: var(--text-secondary); }
+.tbb.recording { color: var(--accent-danger); animation: pulse 1s infinite; }
 .tbb.vw { font-size: 14px; width: 26px; }
-.tbb.vw.a { background: #333; color: #4caf50; }
+.tbb.vw.a { background: var(--surface-hover); color: var(--accent-success); }
 
-.sep { width: 1px; height: 14px; background: #333; margin: 0 4px; }
+.sep { width: 1px; height: 14px; background: var(--border-default); margin: 0 4px; }
 
 /* 结构化视图 */
 .view-block {
@@ -1077,7 +1101,7 @@ function clearAll() {
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: #555;
+  color: var(--text-muted);
   font-size: 13px;
 }
 
@@ -1086,8 +1110,8 @@ function clearAll() {
   align-items: center;
   gap: 12px;
   padding: 5px 10px;
-  background: #1a1a1a;
-  border-top: 1px solid #2a2a2a;
+  background: var(--bg-toolbar);
+  border-top: 1px solid var(--border-default);
   flex-shrink: 0;
   overflow-x: auto;
 }
@@ -1097,7 +1121,7 @@ function clearAll() {
   align-items: center;
   gap: 4px;
   font-size: 10px;
-  color: #666;
+  color: var(--text-muted);
   white-space: nowrap;
 }
 
@@ -1107,18 +1131,18 @@ function clearAll() {
   min-width: 18px;
   height: 16px;
   padding: 0 4px;
-  background: #2a2a2a;
-  border: 1px solid #444;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
   border-radius: 3px;
   font-size: 9px;
-  color: #aaa;
+  color: var(--text-secondary);
   font-family: inherit;
 }
 
 .shortcut-more {
   background: transparent;
   border: none;
-  color: #7aa2f7;
+  color: var(--primary-light);
   font-size: 10px;
   cursor: pointer;
   padding: 2px 6px;
@@ -1126,24 +1150,24 @@ function clearAll() {
 }
 
 .shortcut.app {
-  color: #4caf50;
+  color: var(--accent-success);
 }
 
 .shortcut.app kbd {
-  background: rgba(76, 175, 80, 0.15);
-  border-color: rgba(76, 175, 80, 0.3);
-  color: #4caf50;
+  background: var(--success-bg);
+  border-color: var(--success-bg);
+  color: var(--accent-success);
 }
 
 .sep {
   width: 1px;
   height: 12px;
-  background: #333;
+  background: var(--border-default);
   margin: 0 4px;
 }
 
 .shortcut-more:hover {
-  background: rgba(122, 162, 247, 0.1);
+  background: var(--primary-bg);
 }
 
 /* 经典视图 */
@@ -1160,6 +1184,7 @@ function clearAll() {
 
 .view-classic :deep(.xterm-viewport) {
   overflow-y: auto !important;
+  background-color: transparent !important;
 }
 
 .view-classic :deep(.xterm-screen) {
@@ -1171,8 +1196,8 @@ function clearAll() {
   display: flex;
   align-items: center;
   padding: 6px 10px;
-  background: #1e1e1e;
-  border-top: 1px solid #2a2a2a;
+  background: var(--bg-toolbar);
+  border-top: 1px solid var(--border-default);
   gap: 8px;
   flex-shrink: 0;
 }
@@ -1182,7 +1207,7 @@ function clearAll() {
 .ps {
   font-family: monospace;
   font-size: 13px;
-  color: #4caf50;
+  color: var(--accent-success);
 }
 
 .ci {
@@ -1190,20 +1215,20 @@ function clearAll() {
   background: transparent;
   border: none;
   outline: none;
-  color: #d4d4d4;
+  color: var(--text-primary);
   font-family: 'Cascadia Code', monospace;
   font-size: 13px;
   width: 100%;
 }
 
-.ci::placeholder { color: #555; }
+.ci::placeholder { color: var(--text-muted); }
 .ci:disabled { opacity: .4; }
 
 /* 滚动条 */
 .bp::-webkit-scrollbar { width: 6px; }
 .bp::-webkit-scrollbar-track { background: transparent; }
-.bp::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
-.bp::-webkit-scrollbar-thumb:hover { background: #555; }
+.bp::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 3px; }
+.bp::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-thumb-hover); }
 
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
 
@@ -1211,12 +1236,12 @@ function clearAll() {
 .view-classic :deep(.xterm-decoration-top),
 .view-classic :deep(.xterm-decoration-bottom),
 .view-classic :deep(.xterm-find-result-decoration) {
-  background: rgba(255, 152, 0, 0.5) !important;
+  background: color-mix(in srgb, var(--accent-warning) 50%, transparent) !important;
 }
 
 .view-classic :deep(.xterm-decoration-over),
 .view-classic :deep(.xterm-find-result-selected-decoration) {
-  background: rgba(255, 152, 0, 0.8) !important;
+  background: color-mix(in srgb, var(--accent-warning) 80%, transparent) !important;
 }
 
 /* 搜索栏 */
@@ -1232,28 +1257,28 @@ function clearAll() {
   align-items: center;
   gap: 6px;
   padding: 6px 10px;
-  background: #1e1e1e;
-  border: 1px solid #444;
+  background: var(--bg-toolbar);
+  border: 1px solid var(--border-strong);
   border-radius: 6px;
-  box-shadow: 0 4px 12px rgba(0,0,0,.4);
+  box-shadow: var(--shadow-md);
 }
 
-.search-box svg { color: #666; flex-shrink: 0; }
+.search-box svg { color: var(--text-muted); flex-shrink: 0; }
 
 .search-input {
   width: 200px;
   background: transparent;
   border: none;
   outline: none;
-  color: #d4d4d4;
+  color: var(--text-primary);
   font-size: 12px;
 }
 
-.search-input::placeholder { color: #555; }
+.search-input::placeholder { color: var(--text-muted); }
 
 .search-count {
   font-size: 10px;
-  color: #888;
+  color: var(--text-muted);
   white-space: nowrap;
 }
 
@@ -1266,17 +1291,17 @@ function clearAll() {
   background: transparent;
   border: none;
   border-radius: 3px;
-  color: #888;
+  color: var(--text-muted);
   cursor: pointer;
 }
 
-.search-btn:hover { background: #333; color: #aaa; }
-.search-btn.close:hover { background: rgba(244,67,54,.15); color: #f44336; }
+.search-btn:hover { background: var(--surface-hover); color: var(--text-secondary); }
+.search-btn.close:hover { background: var(--danger-bg); color: var(--accent-danger); }
 
 /* 块高亮（搜索结果） */
 :deep(.terminal-block.highlight) {
-  border-color: #ff9800 !important;
-  box-shadow: 0 0 8px rgba(255,152,0,.3);
+  border-color: var(--accent-warning) !important;
+  box-shadow: 0 0 8px color-mix(in srgb, var(--accent-warning) 30%, transparent);
 }
 
 /* 搜索栏动画 */

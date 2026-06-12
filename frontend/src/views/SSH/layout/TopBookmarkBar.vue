@@ -344,8 +344,8 @@ onUnmounted(() => {
 <style scoped>
 .top-bar {
   height: 2.5rem;
-  background: rgba(45, 45, 45, 0.95);
-  border-bottom: 0.0625rem solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-toolbar);
+  border-bottom: 0.0625rem solid var(--border-default);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -367,7 +367,7 @@ onUnmounted(() => {
   align-items: center;
   gap: 0.5rem;
   padding: 0.375rem 0.75rem;
-  background: rgba(50, 50, 50, 0.4);
+  background: var(--surface-2);
   border: 0.0625rem solid transparent;
   border-bottom: 2px solid transparent;
   border-radius: 0.25rem 0.25rem 0 0;
@@ -379,21 +379,21 @@ onUnmounted(() => {
 }
 
 .tab-item:hover {
-  background: rgba(60, 60, 60, 0.6);
+  background: var(--surface-hover);
 }
 
 .tab-item.disconnected {
-  border-bottom-color: #fc8181;
+  border-bottom-color: var(--accent-danger);
 }
 
 .tab-item.disconnected .tab-name {
-  color: #fc8181;
+  color: var(--accent-danger);
 }
 
 .tab-item.active {
-  background: rgba(45, 45, 45, 0.95);
-  border-color: rgba(255, 255, 255, 0.1);
-  border-bottom-color: #4299e1;
+  background: var(--bg-panel);
+  border-color: var(--border-default);
+  border-bottom-color: var(--accent-primary);
 }
 
 .tab-status {
@@ -404,17 +404,17 @@ onUnmounted(() => {
 }
 
 .tab-status.connected {
-  background: #48bb78;
+  background: var(--accent-success);
   box-shadow: 0 0 0.375rem rgba(72, 187, 120, 0.5);
 }
 
 .tab-status.disconnected {
-  background: #fc8181;
+  background: var(--accent-danger);
   box-shadow: 0 0 0.375rem rgba(252, 129, 129, 0.5);
 }
 
 .tab-status.reconnecting {
-  background: #fbd38d;
+  background: var(--accent-warning);
   box-shadow: 0 0 0.375rem rgba(251, 211, 141, 0.5);
   animation: pulse 1.5s infinite;
 }
@@ -425,7 +425,7 @@ onUnmounted(() => {
 }
 
 .tab-name {
-  color: #e2e8f0;
+  color: var(--text-primary);
   font-size: 0.8125rem;
   flex: 1;
   overflow: hidden;
@@ -441,7 +441,7 @@ onUnmounted(() => {
   background: transparent;
   border: none;
   border-radius: 0.25rem;
-  color: #a0aec0;
+  color: var(--text-secondary);
   cursor: pointer;
   opacity: 0;
   transition: all 0.2s;
@@ -457,7 +457,7 @@ onUnmounted(() => {
   background: transparent;
   border: none;
   border-radius: 0.25rem;
-  color: #fbd38d;
+  color: var(--accent-warning);
   cursor: pointer;
   opacity: 0;
   transition: all 0.2s;
@@ -469,8 +469,8 @@ onUnmounted(() => {
 }
 
 .tab-reconnect:hover {
-  background: rgba(251, 211, 141, 0.2);
-  color: #f6e05e;
+  background: var(--warning-bg);
+  color: var(--warning-light);
 }
 
 .tab-item:hover .tab-close {
@@ -478,8 +478,8 @@ onUnmounted(() => {
 }
 
 .tab-close:hover {
-  background: rgba(255, 255, 255, 0.15);
-  color: #fc8181;
+  background: var(--surface-hover);
+  color: var(--accent-danger);
 }
 
 /* 窗口控制按钮 */
@@ -489,7 +489,7 @@ onUnmounted(() => {
   gap: 0.25rem;
   margin-left: 0.5rem;
   padding-left: 0.5rem;
-  border-left: 0.0625rem solid rgba(255, 255, 255, 0.1);
+  border-left: 0.0625rem solid var(--border-default);
 }
 
 .control-btn {
@@ -501,19 +501,19 @@ onUnmounted(() => {
   background: transparent;
   border: none;
   border-radius: 0.5rem;
-  color: #a0aec0;
+  color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .control-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #e2e8f0;
+  background: var(--surface-hover);
+  color: var(--text-primary);
 }
 
 .control-btn.close:hover {
-  background: rgba(229, 62, 62, 0.2);
-  color: #fc8181;
+  background: var(--danger-bg);
+  color: var(--accent-danger);
 }
 
 /* 滚动条样式 */
@@ -526,11 +526,11 @@ onUnmounted(() => {
 }
 
 .tab-container::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--scrollbar-thumb);
   border-radius: 0.0625rem;
 }
 
 .tab-container::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--scrollbar-thumb-hover);
 }
 </style>

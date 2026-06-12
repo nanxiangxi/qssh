@@ -84,7 +84,7 @@ function moveXterm(toPopup) {
 .mini-terminal-mask {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,.5);
+  background: var(--bg-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -97,10 +97,10 @@ function moveXterm(toPopup) {
   max-width: 90vw;
   height: 450px;
   max-height: 70vh;
-  background: #1a1a1a;
-  border: 1px solid #444;
+  background: var(--bg-terminal);
+  border: 1px solid var(--border-strong);
   border-radius: 12px;
-  box-shadow: 0 16px 48px rgba(0,0,0,.6);
+  box-shadow: var(--shadow-lg);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -111,8 +111,8 @@ function moveXterm(toPopup) {
   align-items: center;
   justify-content: space-between;
   padding: 10px 14px;
-  background: #252525;
-  border-bottom: 1px solid #333;
+  background: var(--bg-toolbar);
+  border-bottom: 1px solid var(--border-default);
   flex-shrink: 0;
 }
 
@@ -120,7 +120,7 @@ function moveXterm(toPopup) {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #aaa;
+  color: var(--text-secondary);
   font-size: 13px;
 }
 
@@ -133,13 +133,13 @@ function moveXterm(toPopup) {
   background: transparent;
   border: none;
   border-radius: 6px;
-  color: #666;
+  color: var(--text-muted);
   cursor: pointer;
 }
 
 .mini-btn:hover {
-  background: #333;
-  color: #aaa;
+  background: var(--surface-hover);
+  color: var(--text-secondary);
 }
 
 .mini-body {
@@ -167,11 +167,11 @@ function moveXterm(toPopup) {
 
 .mini-status {
   padding: 6px 14px;
-  background: #1e1e1e;
-  border-top: 1px solid #2a2a2a;
+  background: var(--bg-toolbar);
+  border-top: 1px solid var(--border-default);
   flex-shrink: 0;
   font-size: 10px;
-  color: #555;
+  color: var(--text-muted);
 }
 
 .fade-enter-active { transition: all .2s ease; }

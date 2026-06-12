@@ -108,10 +108,10 @@ defineExpose({ handleKey, selectedIndex })
 <style scoped>
 .completion-popup {
   position: fixed;
-  background: #1e1e1e;
-  border: 1px solid #444;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-strong);
   border-radius: 6px;
-  box-shadow: 0 4px 16px rgba(0,0,0,.5);
+  box-shadow: var(--shadow-md);
   max-height: 200px;
   overflow-y: auto;
   padding: 4px;
@@ -130,33 +130,33 @@ defineExpose({ handleKey, selectedIndex })
 
 .suggestion-item:hover,
 .suggestion-item.selected {
-  background: #333;
+  background: var(--surface-hover);
 }
 
 .suggestion-icon {
   flex-shrink: 0;
-  color: #666;
+  color: var(--text-muted);
 }
 
-.suggestion-icon.command { color: #4caf50; }
-.suggestion-icon.subcommand { color: #888; }
-.suggestion-icon.option { color: #ff9800; }
+.suggestion-icon.command { color: var(--accent-success); }
+.suggestion-icon.subcommand { color: var(--text-secondary); }
+.suggestion-icon.option { color: var(--accent-warning); }
 
 .suggestion-value {
   font-family: 'Cascadia Code', monospace;
   font-size: 13px;
-  color: #d4d4d4;
+  color: var(--text-primary);
   white-space: nowrap;
 }
 
 .suggestion-desc {
   font-size: 11px;
-  color: #666;
+  color: var(--text-muted);
   margin-left: auto;
   white-space: nowrap;
 }
 
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #444; border-radius: 2px; }
+::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 2px; }
 </style>

@@ -8,38 +8,13 @@ import { FitAddon } from 'xterm-addon-fit'
 import { WebLinksAddon } from 'xterm-addon-web-links'
 import { SearchAddon } from 'xterm-addon-search'
 import 'xterm/css/xterm.css'
-
-// 默认终端主题
-const DEFAULT_THEME = {
-  background: '#1a1b26',
-  foreground: '#c0caf5',
-  cursor: '#c0caf5',
-  cursorAccent: '#1a1b26',
-  selectionBackground: '#33467c',
-  selectionForeground: '#c0caf5',
-  black: '#15161e',
-  red: '#f7768e',
-  green: '#9ece6a',
-  yellow: '#e0af68',
-  blue: '#7aa2f7',
-  magenta: '#bb9af7',
-  cyan: '#7dcfff',
-  white: '#a9b1d6',
-  brightBlack: '#414868',
-  brightRed: '#f7768e',
-  brightGreen: '#9ece6a',
-  brightYellow: '#e0af68',
-  brightBlue: '#7aa2f7',
-  brightMagenta: '#bb9af7',
-  brightCyan: '#7dcfff',
-  brightWhite: '#c0caf5'
-}
+import { getCurrentTheme } from '../utils/terminalThemes.js'
 
 export function useTerminal(containerRef, options = {}) {
   const {
     fontSize = 14,
     fontFamily = '"Cascadia Code", "Fira Code", JetBrains Mono, Consolas, monospace',
-    theme = DEFAULT_THEME,
+    theme,
     cursorBlink = true,
     scrollback = 10000
   } = options
@@ -61,11 +36,11 @@ export function useTerminal(containerRef, options = {}) {
       return false
     }
 
-    // 创建终端实例
+    // 创建终端实例（未传主题时跟随当前 UI 主题）
     terminal.value = new Terminal({
       fontSize,
       fontFamily,
-      theme,
+      theme: theme ?? getCurrentTheme(),
       cursorBlink,
       scrollback,
       allowProposedApi: true,

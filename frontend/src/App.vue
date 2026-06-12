@@ -32,12 +32,16 @@ onMounted(() => {
 }
 
 *::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgba(99, 179, 237, 0.15), rgba(66, 153, 225, 0.3));
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--accent-primary) 15%, transparent),
+    color-mix(in srgb, var(--accent-primary) 30%, transparent));
   border-radius: 999px;
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, rgba(99, 179, 237, 0.3), rgba(66, 153, 225, 0.5));
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--accent-primary) 30%, transparent),
+    color-mix(in srgb, var(--accent-primary) 50%, transparent));
 }
 
 *::-webkit-scrollbar-button {
