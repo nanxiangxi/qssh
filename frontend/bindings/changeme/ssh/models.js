@@ -71,6 +71,13 @@ export class AppConfig {
              */
             this["terminal"] = (new TerminalConfig());
         }
+        if (!("ui" in $$source)) {
+            /**
+             * @member
+             * @type {UIConfig}
+             */
+            this["ui"] = (new UIConfig());
+        }
 
         Object.assign(this, $$source);
     }
@@ -82,9 +89,13 @@ export class AppConfig {
      */
     static createFrom($$source = {}) {
         const $$createField0_0 = $$createType0;
+        const $$createField1_0 = $$createType1;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("terminal" in $$parsedSource) {
             $$parsedSource["terminal"] = $$createField0_0($$parsedSource["terminal"]);
+        }
+        if ("ui" in $$parsedSource) {
+            $$parsedSource["ui"] = $$createField1_0($$parsedSource["ui"]);
         }
         return new AppConfig(/** @type {Partial<AppConfig>} */($$parsedSource));
     }
@@ -141,8 +152,8 @@ export class CPUStats {
      * @returns {CPUStats}
      */
     static createFrom($$source = {}) {
-        const $$createField2_0 = $$createType1;
-        const $$createField3_0 = $$createType2;
+        const $$createField2_0 = $$createType2;
+        const $$createField3_0 = $$createType3;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("perCpuUsage" in $$parsedSource) {
             $$parsedSource["perCpuUsage"] = $$createField2_0($$parsedSource["perCpuUsage"]);
@@ -478,8 +489,8 @@ export class DiskStats {
      * @returns {DiskStats}
      */
     static createFrom($$source = {}) {
-        const $$createField0_0 = $$createType4;
-        const $$createField1_0 = $$createType5;
+        const $$createField0_0 = $$createType5;
+        const $$createField1_0 = $$createType6;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("partitions" in $$parsedSource) {
             $$parsedSource["partitions"] = $$createField0_0($$parsedSource["partitions"]);
@@ -681,8 +692,8 @@ export class FirewallInfo {
      * @returns {FirewallInfo}
      */
     static createFrom($$source = {}) {
-        const $$createField2_0 = $$createType7;
-        const $$createField4_0 = $$createType8;
+        const $$createField2_0 = $$createType8;
+        const $$createField4_0 = $$createType9;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("rules" in $$parsedSource) {
             $$parsedSource["rules"] = $$createField2_0($$parsedSource["rules"]);
@@ -1120,7 +1131,7 @@ export class NetworkStats {
      * @returns {NetworkStats}
      */
     static createFrom($$source = {}) {
-        const $$createField0_0 = $$createType10;
+        const $$createField0_0 = $$createType11;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("interfaces" in $$parsedSource) {
             $$parsedSource["interfaces"] = $$createField0_0($$parsedSource["interfaces"]);
@@ -1546,7 +1557,7 @@ export class SSHGroup {
      * @returns {SSHGroup}
      */
     static createFrom($$source = {}) {
-        const $$createField2_0 = $$createType8;
+        const $$createField2_0 = $$createType9;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("conn_ids" in $$parsedSource) {
             $$parsedSource["conn_ids"] = $$createField2_0($$parsedSource["conn_ids"]);
@@ -1683,10 +1694,10 @@ export class SystemStats {
      * @returns {SystemStats}
      */
     static createFrom($$source = {}) {
-        const $$createField2_0 = $$createType11;
-        const $$createField3_0 = $$createType12;
-        const $$createField4_0 = $$createType13;
-        const $$createField5_0 = $$createType14;
+        const $$createField2_0 = $$createType12;
+        const $$createField3_0 = $$createType13;
+        const $$createField4_0 = $$createType14;
+        const $$createField5_0 = $$createType15;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("cpu" in $$parsedSource) {
             $$parsedSource["cpu"] = $$createField2_0($$parsedSource["cpu"]);
@@ -1838,17 +1849,18 @@ export class WindowManager {
 
 // Private type creation functions
 const $$createType0 = TerminalConfig.createFrom;
-const $$createType1 = $Create.Array($Create.Any);
-const $$createType2 = LoadAvg.createFrom;
-const $$createType3 = DiskPartition.createFrom;
-const $$createType4 = $Create.Array($$createType3);
-const $$createType5 = DiskIOStats.createFrom;
-const $$createType6 = FirewallRule.createFrom;
-const $$createType7 = $Create.Array($$createType6);
-const $$createType8 = $Create.Array($Create.Any);
-const $$createType9 = NetInterface.createFrom;
-const $$createType10 = $Create.Array($$createType9);
-const $$createType11 = CPUStats.createFrom;
-const $$createType12 = MemoryStats.createFrom;
-const $$createType13 = DiskStats.createFrom;
-const $$createType14 = NetworkStats.createFrom;
+const $$createType1 = UIConfig.createFrom;
+const $$createType2 = $Create.Array($Create.Any);
+const $$createType3 = LoadAvg.createFrom;
+const $$createType4 = DiskPartition.createFrom;
+const $$createType5 = $Create.Array($$createType4);
+const $$createType6 = DiskIOStats.createFrom;
+const $$createType7 = FirewallRule.createFrom;
+const $$createType8 = $Create.Array($$createType7);
+const $$createType9 = $Create.Array($Create.Any);
+const $$createType10 = NetInterface.createFrom;
+const $$createType11 = $Create.Array($$createType10);
+const $$createType12 = CPUStats.createFrom;
+const $$createType13 = MemoryStats.createFrom;
+const $$createType14 = DiskStats.createFrom;
+const $$createType15 = NetworkStats.createFrom;

@@ -13,6 +13,7 @@ import (
 // AppConfig 应用配置（仅保留实际使用的字段）
 type AppConfig struct {
 	Terminal TerminalConfig `json:"terminal"`
+	UI       UIConfig       `json:"ui"`
 }
 
 // TerminalConfig 终端配置
@@ -101,6 +102,12 @@ func getDefaultConfig() *AppConfig {
 			DefaultType:       "classic",
 			AutoSwitchClassic: true,
 		},
+		UI: UIConfig{
+			Theme:            "dark",
+			Language:         "zh-CN",
+			SidebarCollapsed: false,
+			ShowStatusBar:    true,
+		},
 	}
 }
 
@@ -152,7 +159,19 @@ func (s *ConfigService) load() error {
 		return err
 	}
 
-	return json.Unmarshal(data, s.config)
+	if err := json.Unmarshal(data, s.config); err != nil {
+		return err
+	}
+
+	// 迁移：确保 UI 配置有默认值
+	if s.config.UI.Theme == "" {
+		s.config.UI.Theme = "dark"
+		if err := s.save(); err != nil {
+			fmt.Printf("[ConfigService] 迁移 UI 默认配置失败: %v\n", err)
+		}
+	}
+
+	return nil
 }
 
 // ensureConfigFile 确保配置文件存在
@@ -266,17 +285,17 @@ func (s *ConfigService) SetAIConfig(config AIConfig) error {
 
 // GetUIConfig 获取界面配置（预留，供 Wails 绑定）
 func (s *ConfigService) GetUIConfig() UIConfig {
-	return UIConfig{
-		Language:         "zh-CN",
-		Theme:            "dark",
-		SidebarCollapsed: false,
-		ShowStatusBar:    true,
-	}
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.config.UI
 }
 
 // SetUIConfig 设置界面配置（预留）
 func (s *ConfigService) SetUIConfig(config UIConfig) error {
-	return nil
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.config.UI = config
+	return s.save()
 }
 
 // GetSSHSettings 获取 SSH 设置（预留，供 Wails 绑定）
@@ -308,6 +327,13 @@ func (s *ConfigService) Get(category, key string) (interface{}, error) {
 		if key == "fontSize" { return s.config.Terminal.FontSize, nil }
 	}
 
+	if category == "ui" {
+		if key == "theme" { return s.config.UI.Theme, nil }
+		if key == "language" { return s.config.UI.Language, nil }
+		if key == "sidebarCollapsed" { return s.config.UI.SidebarCollapsed, nil }
+		if key == "showStatusBar" { return s.config.UI.ShowStatusBar, nil }
+	}
+
 	return nil, fmt.Errorf("未知的配置项: %s.%s", category, key)
 }
 
@@ -335,6 +361,25 @@ func (s *ConfigService) Set(category, key string, value interface{}) error {
 		}
 	}
 
+	if category == "ui" {
+		if key == "theme" {
+			if v, ok := value.(string); ok { s.config.UI.Theme = v; return s.save() }
+			return fmt.Errorf("无效的值类型")
+		}
+		if key == "language" {
+			if v, ok := value.(string); ok { s.config.UI.Language = v; return s.save() }
+			return fmt.Errorf("无效的值类型")
+		}
+		if key == "sidebarCollapsed" {
+			if v, ok := value.(bool); ok { s.config.UI.SidebarCollapsed = v; return s.save() }
+			return fmt.Errorf("无效的值类型")
+		}
+		if key == "showStatusBar" {
+			if v, ok := value.(bool); ok { s.config.UI.ShowStatusBar = v; return s.save() }
+			return fmt.Errorf("无效的值类型")
+		}
+	}
+
 	return fmt.Errorf("未知的配置项: %s.%s", category, key)
 }
 
@@ -347,6 +392,11 @@ func (s *ConfigService) ResetCategory(category string) error {
 
 	if category == "terminal" {
 		s.config.Terminal = defaults.Terminal
+		return s.save()
+	}
+
+	if category == "ui" {
+		s.config.UI = defaults.UI
 		return s.save()
 	}
 
