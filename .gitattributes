@@ -1,3 +1,6 @@
+# Git attributes file itself should use LF
+.gitattributes text eol=lf
+
 # Go source files should always use LF line endings
 *.go text eol=lf
 *.mod text eol=lf
@@ -5,6 +8,15 @@
 
 # Shell scripts should always use LF line endings
 *.sh text eol=lf
+
+# Frontend source files should always use LF line endings
+*.js text eol=lf
+*.ts text eol=lf
+*.d.ts text eol=lf
+*.vue text eol=lf
+*.css text eol=lf
+*.scss text eol=lf
+*.html text eol=lf
 
 # Markdown and config files can use platform-native line endings
 *.md text
