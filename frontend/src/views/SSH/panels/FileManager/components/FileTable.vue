@@ -51,16 +51,18 @@
               class="file-checkbox"
             />
           </td>
-          <td class="file-name">
-            <svg v-if="file.isDir" class="file-icon folder" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-            </svg>
-            <svg v-else class="file-icon file" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
-              <polyline points="13 2 13 9 20 9"></polyline>
-            </svg>
-            <span>{{ file.displayName || file.name }}</span>
-            <span v-if="file.relativePath" class="file-path">{{ file.relativePath }}</span>
+          <td>
+            <div class="file-name">
+              <svg v-if="file.isDir" class="file-icon folder" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+              </svg>
+              <svg v-else class="file-icon file" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+                <polyline points="13 2 13 9 20 9"></polyline>
+              </svg>
+              <span>{{ file.displayName || file.name }}</span>
+              <span v-if="file.relativePath" class="file-path">{{ file.relativePath }}</span>
+            </div>
           </td>
           <td>{{ formatSize(file.size) }}</td>
           <td>{{ formatTime(file.modTime) }}</td>
@@ -188,6 +190,7 @@ defineEmits(['open-file', 'sort', 'show-menu', 'select-file', 'select-all'])
   padding: 0.5rem 0.75rem;
   color: var(--text-primary);
   border-bottom: 1px solid var(--border-subtle);
+  vertical-align: middle;
 }
 
 .file-row {
