@@ -1602,7 +1602,7 @@ const batchChmod = () => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: rgba(30, 30, 30, 0.95);
+  background: var(--bg-panel);
   overflow: hidden;
 }
 
@@ -1616,9 +1616,9 @@ const batchChmod = () => {
 
 .status-bar {
   padding: 0.5rem 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(40, 40, 40, 0.5);
-  color: #a0aec0;
+  border-top: 1px solid var(--border-default);
+  background: var(--surface-1);
+  color: var(--text-secondary);
   font-size: 0.75rem;
 }
 
@@ -1629,22 +1629,22 @@ const batchChmod = () => {
 }
 
 .input-dialog-content label {
-  color: #a0aec0;
+  color: var(--text-secondary);
   font-size: 0.875rem;
 }
 
 .dialog-input {
   padding: 0.5rem 0.75rem;
-  background: rgba(45, 45, 45, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: var(--bg-input);
+  border: 1px solid var(--border-default);
   border-radius: 0.375rem;
-  color: #e2e8f0;
+  color: var(--text-primary);
   font-size: 0.875rem;
 }
 
 .dialog-input:focus {
   outline: none;
-  border-color: #4299e1;
+  border-color: var(--accent-primary);
 }
 
 /* 上传任务面板 */
@@ -1654,10 +1654,10 @@ const batchChmod = () => {
   right: 20px;
   width: 400px;
   max-height: 500px;
-  background: rgba(30, 30, 30, 0.98);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-panel-solid);
+  border: 1px solid var(--border-default);
   border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-md);
   display: flex;
   flex-direction: column;
   z-index: 1000;
@@ -1665,7 +1665,7 @@ const batchChmod = () => {
 
 .upload-panel-header {
   padding: 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--border-default);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1673,7 +1673,7 @@ const batchChmod = () => {
 
 .upload-panel-header h3 {
   margin: 0;
-  color: #e2e8f0;
+  color: var(--text-primary);
   font-size: 0.875rem;
 }
 
@@ -1685,10 +1685,10 @@ const batchChmod = () => {
 .btn-clear,
 .btn-close {
   padding: 0.25rem 0.75rem;
-  background: rgba(66, 153, 225, 0.2);
-  border: 1px solid rgba(66, 153, 225, 0.4);
+  background: var(--primary-bg);
+  border: 1px solid var(--border-accent);
   border-radius: 4px;
-  color: #e2e8f0;
+  color: var(--text-primary);
   font-size: 0.75rem;
   cursor: pointer;
   transition: all 0.2s;
@@ -1696,7 +1696,7 @@ const batchChmod = () => {
 
 .btn-clear:hover,
 .btn-close:hover {
-  background: rgba(66, 153, 225, 0.3);
+  background: var(--primary-bg-hover);
 }
 
 .upload-panel-body {
@@ -1707,7 +1707,7 @@ const batchChmod = () => {
 
 .upload-task {
   padding: 0.75rem;
-  background: rgba(45, 45, 45, 0.5);
+  background: var(--surface-1);
   border-radius: 6px;
   margin-bottom: 0.5rem;
 }
@@ -1719,7 +1719,7 @@ const batchChmod = () => {
 }
 
 .task-name {
-  color: #e2e8f0;
+  color: var(--text-primary);
   font-size: 0.875rem;
   font-weight: 500;
   flex: 1;
@@ -1729,7 +1729,7 @@ const batchChmod = () => {
 }
 
 .task-size {
-  color: #a0aec0;
+  color: var(--text-secondary);
   font-size: 0.75rem;
   margin-left: 1rem;
 }
@@ -1744,7 +1744,7 @@ const batchChmod = () => {
 .progress-bar {
   flex: 1;
   height: 6px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--surface-2);
   border-radius: 3px;
   overflow: hidden;
 }
@@ -1755,27 +1755,27 @@ const batchChmod = () => {
 }
 
 .progress-fill.pending {
-  background: #a0aec0;
+  background: var(--text-secondary);
 }
 
 .progress-fill.uploading {
-  background: linear-gradient(90deg, #4299e1, #63b3ed);
+  background: linear-gradient(90deg, var(--accent-primary), var(--primary-light));
 }
 
 .progress-fill.success {
-  background: #48bb78;
+  background: var(--accent-success);
 }
 
 .progress-fill.failed {
-  background: #f56565;
+  background: var(--accent-danger);
 }
 
 .progress-fill.cancelled {
-  background: #a0aec0;
+  background: var(--text-secondary);
 }
 
 .progress-text {
-  color: #a0aec0;
+  color: var(--text-secondary);
   font-size: 0.75rem;
   min-width: 40px;
   text-align: right;
@@ -1796,23 +1796,23 @@ const batchChmod = () => {
 }
 
 .status-pending {
-  color: #a0aec0;
+  color: var(--text-secondary);
 }
 
 .status-uploading {
-  color: #4299e1;
+  color: var(--accent-primary);
 }
 
 .status-success {
-  color: #48bb78;
+  color: var(--accent-success);
 }
 
 .status-failed {
-  color: #f56565;
+  color: var(--accent-danger);
 }
 
 .status-cancelled {
-  color: #a0aec0;
+  color: var(--text-secondary);
 }
 
 .task-actions {
@@ -1824,27 +1824,27 @@ const batchChmod = () => {
 .btn-retry {
   padding: 0.25rem 0.5rem;
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--border-default);
   border-radius: 4px;
-  color: #e2e8f0;
+  color: var(--text-primary);
   font-size: 0.75rem;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .btn-cancel:hover {
-  background: rgba(245, 101, 101, 0.2);
-  border-color: #f56565;
+  background: var(--danger-bg);
+  border-color: var(--accent-danger);
 }
 
 .btn-retry:hover {
-  background: rgba(66, 153, 225, 0.2);
-  border-color: #4299e1;
+  background: var(--primary-bg);
+  border-color: var(--accent-primary);
 }
 
 .empty-tasks {
   text-align: center;
-  color: #a0aec0;
+  color: var(--text-secondary);
   padding: 2rem;
   font-size: 0.875rem;
 }
@@ -1856,7 +1856,7 @@ const batchChmod = () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: var(--bg-overlay);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1868,8 +1868,8 @@ const batchChmod = () => {
 .loading-spinner {
   width: 50px;
   height: 50px;
-  border: 4px solid rgba(66, 153, 225, 0.3);
-  border-top-color: #4299e1;
+  border: 4px solid var(--primary-bg);
+  border-top-color: var(--accent-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -1880,7 +1880,7 @@ const batchChmod = () => {
 
 .loading-text {
   margin-top: 1rem;
-  color: #e2e8f0;
+  color: var(--text-primary);
   font-size: 1rem;
   font-weight: 500;
 }

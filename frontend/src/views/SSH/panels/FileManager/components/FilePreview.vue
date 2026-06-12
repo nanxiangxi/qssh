@@ -9,8 +9,8 @@
     height="90%"
     :border-radius="6"
     :body-padding="0"
-    background-color="rgba(30, 30, 30, 0.98)"
-    border-color="rgba(255, 255, 255, 0.1)"
+    background-color="var(--bg-panel-solid)"
+    border-color="var(--border-default)"
     :overlay-opacity="0.85"
     :overlay-blur="6"
     @close="$emit('close')"
@@ -324,7 +324,7 @@ onUnmounted(() => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: #1e1e1e;
+  background: var(--bg-panel-solid);
   border-radius: 6px;
   overflow: hidden;
 }
@@ -335,8 +335,8 @@ onUnmounted(() => {
   align-items: center;
   justify-content: space-between;
   padding: 0.5rem 1rem;
-  background: #2d2d2d;
-  border-bottom: 1px solid #3e3e3e;
+  background: var(--bg-toolbar);
+  border-bottom: 1px solid var(--border-default);
   flex-shrink: 0;
 }
 
@@ -356,29 +356,29 @@ onUnmounted(() => {
   background: transparent;
   border: none;
   border-radius: 4px;
-  color: #a0aec0;
+  color: var(--text-secondary);
   font-size: 0.8125rem;
   cursor: pointer;
   transition: all 0.15s;
 }
 
 .toolbar-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #e2e8f0;
+  background: var(--surface-hover);
+  color: var(--text-primary);
 }
 
 .toolbar-btn.primary {
-  color: #63b3ed;
+  color: var(--primary-light);
 }
 
 .toolbar-btn.primary:hover {
-  background: rgba(66, 153, 225, 0.15);
-  color: #90cdf4;
+  background: var(--primary-bg);
+  color: var(--accent-info);
 }
 
 .toolbar-btn.active {
-  background: rgba(66, 153, 225, 0.2);
-  color: #63b3ed;
+  background: var(--primary-bg);
+  color: var(--primary-light);
 }
 
 .toolbar-btn:disabled {
@@ -395,7 +395,7 @@ onUnmounted(() => {
 }
 
 .file-name {
-  color: #e2e8f0;
+  color: var(--text-primary);
   font-size: 0.8125rem;
   font-weight: 500;
   max-width: 300px;
@@ -406,9 +406,9 @@ onUnmounted(() => {
 
 .language-badge {
   padding: 0.125rem 0.5rem;
-  background: rgba(66, 153, 225, 0.2);
+  background: var(--primary-bg);
   border-radius: 3px;
-  color: #63b3ed;
+  color: var(--primary-light);
   font-size: 0.6875rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -424,14 +424,14 @@ onUnmounted(() => {
   background: transparent;
   border: none;
   border-radius: 4px;
-  color: #a0aec0;
+  color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.15s;
 }
 
 .close-btn:hover {
-  background: rgba(245, 101, 101, 0.15);
-  color: #fc8181;
+  background: var(--danger-bg);
+  color: var(--accent-danger);
 }
 
 /* ========== 编辑器主体 ========== */
@@ -448,7 +448,7 @@ onUnmounted(() => {
   justify-content: center;
   align-items: center;
   padding: 2rem;
-  background: rgba(25, 25, 25, 0.5);
+  background: var(--surface-1);
 }
 
 .media-preview img {
@@ -479,8 +479,8 @@ onUnmounted(() => {
   align-items: center;
   justify-content: space-between;
   padding: 0.375rem 1rem;
-  background: #2d2d2d;
-  border-top: 1px solid #3e3e3e;
+  background: var(--bg-toolbar);
+  border-top: 1px solid var(--border-default);
   font-size: 0.75rem;
   flex-shrink: 0;
 }
@@ -493,12 +493,12 @@ onUnmounted(() => {
 }
 
 .status-item {
-  color: #a0aec0;
+  color: var(--text-secondary);
   font-size: 0.75rem;
 }
 
 .status-item.modified {
-  color: #f6ad55;
+  color: var(--accent-warning);
   font-weight: 500;
 }
 </style>

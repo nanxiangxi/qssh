@@ -166,11 +166,11 @@ const setPreset = (value) => {
 }
 
 .chmod-file-name {
-  color: #63b3ed;
+  color: var(--primary-light);
   font-weight: 600;
   font-size: 1rem;
   padding: 0.5rem;
-  background: rgba(66, 153, 225, 0.1);
+  background: var(--primary-bg);
   border-radius: 0.375rem;
   text-align: center;
 }
@@ -186,13 +186,13 @@ const setPreset = (value) => {
 .chmod-section {
   flex: 1;
   padding: 1rem;
-  background: rgba(40, 40, 40, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--surface-1);
+  border: 1px solid var(--border-default);
   border-radius: 0.5rem;
 }
 
 .chmod-section legend {
-  color: #e2e8f0;
+  color: var(--text-primary);
   font-weight: 600;
   font-size: 0.9rem;
   padding: 0 0.5rem;
@@ -210,20 +210,20 @@ const setPreset = (value) => {
   align-items: center;
   gap: 0.5rem;
   cursor: pointer;
-  color: #cbd5e0;
+  color: var(--text-secondary);
   font-size: 0.875rem;
   transition: color 0.2s;
 }
 
 .checkbox-item:hover {
-  color: #e2e8f0;
+  color: var(--text-primary);
 }
 
 .checkbox-item input[type="checkbox"] {
   width: 1rem;
   height: 1rem;
   cursor: pointer;
-  accent-color: #4299e1;
+  accent-color: var(--accent-primary);
 }
 
 /* 底部区域 */
@@ -232,7 +232,7 @@ const setPreset = (value) => {
   flex-direction: column;
   gap: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--border-default);
 }
 
 .chmod-number-input {
@@ -242,17 +242,17 @@ const setPreset = (value) => {
 }
 
 .chmod-number-input label {
-  color: #a0aec0;
+  color: var(--text-secondary);
   font-size: 0.875rem;
 }
 
 .chmod-input {
   width: 6rem;
   padding: 0.5rem 0.75rem;
-  background: rgba(45, 45, 45, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: var(--bg-input);
+  border: 1px solid var(--border-default);
   border-radius: 0.375rem;
-  color: #e2e8f0;
+  color: var(--text-primary);
   font-size: 1rem;
   font-family: monospace;
   text-align: center;
@@ -266,18 +266,18 @@ const setPreset = (value) => {
 
 .preset-btn {
   padding: 0.5rem;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: var(--surface-2);
+  border: 1px solid var(--border-default);
   border-radius: 0.375rem;
-  color: #e2e8f0;
+  color: var(--text-primary);
   cursor: pointer;
   font-size: 0.75rem;
   transition: all 0.2s;
 }
 
 .preset-btn:hover {
-  background: rgba(66, 153, 225, 0.2);
-  border-color: rgba(66, 153, 225, 0.5);
+  background: var(--primary-bg);
+  border-color: var(--border-accent);
 }
 
 .apply-to-subdirs {

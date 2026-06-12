@@ -31,6 +31,9 @@ import { yaml } from '@codemirror/legacy-modes/mode/yaml'
 import { sql } from '@codemirror/legacy-modes/mode/sql'
 import { oneDark } from '@codemirror/theme-one-dark'
 
+// TODO: 代码编辑器主题需跟随系统深浅色主题切换。当前固定使用 one-dark，
+// 浅色主题下应切换为 github-light 等浅色 CodeMirror 主题，并从主题 store 获取当前主题。
+
 // ✅ 使用 basicSetup，它已经包含了行号等基础功能
 // basicSetup 包含：行号、高亮活动行、括号匹配、自动闭合等
 
@@ -255,15 +258,15 @@ onUnmounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: #1e1e1e;
-  color: #d4d4d4;
+  background: var(--bg-panel-solid);
+  color: var(--text-primary);
 }
 
 .spinner {
   width: 40px;
   height: 40px;
-  border: 3px solid rgba(255, 255, 255, 0.1);
-  border-top-color: #007acc;
+  border: 3px solid var(--surface-2);
+  border-top-color: var(--accent-primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
   margin-bottom: 16px;
@@ -291,15 +294,15 @@ onUnmounted(() => {
 }
 
 :deep(.cm-gutters) {
-  background-color: #1e1e1e;
-  border-right: 1px solid #3e3e3e;
+  background-color: var(--bg-panel-solid);
+  border-right: 1px solid var(--border-default);
 }
 
 :deep(.cm-activeLineGutter) {
-  background-color: #2d2d2d;
+  background-color: var(--bg-toolbar);
 }
 
 :deep(.cm-cursor) {
-  border-left-color: #d4d4d4;
+  border-left-color: var(--text-primary);
 }
 </style>
