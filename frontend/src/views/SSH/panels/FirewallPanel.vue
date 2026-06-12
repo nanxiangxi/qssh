@@ -3,7 +3,7 @@
     <!-- 工具栏 -->
     <div class="fw-toolbar">
       <div class="fw-toolbar-left">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f6ad55" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         <span class="fw-title">防火墙</span>
         <span v-if="fwInfo.type !== 'unknown'" class="fw-badge" :class="'fw-badge-' + fwInfo.status">
           {{ fwTypeName }} · {{ fwInfo.status === 'active' ? '运行中' : '已关闭' }}
@@ -34,7 +34,7 @@
 
       <!-- 未知防火墙 -->
       <div v-else-if="fwInfo.type === 'unknown'" class="fw-empty">
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#4a5568" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         <p>未检测到支持的防火墙</p>
         <p class="fw-hint">支持 iptables / firewalld / ufw</p>
       </div>
@@ -351,59 +351,59 @@ onMounted(() => loadInfo())
 .fw-panel {
   width: 100%; height: 100%;
   display: flex; flex-direction: column;
-  background: rgba(30, 30, 30, 0.95);
+  background: var(--bg-panel);
   overflow: hidden;
 }
 
 .fw-toolbar {
   display: flex; align-items: center; justify-content: space-between;
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(40, 40, 40, 0.5);
+  border-bottom: 1px solid var(--border-default);
+  background: var(--surface-2);
   flex-shrink: 0;
 }
-.fw-toolbar-left { display: flex; align-items: center; gap: 0.5rem; }
+.fw-toolbar-left { display: flex; align-items: center; gap: 0.5rem; color: var(--warning-light); }
 .fw-toolbar-right { display: flex; gap: 0.375rem; }
-.fw-title { color: #e2e8f0; font-weight: 600; font-size: 0.875rem; }
+.fw-title { color: var(--text-primary); font-weight: 600; font-size: 0.875rem; }
 
 .fw-badge {
   padding: 0.125rem 0.5rem; border-radius: 0.25rem;
   font-size: 0.625rem; font-weight: 600;
 }
-.fw-badge-active { background: rgba(72, 187, 120, 0.2); color: #68d391; }
-.fw-badge-inactive { background: rgba(160, 174, 192, 0.2); color: #a0aec0; }
+.fw-badge-active { background: var(--success-bg); color: var(--success-light); }
+.fw-badge-inactive { background: var(--surface-2); color: var(--text-secondary); }
 
 .fw-btn {
   display: inline-flex; align-items: center; gap: 0.375rem;
   padding: 0.375rem 0.75rem;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--surface-1);
+  border: 1px solid var(--border-default);
   border-radius: 0.375rem;
-  color: #a0aec0; font-size: 0.75rem;
+  color: var(--text-secondary); font-size: 0.75rem;
   cursor: pointer; transition: all 0.15s;
 }
-.fw-btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.1); color: #e2e8f0; }
+.fw-btn:hover:not(:disabled) { background: var(--surface-hover); color: var(--text-primary); }
 .fw-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .fw-btn-sm { padding: 0.25rem 0.5rem; }
-.fw-btn-primary { background: rgba(66, 153, 225, 0.2); border-color: rgba(66, 153, 225, 0.4); color: #63b3ed; }
-.fw-btn-primary:hover:not(:disabled) { background: rgba(66, 153, 225, 0.35); }
-.fw-btn-success { background: rgba(72, 187, 120, 0.2); border-color: rgba(72, 187, 120, 0.4); color: #68d391; }
-.fw-btn-warn { background: rgba(237, 137, 54, 0.2); border-color: rgba(237, 137, 54, 0.4); color: #f6ad55; }
-.fw-btn-danger { background: rgba(245, 101, 101, 0.2); border-color: rgba(245, 101, 101, 0.4); color: #fc8181; }
+.fw-btn-primary { background: var(--primary-bg); border-color: var(--border-accent); color: var(--primary-light); }
+.fw-btn-primary:hover:not(:disabled) { background: var(--primary-bg-hover); }
+.fw-btn-success { background: var(--success-bg); border-color: color-mix(in srgb, var(--accent-success), transparent 60%); color: var(--success-light); }
+.fw-btn-warn { background: var(--warning-bg); border-color: color-mix(in srgb, var(--warning-light), transparent 60%); color: var(--warning-light); }
+.fw-btn-danger { background: var(--danger-bg); border-color: color-mix(in srgb, var(--accent-danger), transparent 60%); color: var(--accent-danger); }
 
 .fw-content { flex: 1; overflow-y: auto; min-height: 0; }
 
 .fw-loading, .fw-empty, .fw-empty-rules {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  height: 100%; gap: 0.75rem; color: #718096;
+  height: 100%; gap: 0.75rem; color: var(--text-muted);
 }
 .fw-loading p, .fw-empty p, .fw-empty-rules p { margin: 0; font-size: 0.875rem; }
-.fw-hint { font-size: 0.75rem !important; color: #4a5568 !important; }
+.fw-hint { font-size: 0.75rem !important; color: var(--text-muted) !important; }
 .fw-empty-rules { height: auto; padding: 2rem; }
 
 .fw-spinner {
   width: 24px; height: 24px;
-  border: 2px solid rgba(246, 173, 85, 0.2); border-top-color: #f6ad55;
+  border: 2px solid color-mix(in srgb, var(--warning-light), transparent 80%); border-top-color: var(--warning-light);
   border-radius: 50%; animation: fw-spin 0.8s linear infinite;
 }
 @keyframes fw-spin { to { transform: rotate(360deg); } }
@@ -414,104 +414,104 @@ onMounted(() => loadInfo())
 .fw-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
 .fw-table th {
   padding: 0.5rem 0.625rem; text-align: left;
-  color: #a0aec0; font-weight: 600; white-space: nowrap;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
-  background: rgba(40, 40, 40, 0.5);
+  color: var(--text-secondary); font-weight: 600; white-space: nowrap;
+  border-bottom: 2px solid var(--border-default);
+  background: var(--surface-2);
   position: sticky; top: 0; z-index: 1;
 }
 .fw-table td {
   padding: 0.375rem 0.625rem;
-  color: #e2e8f0; border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  color: var(--text-primary); border-bottom: 1px solid var(--border-subtle);
   white-space: nowrap;
 }
-.fw-table tr:hover td { background: rgba(66, 153, 225, 0.05); }
-.fw-td-num { color: #718096; font-family: monospace; }
+.fw-table tr:hover td { background: var(--bg-hover); }
+.fw-td-num { color: var(--text-muted); font-family: monospace; }
 .fw-mono { font-family: 'Courier New', monospace; font-size: 0.6875rem; }
 
 .fw-chain-tag {
   display: inline-block; padding: 0.0625rem 0.375rem;
-  background: rgba(99, 179, 237, 0.1); border-radius: 0.25rem;
-  color: #63b3ed; font-size: 0.625rem; font-weight: 600;
+  background: color-mix(in srgb, var(--primary-light), transparent 90%); border-radius: 0.25rem;
+  color: var(--primary-light); font-size: 0.625rem; font-weight: 600;
 }
 .fw-target-tag {
   display: inline-block; padding: 0.0625rem 0.375rem;
   border-radius: 0.25rem; font-size: 0.625rem; font-weight: 600;
 }
-.fw-target-accept, .fw-target-allow { background: rgba(72, 187, 120, 0.2); color: #68d391; }
-.fw-target-drop, .fw-target-deny { background: rgba(245, 101, 101, 0.2); color: #fc8181; }
-.fw-target-reject { background: rgba(237, 137, 54, 0.2); color: #f6ad55; }
+.fw-target-accept, .fw-target-allow { background: var(--success-bg); color: var(--success-light); }
+.fw-target-drop, .fw-target-deny { background: var(--danger-bg); color: var(--accent-danger); }
+.fw-target-reject { background: var(--warning-bg); color: var(--warning-light); }
 
 .fw-raw-section {
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-subtle);
   border-radius: 0.375rem; overflow: hidden;
 }
 .fw-raw-toggle {
-  padding: 0.5rem 0.75rem; color: #718096; font-size: 0.75rem;
-  cursor: pointer; background: rgba(255, 255, 255, 0.02);
+  padding: 0.5rem 0.75rem; color: var(--text-muted); font-size: 0.75rem;
+  cursor: pointer; background: var(--surface-1);
 }
-.fw-raw-toggle:hover { background: rgba(255, 255, 255, 0.04); }
+.fw-raw-toggle:hover { background: var(--surface-2); }
 .fw-raw {
   margin: 0; padding: 0.75rem;
-  color: #a0aec0; font-size: 0.6875rem;
+  color: var(--text-secondary); font-size: 0.6875rem;
   font-family: 'Courier New', monospace; line-height: 1.5;
   white-space: pre; overflow-x: auto;
-  max-height: 30vh; background: rgba(0, 0, 0, 0.2);
+  max-height: 30vh; background: var(--surface-1);
 }
 
 .fw-cmd-bar {
   display: flex; gap: 0.5rem; padding: 0.5rem 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
-  background: rgba(35, 35, 35, 0.5); flex-shrink: 0;
+  border-top: 1px solid var(--border-subtle);
+  background: var(--surface-2); flex-shrink: 0;
 }
 .fw-cmd-input {
-  flex: 1; background: rgba(30, 30, 30, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 0.375rem;
-  color: #e2e8f0; font-size: 0.75rem; font-family: 'Courier New', monospace;
+  flex: 1; background: var(--bg-input);
+  border: 1px solid var(--border-default); border-radius: 0.375rem;
+  color: var(--text-primary); font-size: 0.75rem; font-family: 'Courier New', monospace;
   padding: 0.375rem 0.625rem; outline: none;
 }
-.fw-cmd-input:focus { border-color: rgba(66, 153, 225, 0.4); }
+.fw-cmd-input:focus { border-color: var(--border-accent); }
 
 .fw-footer {
   display: flex; align-items: center;
   padding: 0.25rem 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(40, 40, 40, 0.5);
+  border-top: 1px solid var(--border-default);
+  background: var(--surface-2);
   font-size: 0.625rem; flex-shrink: 0;
 }
-.fw-footer-info { color: #718096; }
-.fw-cmd-result { color: #68d391; font-family: monospace; white-space: pre-wrap; word-break: break-all; }
-.fw-cmd-error { color: #fc8181; }
+.fw-footer-info { color: var(--text-muted); }
+.fw-cmd-result { color: var(--success-light); font-family: monospace; white-space: pre-wrap; word-break: break-all; }
+.fw-cmd-error { color: var(--accent-danger); }
 
 .fw-modal-mask {
   position: fixed; inset: 0;
-  background: rgba(0, 0, 0, 0.7); display: flex;
+  background: var(--bg-overlay); display: flex;
   align-items: center; justify-content: center;
   z-index: 10000; backdrop-filter: blur(4px);
 }
 .fw-modal {
-  background: #1a1a1a; border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-panel-solid); border: 1px solid var(--border-default);
   border-radius: 0.75rem; width: 400px; max-width: 90vw;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-lg);
 }
 .fw-modal-head {
   display: flex; justify-content: space-between; align-items: center;
-  padding: 1rem 1.25rem; border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-subtle);
 }
-.fw-modal-head h3 { margin: 0; color: #e2e8f0; font-size: 0.9375rem; }
-.fw-modal-head button { background: none; border: none; color: #718096; font-size: 1.25rem; cursor: pointer; }
-.fw-modal-head button:hover { color: #e2e8f0; }
+.fw-modal-head h3 { margin: 0; color: var(--text-primary); font-size: 0.9375rem; }
+.fw-modal-head button { background: none; border: none; color: var(--text-muted); font-size: 1.25rem; cursor: pointer; }
+.fw-modal-head button:hover { color: var(--text-primary); }
 .fw-modal-body { padding: 1rem 1.25rem; display: flex; flex-direction: column; gap: 0.75rem; }
 .fw-modal-foot {
   display: flex; justify-content: flex-end; gap: 0.5rem;
-  padding: 0.875rem 1.25rem; border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 0.875rem 1.25rem; border-top: 1px solid var(--border-subtle);
 }
-.fw-field label { display: block; color: #a0aec0; font-size: 0.75rem; margin-bottom: 0.25rem; }
+.fw-field label { display: block; color: var(--text-secondary); font-size: 0.75rem; margin-bottom: 0.25rem; }
 .fw-input {
-  width: 100%; background: rgba(30, 30, 30, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 0.375rem;
-  color: #e2e8f0; font-size: 0.8125rem; padding: 0.5rem 0.75rem;
+  width: 100%; background: var(--bg-input);
+  border: 1px solid var(--border-default); border-radius: 0.375rem;
+  color: var(--text-primary); font-size: 0.8125rem; padding: 0.5rem 0.75rem;
   outline: none; box-sizing: border-box;
 }
-.fw-input:focus { border-color: rgba(66, 153, 225, 0.4); }
-.fw-error { color: #fc8181; font-size: 0.75rem; }
+.fw-input:focus { border-color: var(--border-accent); }
+.fw-error { color: var(--accent-danger); font-size: 0.75rem; }
 </style>
