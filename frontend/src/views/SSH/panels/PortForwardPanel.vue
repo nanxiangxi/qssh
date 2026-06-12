@@ -3,7 +3,7 @@
     <!-- 顶部工具栏 -->
     <div class="pf-toolbar">
       <div class="pf-toolbar-left">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#63b3ed" stroke-width="2" stroke-linecap="round">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
           <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
           <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
           <line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
@@ -21,7 +21,7 @@
     <!-- 转发列表 -->
     <div class="pf-list">
       <div v-if="forwards.length === 0" class="pf-empty">
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#4a5568" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
         <p>暂无端口转发规则</p>
         <button class="pf-btn pf-btn-primary pf-btn-sm" @click="closeDialog(); showAdd = true">添加转发</button>
       </div>
@@ -311,7 +311,7 @@ onUnmounted(() => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: rgba(30, 30, 30, 0.95);
+  background: var(--bg-panel);
   overflow: hidden;
 }
 
@@ -321,8 +321,8 @@ onUnmounted(() => {
   align-items: center;
   justify-content: space-between;
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(40, 40, 40, 0.5);
+  border-bottom: 1px solid var(--border-default);
+  background: var(--surface-2);
   flex-shrink: 0;
 }
 
@@ -330,10 +330,11 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  color: var(--primary-light);
 }
 
 .pf-title {
-  color: #e2e8f0;
+  color: var(--text-primary);
   font-weight: 600;
   font-size: 0.875rem;
 }
@@ -353,7 +354,7 @@ onUnmounted(() => {
   justify-content: center;
   height: 100%;
   gap: 0.75rem;
-  color: #718096;
+  color: var(--text-muted);
 }
 
 .pf-empty p {
@@ -375,16 +376,16 @@ onUnmounted(() => {
 .pf-table th {
   padding: 0.5rem 0.75rem;
   text-align: left;
-  color: #a0aec0;
+  color: var(--text-secondary);
   font-weight: 600;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 2px solid var(--border-default);
   white-space: nowrap;
 }
 
 .pf-table td {
   padding: 0.5rem 0.75rem;
-  color: #e2e8f0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-subtle);
   white-space: nowrap;
 }
 
@@ -394,11 +395,11 @@ onUnmounted(() => {
 }
 
 .pf-row-running td {
-  background: rgba(72, 187, 120, 0.03);
+  background: color-mix(in srgb, var(--accent-success), transparent 95%);
 }
 
 .pf-row-error td {
-  background: rgba(245, 101, 101, 0.03);
+  background: color-mix(in srgb, var(--accent-danger), transparent 95%);
 }
 
 /* 连接和流量统计 */
@@ -408,16 +409,16 @@ onUnmounted(() => {
 }
 
 .pf-conn-count {
-  color: #e2e8f0;
+  color: var(--text-primary);
   font-weight: 600;
 }
 
 .pf-conn-count.pf-conn-active {
-  color: #68d391;
+  color: var(--success-light);
 }
 
 .pf-conn-total {
-  color: #4a5568;
+  color: var(--text-muted);
   font-size: 0.5625rem;
 }
 
@@ -426,15 +427,15 @@ onUnmounted(() => {
 }
 
 .pf-traffic-up {
-  color: #f6ad55;
+  color: var(--warning-light);
 }
 
 .pf-traffic-down {
-  color: #63b3ed;
+  color: var(--primary-light);
 }
 
 .pf-traffic-sep {
-  color: #4a5568;
+  color: var(--text-muted);
   margin: 0 0.125rem;
 }
 
@@ -448,13 +449,13 @@ onUnmounted(() => {
 }
 
 .pf-type-local {
-  background: rgba(66, 153, 225, 0.2);
-  color: #63b3ed;
+  background: var(--primary-bg);
+  color: var(--primary-light);
 }
 
 .pf-type-remote {
-  background: rgba(159, 122, 234, 0.2);
-  color: #b794f4;
+  background: color-mix(in srgb, var(--accent-purple), transparent 80%);
+  color: var(--accent-purple);
 }
 
 /* 状态 */
@@ -467,18 +468,18 @@ onUnmounted(() => {
 }
 
 .pf-status-running {
-  background: rgba(72, 187, 120, 0.2);
-  color: #68d391;
+  background: var(--success-bg);
+  color: var(--success-light);
 }
 
 .pf-status-stopped {
-  background: rgba(160, 174, 192, 0.2);
-  color: #a0aec0;
+  background: var(--surface-2);
+  color: var(--text-secondary);
 }
 
 .pf-status-error {
-  background: rgba(245, 101, 101, 0.2);
-  color: #fc8181;
+  background: var(--danger-bg);
+  color: var(--accent-danger);
 }
 
 /* 操作按钮 */
@@ -493,18 +494,18 @@ onUnmounted(() => {
   align-items: center;
   gap: 0.375rem;
   padding: 0.375rem 0.75rem;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: var(--surface-1);
+  border: 1px solid var(--border-default);
   border-radius: 0.375rem;
-  color: #a0aec0;
+  color: var(--text-secondary);
   font-size: 0.75rem;
   cursor: pointer;
   transition: all 0.15s;
 }
 
 .pf-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #e2e8f0;
+  background: var(--surface-hover);
+  color: var(--text-primary);
 }
 
 .pf-btn-sm {
@@ -512,43 +513,43 @@ onUnmounted(() => {
 }
 
 .pf-btn-primary {
-  background: rgba(66, 153, 225, 0.2);
-  border-color: rgba(66, 153, 225, 0.4);
-  color: #63b3ed;
+  background: var(--primary-bg);
+  border-color: var(--border-accent);
+  color: var(--primary-light);
 }
 
 .pf-btn-primary:hover {
-  background: rgba(66, 153, 225, 0.35);
+  background: var(--primary-bg-hover);
 }
 
 .pf-btn-success {
-  background: rgba(72, 187, 120, 0.2);
-  border-color: rgba(72, 187, 120, 0.4);
-  color: #68d391;
+  background: var(--success-bg);
+  border-color: color-mix(in srgb, var(--accent-success), transparent 60%);
+  color: var(--success-light);
 }
 
 .pf-btn-success:hover {
-  background: rgba(72, 187, 120, 0.35);
+  background: color-mix(in srgb, var(--accent-success), transparent 65%);
 }
 
 .pf-btn-warn {
-  background: rgba(237, 137, 54, 0.2);
-  border-color: rgba(237, 137, 54, 0.4);
-  color: #f6ad55;
+  background: var(--warning-bg);
+  border-color: color-mix(in srgb, var(--warning-light), transparent 60%);
+  color: var(--warning-light);
 }
 
 .pf-btn-warn:hover {
-  background: rgba(237, 137, 54, 0.35);
+  background: color-mix(in srgb, var(--warning-light), transparent 65%);
 }
 
 .pf-btn-danger {
-  background: rgba(245, 101, 101, 0.2);
-  border-color: rgba(245, 101, 101, 0.4);
-  color: #fc8181;
+  background: var(--danger-bg);
+  border-color: color-mix(in srgb, var(--accent-danger), transparent 60%);
+  color: var(--accent-danger);
 }
 
 .pf-btn-danger:hover {
-  background: rgba(245, 101, 101, 0.35);
+  background: color-mix(in srgb, var(--accent-danger), transparent 65%);
 }
 
 .pf-btn-text {
@@ -560,9 +561,9 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   padding: 0.375rem 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(40, 40, 40, 0.5);
-  color: #718096;
+  border-top: 1px solid var(--border-default);
+  background: var(--surface-2);
+  color: var(--text-muted);
   font-size: 0.6875rem;
   flex-shrink: 0;
 }
@@ -571,7 +572,7 @@ onUnmounted(() => {
 .pf-modal-mask {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: var(--bg-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -580,12 +581,12 @@ onUnmounted(() => {
 }
 
 .pf-modal {
-  background: #1a1a1a;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-panel-solid);
+  border: 1px solid var(--border-default);
   border-radius: 0.75rem;
   width: 400px;
   max-width: 90vw;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-lg);
 }
 
 .pf-modal-head {
@@ -593,25 +594,25 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
   padding: 1rem 1.25rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .pf-modal-head h3 {
   margin: 0;
-  color: #e2e8f0;
+  color: var(--text-primary);
   font-size: 0.9375rem;
 }
 
 .pf-modal-head button {
   background: none;
   border: none;
-  color: #718096;
+  color: var(--text-muted);
   font-size: 1.25rem;
   cursor: pointer;
 }
 
 .pf-modal-head button:hover {
-  color: #e2e8f0;
+  color: var(--text-primary);
 }
 
 .pf-modal-body {
@@ -623,7 +624,7 @@ onUnmounted(() => {
 
 .pf-field label {
   display: block;
-  color: #a0aec0;
+  color: var(--text-secondary);
   font-size: 0.75rem;
   margin-bottom: 0.375rem;
 }
@@ -634,10 +635,10 @@ onUnmounted(() => {
 }
 
 .pf-input {
-  background: rgba(30, 30, 30, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-input);
+  border: 1px solid var(--border-default);
   border-radius: 0.375rem;
-  color: #e2e8f0;
+  color: var(--text-primary);
   font-size: 0.8125rem;
   padding: 0.5rem 0.75rem;
   outline: none;
@@ -645,7 +646,7 @@ onUnmounted(() => {
 }
 
 .pf-input:focus {
-  border-color: rgba(66, 153, 225, 0.5);
+  border-color: var(--border-accent);
 }
 
 .pf-input-addr {
@@ -666,10 +667,10 @@ onUnmounted(() => {
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 0.75rem;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--surface-1);
+  border: 1px solid var(--border-default);
   border-radius: 0.375rem;
-  color: #a0aec0;
+  color: var(--text-secondary);
   font-size: 0.75rem;
   cursor: pointer;
   transition: all 0.15s;
@@ -677,13 +678,13 @@ onUnmounted(() => {
 }
 
 .pf-radio:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--surface-2);
 }
 
 .pf-radio.active {
-  background: rgba(66, 153, 225, 0.15);
-  border-color: rgba(66, 153, 225, 0.4);
-  color: #e2e8f0;
+  background: var(--primary-bg);
+  border-color: var(--border-accent);
+  color: var(--text-primary);
 }
 
 .pf-radio input {
@@ -707,13 +708,13 @@ onUnmounted(() => {
 }
 
 .pf-hint {
-  color: #4a5568;
+  color: var(--text-muted);
   font-size: 0.625rem;
   margin-bottom: 0.375rem;
 }
 
 .pf-error {
-  color: #fc8181;
+  color: var(--accent-danger);
   font-size: 0.75rem;
 }
 
@@ -722,7 +723,7 @@ onUnmounted(() => {
   justify-content: flex-end;
   gap: 0.5rem;
   padding: 0.875rem 1.25rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: 1px solid var(--border-subtle);
 }
 
 /* 滚动条 */
@@ -735,7 +736,7 @@ onUnmounted(() => {
 }
 
 .pf-list::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--scrollbar-thumb);
   border-radius: 999px;
 }
 </style>
