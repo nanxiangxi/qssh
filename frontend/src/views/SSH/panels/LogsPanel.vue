@@ -3,7 +3,7 @@
     <!-- 顶部工具栏 -->
     <div class="logs-toolbar">
       <div class="toolbar-left">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#63b3ed" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         <h3>操作日志</h3>
         <span class="connection-badge" v-if="currentConnId">
           {{ getConnectionName() }}
@@ -77,7 +77,7 @@
     <!-- 日志列表容器 -->
     <div class="logs-container" ref="logsContainer">
       <div v-if="filteredLogs.length === 0" class="empty-state">
-        <svg class="empty-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#4a5568" stroke-width="1.5" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        <svg class="empty-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         <p v-if="searchKeyword || filterType !== 'all' || filterLevel !== 'all'">
           没有找到匹配的日志
         </p>
@@ -380,18 +380,18 @@ onUnmounted(() => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: rgba(30, 30, 30, 0.95);
+  background: var(--bg-panel);
   overflow: hidden;
 }
 
 /* 工具栏 */
 .logs-toolbar {
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--border-default);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: rgba(40, 40, 40, 0.5);
+  background: var(--bg-toolbar);
 }
 
 .toolbar-left {
@@ -400,17 +400,21 @@ onUnmounted(() => {
   gap: 0.75rem;
 }
 
+.toolbar-left svg {
+  color: var(--primary-light);
+}
+
 .toolbar-left h3 {
   margin: 0;
-  color: #e2e8f0;
+  color: var(--text-primary);
   font-size: 0.875rem;
   font-weight: 600;
 }
 
 .connection-badge {
   padding: 0.25rem 0.5rem;
-  background: rgba(66, 153, 225, 0.2);
-  color: #63b3ed;
+  background: var(--primary-bg);
+  color: var(--primary-light);
   border-radius: 0.25rem;
   font-size: 0.6875rem;
   font-weight: 500;
@@ -428,34 +432,34 @@ onUnmounted(() => {
   width: 1.75rem;
   height: 1.75rem;
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--border-default);
   border-radius: 0.25rem;
-  color: #a0aec0;
+  color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .tool-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.3);
-  color: #e2e8f0;
+  background: var(--bg-hover);
+  border-color: var(--border-strong);
+  color: var(--text-primary);
 }
 
 .tool-btn.active {
-  background: rgba(66, 153, 225, 0.3);
-  border-color: #4299e1;
-  color: #63b3ed;
+  background: var(--primary-bg);
+  border-color: var(--border-accent);
+  color: var(--primary-light);
 }
 
 /* 过滤栏 */
 .logs-filter-bar {
   padding: 0.5rem 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--border-subtle);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  background: rgba(35, 35, 35, 0.5);
+  background: var(--bg-toolbar);
 }
 
 .search-box {
@@ -468,30 +472,30 @@ onUnmounted(() => {
   left: 0.625rem;
   top: 50%;
   transform: translateY(-50%);
-  color: #718096;
+  color: var(--text-muted);
   pointer-events: none;
 }
 
 .search-input {
   width: 100%;
   padding: 0.375rem 0.625rem 0.375rem 2rem;
-  background: rgba(40, 40, 40, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-input);
+  border: 1px solid var(--border-default);
   border-radius: 0.375rem;
-  color: #e2e8f0;
+  color: var(--text-primary);
   font-size: 0.75rem;
   outline: none;
   transition: all 0.2s;
 }
 
 .search-input:focus {
-  border-color: rgba(66, 153, 225, 0.5);
-  background: rgba(45, 45, 45, 0.9);
-  box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.1);
+  border-color: var(--border-accent);
+  background: var(--bg-input-focus);
+  box-shadow: 0 0 0 2px var(--primary-bg);
 }
 
 .search-input::placeholder {
-  color: #718096;
+  color: var(--text-muted);
 }
 
 .filter-buttons {
@@ -502,10 +506,10 @@ onUnmounted(() => {
 .filter-select {
   min-width: 110px;
   padding: 0.375rem 0.625rem;
-  background: rgba(40, 40, 40, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-input);
+  border: 1px solid var(--border-default);
   border-radius: 0.375rem;
-  color: #e2e8f0;
+  color: var(--text-primary);
   font-size: 0.75rem;
   outline: none;
   cursor: pointer;
@@ -513,12 +517,12 @@ onUnmounted(() => {
 }
 
 .filter-select:hover {
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: var(--border-strong);
 }
 
 .filter-select:focus {
-  border-color: rgba(66, 153, 225, 0.5);
-  box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.1);
+  border-color: var(--border-accent);
+  box-shadow: 0 0 0 2px var(--primary-bg);
 }
 
 /* 日志容器 */
@@ -537,12 +541,12 @@ onUnmounted(() => {
 }
 
 .logs-container::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--scrollbar-thumb);
   border-radius: 3px;
 }
 
 .logs-container::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--scrollbar-thumb-hover);
 }
 
 /* 空状态 */
@@ -553,11 +557,12 @@ onUnmounted(() => {
   justify-content: center;
   height: 100%;
   gap: 1rem;
-  color: #718096;
+  color: var(--text-muted);
 }
 
 .empty-icon {
   opacity: 0.4;
+  color: var(--text-muted);
 }
 
 .empty-state p {
@@ -567,17 +572,17 @@ onUnmounted(() => {
 
 .retry-btn {
   padding: 0.5rem 1rem;
-  background: rgba(66, 153, 225, 0.2);
-  border: 1px solid rgba(66, 153, 225, 0.5);
+  background: var(--primary-bg);
+  border: 1px solid var(--border-accent);
   border-radius: 0.25rem;
-  color: #63b3ed;
+  color: var(--primary-light);
   cursor: pointer;
   font-size: 0.75rem;
   transition: all 0.2s;
 }
 
 .retry-btn:hover {
-  background: rgba(66, 153, 225, 0.3);
+  background: var(--primary-bg-hover);
 }
 
 /* 日志卡片 - 简洁现代化设计 */
@@ -589,14 +594,14 @@ onUnmounted(() => {
 
 .log-card {
   padding: 0.75rem 1rem;
-  background: rgba(45, 45, 45, 0.6);
+  background: var(--surface-1);
   border-radius: 0.375rem;
   transition: all 0.2s ease;
   cursor: pointer;
 }
 
 .log-card:hover {
-  background: rgba(55, 55, 55, 0.8);
+  background: var(--surface-hover);
   transform: translateX(2px);
 }
 
@@ -616,7 +621,7 @@ onUnmounted(() => {
 
 .log-time {
   font-size: 0.6875rem;
-  color: #718096;
+  color: var(--text-muted);
   font-family: 'Courier New', monospace;
 }
 
@@ -628,45 +633,45 @@ onUnmounted(() => {
   font-weight: 600;
 }
 
-.type-terminal { 
-  background: rgba(66, 153, 225, 0.2); 
-  color: #63b3ed; 
+.type-terminal {
+  background: var(--primary-bg);
+  color: var(--primary-light);
 }
-.type-fileManager { 
-  background: rgba(72, 187, 120, 0.2); 
-  color: #68d391; 
+.type-fileManager {
+  background: var(--success-bg);
+  color: var(--success-light);
 }
-.type-connection { 
-  background: rgba(159, 122, 234, 0.2); 
-  color: #b794f4; 
+.type-connection {
+  background: color-mix(in srgb, var(--accent-purple), transparent 80%);
+  color: var(--accent-purple);
 }
-.type-system { 
-  background: rgba(237, 137, 54, 0.2); 
-  color: #f6ad55; 
+.type-system {
+  background: var(--warning-bg);
+  color: var(--warning-light);
 }
-.type-error { 
-  background: rgba(245, 101, 101, 0.2); 
-  color: #fc8181; 
+.type-error {
+  background: var(--danger-bg);
+  color: var(--danger-light);
 }
 .type-security {
-  background: rgba(236, 201, 75, 0.2);
-  color: #faf089;
+  background: color-mix(in srgb, var(--accent-warning), transparent 80%);
+  color: var(--warning-light);
 }
 .type-ai {
-  background: rgba(159, 122, 234, 0.2);
-  color: #b794f4;
+  background: color-mix(in srgb, var(--accent-purple), transparent 80%);
+  color: var(--accent-purple);
 }
 .type-portForward {
-  background: rgba(99, 179, 237, 0.2);
-  color: #63b3ed;
+  background: var(--primary-bg);
+  color: var(--primary-light);
 }
 .type-firewall {
-  background: rgba(246, 173, 85, 0.2);
-  color: #f6ad55;
+  background: var(--warning-bg);
+  color: var(--warning-light);
 }
 .type-guardian {
-  background: rgba(159, 122, 234, 0.2);
-  color: #b794f4;
+  background: color-mix(in srgb, var(--accent-purple), transparent 80%);
+  color: var(--accent-purple);
 }
 
 .log-level-badge {
@@ -677,43 +682,43 @@ onUnmounted(() => {
   font-weight: 600;
 }
 
-.badge-info { 
-  background: rgba(99, 179, 237, 0.2); 
-  color: #63b3ed; 
+.badge-info {
+  background: var(--primary-bg);
+  color: var(--primary-light);
 }
-.badge-success { 
-  background: rgba(72, 187, 120, 0.2); 
-  color: #68d391; 
+.badge-success {
+  background: var(--success-bg);
+  color: var(--success-light);
 }
-.badge-warning { 
-  background: rgba(236, 201, 75, 0.2); 
-  color: #faf089; 
+.badge-warning {
+  background: color-mix(in srgb, var(--accent-warning), transparent 80%);
+  color: var(--warning-light);
 }
-.badge-error { 
-  background: rgba(245, 101, 101, 0.2); 
-  color: #fc8181; 
+.badge-error {
+  background: var(--danger-bg);
+  color: var(--danger-light);
 }
-.badge-low { 
-  background: rgba(236, 201, 75, 0.2); 
-  color: #faf089; 
+.badge-low {
+  background: color-mix(in srgb, var(--accent-warning), transparent 80%);
+  color: var(--warning-light);
 }
-.badge-medium { 
-  background: rgba(237, 137, 54, 0.2); 
-  color: #fbd38d; 
+.badge-medium {
+  background: color-mix(in srgb, var(--accent-warning), transparent 70%);
+  color: var(--warning-light);
 }
-.badge-high { 
-  background: rgba(245, 101, 101, 0.25); 
-  color: #feb2b2; 
+.badge-high {
+  background: color-mix(in srgb, var(--accent-danger), transparent 75%);
+  color: var(--danger-light);
   font-weight: 700;
 }
-.badge-critical { 
-  background: rgba(229, 62, 62, 0.3); 
-  color: #fed7d7; 
+.badge-critical {
+  background: color-mix(in srgb, var(--accent-danger), transparent 70%);
+  color: var(--danger-light);
   font-weight: 700;
 }
 
 .expand-icon {
-  color: #718096;
+  color: var(--text-muted);
   transition: transform 0.2s;
   cursor: pointer;
 }
@@ -729,13 +734,13 @@ onUnmounted(() => {
 }
 
 .command-text {
-  color: #e2e8f0;
+  color: var(--text-primary);
   font-family: 'Courier New', monospace;
   font-weight: 500;
 }
 
 .message-text {
-  color: #e2e8f0;
+  color: var(--text-primary);
   line-height: 1.5;
 }
 
@@ -743,9 +748,9 @@ onUnmounted(() => {
 .log-security-info {
   margin-top: 0.5rem;
   padding: 0.5rem 0.75rem;
-  background: rgba(229, 62, 62, 0.1);
+  background: var(--danger-bg);
   border-radius: 0.25rem;
-  border-left: 2px solid #e53e3e;
+  border-left: 2px solid var(--accent-danger);
 }
 
 .security-warnings {
@@ -756,27 +761,27 @@ onUnmounted(() => {
 
 .warning-text {
   font-size: 0.75rem;
-  color: #feb2b2;
+  color: var(--danger-light);
   line-height: 1.4;
 }
 
 .log-details {
   margin-top: 0.75rem;
   padding-top: 0.75rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--border-default);
 }
 
 .details-label {
   font-size: 0.6875rem;
-  color: #718096;
+  color: var(--text-muted);
   margin-bottom: 0.375rem;
   font-weight: 600;
 }
 
 .details-content {
   font-size: 0.75rem;
-  color: #a0aec0;
-  background: rgba(0, 0, 0, 0.3);
+  color: var(--text-secondary);
+  background: var(--surface-1);
   padding: 0.625rem;
   border-radius: 0.25rem;
   overflow-x: auto;
@@ -789,8 +794,8 @@ onUnmounted(() => {
 /* 底部状态栏 */
 .logs-footer {
   padding: 0.5rem 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(40, 40, 40, 0.5);
+  border-top: 1px solid var(--border-default);
+  background: var(--bg-toolbar);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -807,7 +812,7 @@ onUnmounted(() => {
   align-items: center;
   gap: 0.375rem;
   font-size: 0.6875rem;
-  color: #a0aec0;
+  color: var(--text-secondary);
   cursor: pointer;
 }
 
@@ -817,7 +822,7 @@ onUnmounted(() => {
 
 .last-update {
   font-size: 0.6875rem;
-  color: #718096;
+  color: var(--text-muted);
 }
 
 /* === 响应式布局 === */
