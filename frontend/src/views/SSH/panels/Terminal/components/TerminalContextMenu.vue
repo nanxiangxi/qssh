@@ -125,12 +125,12 @@ function close() {
 
 .context-menu {
   position: fixed;
-  background: rgba(26, 27, 38, 0.98);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-panel);
+  border: 1px solid var(--border-default);
   border-radius: 8px;
   padding: 4px;
   min-width: 200px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-md);
   z-index: 10001;
   animation: contextMenuIn 0.1s ease-out;
 }
@@ -147,7 +147,7 @@ function close() {
   align-items: center;
   gap: 8px;
   padding: 6px 12px;
-  color: #a9b1d6;
+  color: var(--text-secondary);
   font-size: 12px;
   border-radius: 4px;
   cursor: pointer;
@@ -155,8 +155,8 @@ function close() {
 }
 
 .menu-item:hover {
-  background: rgba(122, 162, 247, 0.15);
-  color: #c0caf5;
+  background: var(--primary-bg);
+  color: var(--text-primary);
 }
 
 .menu-item.disabled {
@@ -166,19 +166,19 @@ function close() {
 
 .menu-item.disabled:hover {
   background: transparent;
-  color: #a9b1d6;
+  color: var(--text-secondary);
 }
 
 .shortcut {
   margin-left: auto;
-  color: #565f89;
+  color: var(--text-muted);
   font-size: 10px;
   font-family: monospace;
 }
 
 .menu-separator {
   height: 1px;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--border-subtle);
   margin: 4px 0;
 }
 </style>

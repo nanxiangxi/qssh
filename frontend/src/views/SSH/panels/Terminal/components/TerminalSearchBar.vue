@@ -90,16 +90,16 @@ function close() {
 .search-input-wrapper {
   display: flex;
   align-items: center;
-  background: rgba(26, 27, 38, 0.98);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-panel);
+  border: 1px solid var(--border-default);
   border-radius: 8px;
   padding: 4px 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--shadow-md);
   backdrop-filter: blur(12px);
 }
 
 .search-icon {
-  color: #565f89;
+  color: var(--text-muted);
   margin-right: 8px;
   flex-shrink: 0;
 }
@@ -109,13 +109,13 @@ function close() {
   background: transparent;
   border: none;
   outline: none;
-  color: #c0caf5;
+  color: var(--text-primary);
   font-size: 13px;
   font-family: inherit;
 }
 
 .search-input::placeholder {
-  color: #565f89;
+  color: var(--text-muted);
 }
 
 .search-actions {
@@ -134,19 +134,19 @@ function close() {
   background: transparent;
   border: none;
   border-radius: 4px;
-  color: #a9b1d6;
+  color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.15s;
 }
 
 .search-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #c0caf5;
+  background: var(--bg-hover);
+  color: var(--text-primary);
 }
 
 .search-btn.close:hover {
-  background: rgba(247, 118, 142, 0.15);
-  color: #f7768e;
+  background: var(--danger-bg);
+  color: var(--accent-danger);
 }
 
 /* 动画 */
