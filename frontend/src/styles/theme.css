@@ -52,6 +52,8 @@
   --border-default: rgba(255, 255, 255, 0.1);
   --border-strong: rgba(255, 255, 255, 0.15);
   --border-accent: rgba(66, 153, 225, 0.4);
+  --border-success: rgba(72, 187, 120, 0.4);
+  --border-warning: rgba(246, 173, 85, 0.4);
   --border-danger: rgba(245, 101, 101, 0.4);
 
   /* ===== Shadows ===== */
@@ -119,6 +121,8 @@
   --border-default: rgba(0, 0, 0, 0.1);
   --border-strong: rgba(0, 0, 0, 0.15);
   --border-accent: rgba(59, 130, 246, 0.4);
+  --border-success: rgba(34, 197, 94, 0.4);
+  --border-warning: rgba(245, 158, 11, 0.4);
   --border-danger: rgba(239, 68, 68, 0.4);
 
   /* ===== Shadows ===== */

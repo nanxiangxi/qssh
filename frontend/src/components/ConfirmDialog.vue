@@ -109,7 +109,7 @@ const { confirmState, handleConfirm, handleCancel } = useConfirm()
   color: var(--accent-danger);
 }
 .cd-btn-danger:hover {
-  background: rgba(239, 68, 68, 0.25);
+  background: color-mix(in srgb, var(--accent-danger), transparent 75%);
 }
 
 .cd-fade-enter-active,
