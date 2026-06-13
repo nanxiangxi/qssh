@@ -381,10 +381,10 @@ export default defineComponent({
   height: 100%;
 }
 
-/* Dockview 主题覆盖 - 默认深色 */
+/* Dockview 主题覆盖 - 默认使用 CSS 变量 */
 .dockview-container .dv-tabs-and-actions-container {
-  background: rgba(45, 45, 45, 0.95) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background: var(--bg-toolbar) !important;
+  border-bottom: 1px solid var(--border-default) !important;
   flex-shrink: 0 !important;
   overflow: hidden !important;
   min-width: 0 !important;
@@ -399,9 +399,9 @@ export default defineComponent({
 }
 
 .dockview-container .dv-tab {
-  background: rgba(50, 50, 50, 0.4) !important;
-  color: #e2e8f0 !important;
-  border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: var(--surface-2) !important;
+  color: var(--text-primary) !important;
+  border-right: 1px solid var(--border-subtle) !important;
   padding: 0 0.75rem !important;
   min-width: 0 !important;
   max-width: 160px !important;
@@ -416,37 +416,37 @@ export default defineComponent({
 }
 
 .dockview-container .dv-tab:hover {
-  background: rgba(60, 60, 60, 0.6) !important;
+  background: var(--surface-hover) !important;
 }
 
 .dockview-container .dv-active-tab {
-  background: rgba(45, 45, 45, 0.95) !important;
-  border-bottom: 2px solid #4299e1 !important;
+  background: var(--bg-panel) !important;
+  border-bottom: 2px solid var(--accent-primary) !important;
 }
 
 .dockview-container .dv-inactive-tab {
-  background: rgba(50, 50, 50, 0.4) !important;
+  background: var(--surface-2) !important;
   border-bottom: 2px solid transparent !important;
 }
 
 .dockview-container .dv-default-tab {
-  background: rgba(50, 50, 50, 0.4) !important;
-  color: #a0aec0 !important;
-  border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: var(--surface-2) !important;
+  color: var(--text-secondary) !important;
+  border-right: 1px solid var(--border-subtle) !important;
   padding: 0 0.75rem !important;
   min-width: 100px !important;
 }
 
 .dockview-container .dv-group-view {
-  background: rgba(30, 30, 30, 0.95) !important;
+  background: var(--bg-panel) !important;
 }
 
 .dockview-container .dv-separator {
-  background: rgba(255, 255, 255, 0.1) !important;
+  background: var(--border-default) !important;
 }
 
 .dockview-container .dv-watermark-container {
-  background: rgba(30, 30, 30, 0.95) !important;
+  background: var(--bg-panel) !important;
 }
 
 .dockview-container .dv-group-view > div {
@@ -522,8 +522,8 @@ export default defineComponent({
 
 /* dockview 自定义滚动条 */
 .dockview-container .dv-scrollbar {
-  background-color: rgba(99, 179, 237, 0.2) !important;
-  background-image: linear-gradient(135deg, rgba(99, 179, 237, 0.1), rgba(66, 153, 225, 0.3)) !important;
+  background-color: var(--scrollbar-thumb) !important;
+  background-image: linear-gradient(135deg, color-mix(in srgb, var(--accent-primary) 20%, transparent), color-mix(in srgb, var(--accent-primary) 40%, transparent)) !important;
   border-radius: 999px !important;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
   cursor: pointer !important;
@@ -538,9 +538,9 @@ export default defineComponent({
 .dockview-container .dv-scrollable.dv-scrollable-scrolling .dv-scrollbar-horizontal,
 .dockview-container .dv-scrollable.dv-scrollable-resizing .dv-scrollbar-horizontal {
   height: 6px !important;
-  background-color: rgba(99, 179, 237, 0.4) !important;
-  background-image: linear-gradient(135deg, rgba(99, 179, 237, 0.3), rgba(66, 153, 225, 0.6)) !important;
-  box-shadow: 0 0 10px rgba(66, 153, 225, 0.25) !important;
+  background-color: var(--scrollbar-thumb-hover) !important;
+  background-image: linear-gradient(135deg, color-mix(in srgb, var(--accent-primary) 35%, transparent), color-mix(in srgb, var(--accent-primary) 60%, transparent)) !important;
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent-primary) 25%, transparent) !important;
 }
 
 .dockview-container .dv-scrollbar-vertical {
@@ -552,17 +552,17 @@ export default defineComponent({
 .dockview-container .dv-scrollable.dv-scrollable-scrolling .dv-scrollbar-vertical,
 .dockview-container .dv-scrollable.dv-scrollable-resizing .dv-scrollbar-vertical {
   width: 6px !important;
-  background-color: rgba(99, 179, 237, 0.4) !important;
-  background-image: linear-gradient(135deg, rgba(99, 179, 237, 0.3), rgba(66, 153, 225, 0.6)) !important;
-  box-shadow: 0 0 10px rgba(66, 153, 225, 0.25) !important;
+  background-color: var(--scrollbar-thumb-hover) !important;
+  background-image: linear-gradient(135deg, color-mix(in srgb, var(--accent-primary) 35%, transparent), color-mix(in srgb, var(--accent-primary) 60%, transparent)) !important;
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent-primary) 25%, transparent) !important;
 }
 
 /* dockview 溢出下拉按钮 */
 .dockview-container .dv-tabs-overflow-dropdown-default {
-  background: rgba(66, 153, 225, 0.08) !important;
-  border: 1px solid rgba(66, 153, 225, 0.15) !important;
+  background: var(--primary-bg) !important;
+  border: 1px solid var(--border-accent) !important;
   border-radius: 6px !important;
-  color: #63b3ed !important;
+  color: var(--primary-light) !important;
   font-size: 11px !important;
   font-weight: 500 !important;
   padding: 2px 10px !important;
@@ -574,25 +574,25 @@ export default defineComponent({
 }
 
 .dockview-container .dv-tabs-overflow-dropdown-default:hover {
-  background: rgba(66, 153, 225, 0.18) !important;
-  border-color: rgba(66, 153, 225, 0.3) !important;
-  color: #90cdf4 !important;
+  background: var(--primary-bg-hover) !important;
+  border-color: var(--border-accent) !important;
+  color: var(--accent-primary) !important;
 }
 
 .dockview-container .dv-tabs-overflow-dropdown-default .dv-svg {
-  fill: #63b3ed !important;
+  fill: var(--primary-light) !important;
 }
 
 .dockview-container .dv-tabs-overflow-dropdown-default:hover .dv-svg {
-  fill: #90cdf4 !important;
+  fill: var(--accent-primary) !important;
 }
 
 /* dockview 溢出容器 */
 .dockview-container .dv-tabs-overflow-container {
-  background: rgba(22, 22, 22, 0.98) !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: var(--bg-panel) !important;
+  border: 1px solid var(--border-default) !important;
   border-radius: 10px !important;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 1px rgba(255, 255, 255, 0.1) !important;
+  box-shadow: var(--shadow-lg) !important;
   padding: 4px !important;
   backdrop-filter: blur(12px) !important;
 }
@@ -606,49 +606,49 @@ export default defineComponent({
 }
 
 .dockview-container .dv-tabs-overflow-container::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgba(99, 179, 237, 0.15), rgba(66, 153, 225, 0.3)) !important;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent-primary) 20%, transparent), color-mix(in srgb, var(--accent-primary) 40%, transparent)) !important;
   border-radius: 999px !important;
 }
 
 .dockview-container .dv-tabs-overflow-container .dv-tab {
   border-radius: 4px !important;
   margin: 1px 0 !important;
-  color: #a0aec0 !important;
+  color: var(--text-secondary) !important;
 }
 
 .dockview-container .dv-tabs-overflow-container .dv-tab:hover {
-  background: rgba(66, 153, 225, 0.1) !important;
-  color: #e2e8f0 !important;
+  background: var(--primary-bg) !important;
+  color: var(--text-primary) !important;
 }
 
 .dockview-container .dv-tabs-overflow-container .dv-active-tab {
-  background: rgba(66, 153, 225, 0.15) !important;
-  color: #63b3ed !important;
+  background: var(--primary-bg) !important;
+  color: var(--accent-primary) !important;
 }
 
 /* 面板内 select 下拉框 */
 .dockview-container select {
-  background: rgba(30, 30, 30, 0.95) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background: var(--bg-input) !important;
+  border: 1px solid var(--border-default) !important;
   border-radius: 6px !important;
-  color: #a0aec0 !important;
+  color: var(--text-secondary) !important;
   font-size: 12px !important;
   padding: 4px 24px 4px 8px !important;
   outline: none !important;
   appearance: none !important;
   -webkit-appearance: none !important;
-  background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23718096' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E") !important;
+  background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%2364748b' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E") !important;
   background-repeat: no-repeat !important;
   background-position: right 8px center !important;
 }
 
 .dockview-container select:focus {
-  border-color: rgba(66, 153, 225, 0.4) !important;
+  border-color: var(--border-accent) !important;
 }
 
 .dockview-container select option {
-  background: #1a1a1a !important;
-  color: #e2e8f0 !important;
+  background: var(--bg-panel) !important;
+  color: var(--text-primary) !important;
 }
 
 /* ===== 浅色主题覆盖 ===== */

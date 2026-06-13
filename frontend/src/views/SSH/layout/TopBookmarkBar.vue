@@ -405,17 +405,17 @@ onUnmounted(() => {
 
 .tab-status.connected {
   background: var(--accent-success);
-  box-shadow: 0 0 0.375rem rgba(72, 187, 120, 0.5);
+  box-shadow: 0 0 0.375rem color-mix(in srgb, var(--accent-success), transparent 50%);
 }
 
 .tab-status.disconnected {
   background: var(--accent-danger);
-  box-shadow: 0 0 0.375rem rgba(252, 129, 129, 0.5);
+  box-shadow: 0 0 0.375rem color-mix(in srgb, var(--accent-danger), transparent 50%);
 }
 
 .tab-status.reconnecting {
   background: var(--accent-warning);
-  box-shadow: 0 0 0.375rem rgba(251, 211, 141, 0.5);
+  box-shadow: 0 0 0.375rem color-mix(in srgb, var(--accent-warning), transparent 50%);
   animation: pulse 1.5s infinite;
 }
 
