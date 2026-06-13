@@ -402,7 +402,7 @@ export default defineComponent({
   background: var(--surface-2) !important;
   color: var(--text-primary) !important;
   border-right: 1px solid var(--border-subtle) !important;
-  padding: 0 0.75rem !important;
+  padding: 0 !important;
   min-width: 0 !important;
   max-width: 160px !important;
   flex-shrink: 0 !important;
@@ -426,15 +426,18 @@ export default defineComponent({
 
 .dockview-container .dv-inactive-tab {
   background: var(--surface-2) !important;
+  color: var(--text-secondary) !important;
   border-bottom: 2px solid transparent !important;
 }
 
 .dockview-container .dv-default-tab {
-  background: var(--surface-2) !important;
-  color: var(--text-secondary) !important;
-  border-right: 1px solid var(--border-subtle) !important;
+  background: transparent !important;
+  color: inherit !important;
+  border-right: none !important;
   padding: 0 0.75rem !important;
   min-width: 100px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 .dockview-container .dv-group-view {
@@ -674,12 +677,13 @@ export default defineComponent({
 
 [data-theme="light"] .dockview-container .dv-inactive-tab {
   background: var(--surface-2) !important;
+  color: var(--text-secondary) !important;
 }
 
 [data-theme="light"] .dockview-container .dv-default-tab {
-  background: var(--surface-2) !important;
-  color: var(--text-secondary) !important;
-  border-right: 1px solid var(--border-subtle) !important;
+  background: transparent !important;
+  color: inherit !important;
+  border-right: none !important;
 }
 
 [data-theme="light"] .dockview-container .dv-group-view {
