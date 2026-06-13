@@ -13,6 +13,18 @@ import (
 // AppConfig 应用配置（仅保留实际使用的字段）
 type AppConfig struct {
 	Terminal TerminalConfig `json:"terminal"`
+	UI       UIConfig       `json:"ui"`
+	Cloud    CloudConfig    `json:"cloud"`
+}
+
+// CloudConfig 云端配置
+type CloudConfig struct {
+	Enabled      bool   `json:"enabled"`
+	ServerURL    string `json:"serverUrl"`
+	Token        string `json:"token"`
+	SyncInterval int    `json:"syncInterval"` // 同步间隔（秒）
+	AutoSyncTo   bool   `json:"autoSyncTo"`   // 自动同步到云端
+	AutoSyncFrom bool   `json:"autoSyncFrom"` // 自动从云端同步
 }
 
 // TerminalConfig 终端配置
@@ -21,6 +33,8 @@ type TerminalConfig struct {
 	AutoSwitchClassic  bool   `json:"autoSwitchClassic"`  // 交互式操作自动切经典
 	SwitchMode         string `json:"switchMode"`         // prompt | auto | inline
 	FontSize           int    `json:"fontSize"`           // 终端字体大小
+	CommandSendMode    string `json:"commandSendMode"`    // enter | button
+	CodeHighlight      bool   `json:"codeHighlight"`      // 经典终端代码高亮
 }
 
 // FileManagerConfig 文件管理配置（预留，供 Wails 绑定使用）
@@ -38,12 +52,12 @@ type AIConfig struct {
 	ConfirmExecution bool `json:"confirmExecution"`
 }
 
-// UIConfig 界面配置（预留）
+// UIConfig 界面配置
 type UIConfig struct {
-	Language         string `json:"language"`
-	Theme            string `json:"theme"`
-	SidebarCollapsed bool   `json:"sidebarCollapsed"`
-	ShowStatusBar    bool   `json:"showStatusBar"`
+	AutoTray         bool   `json:"autoTray"`         // SSH 连接成功后自动最小化到托盘
+	RememberPosition bool   `json:"rememberPosition"` // 记忆窗口位置
+	AutoShowHome     bool   `json:"autoShowHome"`     // SSH 窗口全部关闭后自动显示首页
+	Theme            string `json:"theme"`            // 主题 dark/light
 }
 
 // SSHSettings SSH 设置（预留）
@@ -76,14 +90,9 @@ func NewConfigService() *ConfigService {
 		config:   getDefaultConfig(),
 	}
 
-	// 加载配置
-	if err := svc.load(); err != nil {
+	// 加载配置并补全缺失字段
+	if err := svc.loadAndMerge(); err != nil {
 		fmt.Printf("[ConfigService] 加载配置失败，使用默认配置: %v\n", err)
-	}
-
-	// 确保配置文件存在（如果不存在则创建）
-	if err := svc.ensureConfigFile(); err != nil {
-		fmt.Printf("[ConfigService] 创建配置文件失败: %v\n", err)
 	}
 
 	return svc
@@ -100,6 +109,21 @@ func getDefaultConfig() *AppConfig {
 		Terminal: TerminalConfig{
 			DefaultType:       "classic",
 			AutoSwitchClassic: true,
+			SwitchMode:        "prompt",
+			FontSize:          14,
+			CommandSendMode:   "enter",
+			CodeHighlight:     false,
+		},
+		UI: UIConfig{
+			AutoTray:         false,
+			RememberPosition: true,
+			AutoShowHome:     true,
+		},
+		Cloud: CloudConfig{
+			Enabled:      false,
+			ServerURL:    "",
+			Token:        "",
+			SyncInterval: 60,
 		},
 	}
 }
@@ -136,34 +160,12 @@ func getDataDir() string {
 	return configDir
 }
 
-// load 加载配置
-func (s *ConfigService) load() error {
+// loadAndMerge 加载配置文件并补全缺失字段
+// 文件不存在 → 使用默认配置并保存
+// 文件存在 → 读取 JSON，与默认配置合并（缺失字段自动补充），合并后保存
+func (s *ConfigService) loadAndMerge() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-
-	// 检查文件是否存在
-	if _, err := os.Stat(s.filePath); os.IsNotExist(err) {
-		fmt.Printf("[ConfigService] 配置文件不存在，将使用默认配置: %s\n", s.filePath)
-		return nil
-	}
-
-	data, err := os.ReadFile(s.filePath)
-	if err != nil {
-		return err
-	}
-
-	return json.Unmarshal(data, s.config)
-}
-
-// ensureConfigFile 确保配置文件存在
-func (s *ConfigService) ensureConfigFile() error {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-
-	// 检查文件是否存在
-	if _, err := os.Stat(s.filePath); err == nil {
-		return nil // 文件已存在
-	}
 
 	// 确保目录存在
 	dir := filepath.Dir(s.filePath)
@@ -171,18 +173,108 @@ func (s *ConfigService) ensureConfigFile() error {
 		return fmt.Errorf("创建配置目录失败: %v", err)
 	}
 
-	// 保存默认配置
-	data, err := json.MarshalIndent(s.config, "", "  ")
+	defaults := getDefaultConfig()
+
+	// 检查文件是否存在
+	if _, err := os.Stat(s.filePath); os.IsNotExist(err) {
+		fmt.Printf("[ConfigService] 配置文件不存在，创建默认配置: %s\n", s.filePath)
+		s.config = defaults
+		return s.save()
+	}
+
+	// 文件存在，读取内容
+	data, err := os.ReadFile(s.filePath)
 	if err != nil {
-		return fmt.Errorf("序列化配置失败: %v", err)
+		return err
 	}
 
-	if err := os.WriteFile(s.filePath, data, 0644); err != nil {
-		return fmt.Errorf("写入配置文件失败: %v", err)
+	// 解析为 map，保留已有字段的值
+	var raw map[string]interface{}
+	if err := json.Unmarshal(data, &raw); err != nil {
+		fmt.Printf("[ConfigService] 配置文件解析失败，使用默认配置: %v\n", err)
+		s.config = defaults
+		return s.save()
 	}
 
-	fmt.Printf("[ConfigService] ✓ 配置文件已创建: %s\n", s.filePath)
+	// 以默认配置为基础，用文件中的值覆盖
+	merged := mergeConfig(raw, defaults)
+	s.config = merged
+
+	// 保存合并后的配置（确保文件包含所有字段）
+	if err := s.save(); err != nil {
+		fmt.Printf("[ConfigService] 保存合并配置失败: %v\n", err)
+	} else {
+		fmt.Printf("[ConfigService] ✓ 配置已加载并补全缺失字段\n")
+	}
+
 	return nil
+}
+
+// mergeConfig 以默认配置为基础，用 raw 中的值覆盖
+func mergeConfig(raw map[string]interface{}, defaults *AppConfig) *AppConfig {
+	result := *defaults // 复制默认值
+
+	// 合并 terminal 配置
+	if termRaw, ok := raw["terminal"].(map[string]interface{}); ok {
+		if v, ok := termRaw["defaultType"].(string); ok && v != "" {
+			result.Terminal.DefaultType = v
+		}
+		if v, ok := termRaw["autoSwitchClassic"].(bool); ok {
+			result.Terminal.AutoSwitchClassic = v
+		}
+		if v, ok := termRaw["switchMode"].(string); ok && v != "" {
+			result.Terminal.SwitchMode = v
+		}
+		if v, ok := termRaw["fontSize"].(float64); ok && v > 0 {
+			result.Terminal.FontSize = int(v)
+		}
+		if v, ok := termRaw["commandSendMode"].(string); ok && v != "" {
+			result.Terminal.CommandSendMode = v
+		}
+		if v, ok := termRaw["codeHighlight"].(bool); ok {
+			result.Terminal.CodeHighlight = v
+		}
+	}
+
+	// 合并 ui 配置
+	if uiRaw, ok := raw["ui"].(map[string]interface{}); ok {
+		if v, ok := uiRaw["autoTray"].(bool); ok {
+			result.UI.AutoTray = v
+		}
+		if v, ok := uiRaw["rememberPosition"].(bool); ok {
+			result.UI.RememberPosition = v
+		}
+		if v, ok := uiRaw["autoShowHome"].(bool); ok {
+			result.UI.AutoShowHome = v
+		}
+		if v, ok := uiRaw["theme"].(string); ok && v != "" {
+			result.UI.Theme = v
+		}
+	}
+
+	// 合并 cloud 配置
+	if cloudRaw, ok := raw["cloud"].(map[string]interface{}); ok {
+		if v, ok := cloudRaw["enabled"].(bool); ok {
+			result.Cloud.Enabled = v
+		}
+		if v, ok := cloudRaw["serverUrl"].(string); ok {
+			result.Cloud.ServerURL = v
+		}
+		if v, ok := cloudRaw["token"].(string); ok {
+			result.Cloud.Token = v
+		}
+		if v, ok := cloudRaw["syncInterval"].(float64); ok && v > 0 {
+			result.Cloud.SyncInterval = int(v)
+		}
+		if v, ok := cloudRaw["autoSyncTo"].(bool); ok {
+			result.Cloud.AutoSyncTo = v
+		}
+		if v, ok := cloudRaw["autoSyncFrom"].(bool); ok {
+			result.Cloud.AutoSyncFrom = v
+		}
+	}
+
+	return &result
 }
 
 // save 保存配置（调用者需持有锁）
@@ -264,14 +356,11 @@ func (s *ConfigService) SetAIConfig(config AIConfig) error {
 	return nil
 }
 
-// GetUIConfig 获取界面配置（预留，供 Wails 绑定）
+// GetUIConfig 获取界面配置
 func (s *ConfigService) GetUIConfig() UIConfig {
-	return UIConfig{
-		Language:         "zh-CN",
-		Theme:            "dark",
-		SidebarCollapsed: false,
-		ShowStatusBar:    true,
-	}
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.config.UI
 }
 
 // SetUIConfig 设置界面配置（预留）
@@ -306,6 +395,24 @@ func (s *ConfigService) Get(category, key string) (interface{}, error) {
 		if key == "autoSwitchClassic" { return s.config.Terminal.AutoSwitchClassic, nil }
 		if key == "switchMode" { return s.config.Terminal.SwitchMode, nil }
 		if key == "fontSize" { return s.config.Terminal.FontSize, nil }
+		if key == "commandSendMode" { return s.config.Terminal.CommandSendMode, nil }
+		if key == "codeHighlight" { return s.config.Terminal.CodeHighlight, nil }
+	}
+
+	if category == "ui" {
+		if key == "autoTray" { return s.config.UI.AutoTray, nil }
+		if key == "rememberPosition" { return s.config.UI.RememberPosition, nil }
+		if key == "autoShowHome" { return s.config.UI.AutoShowHome, nil }
+		if key == "theme" { return s.config.UI.Theme, nil }
+	}
+
+	if category == "cloud" {
+		if key == "enabled" { return s.config.Cloud.Enabled, nil }
+		if key == "serverUrl" { return s.config.Cloud.ServerURL, nil }
+		if key == "token" { return s.config.Cloud.Token, nil }
+		if key == "syncInterval" { return s.config.Cloud.SyncInterval, nil }
+		if key == "autoSyncTo" { return s.config.Cloud.AutoSyncTo, nil }
+		if key == "autoSyncFrom" { return s.config.Cloud.AutoSyncFrom, nil }
 	}
 
 	return nil, fmt.Errorf("未知的配置项: %s.%s", category, key)
@@ -333,6 +440,60 @@ func (s *ConfigService) Set(category, key string, value interface{}) error {
 			if v, ok := value.(float64); ok { s.config.Terminal.FontSize = int(v); return s.save() }
 			return fmt.Errorf("无效的值类型")
 		}
+		if key == "commandSendMode" {
+			if v, ok := value.(string); ok { s.config.Terminal.CommandSendMode = v; return s.save() }
+			return fmt.Errorf("无效的值类型")
+		}
+		if key == "codeHighlight" {
+			if v, ok := value.(bool); ok { s.config.Terminal.CodeHighlight = v; return s.save() }
+			return fmt.Errorf("无效的值类型")
+		}
+	}
+
+	if category == "ui" {
+		if key == "autoTray" {
+			if v, ok := value.(bool); ok { s.config.UI.AutoTray = v; return s.save() }
+			return fmt.Errorf("无效的值类型")
+		}
+		if key == "rememberPosition" {
+			if v, ok := value.(bool); ok { s.config.UI.RememberPosition = v; return s.save() }
+			return fmt.Errorf("无效的值类型")
+		}
+		if key == "autoShowHome" {
+			if v, ok := value.(bool); ok { s.config.UI.AutoShowHome = v; return s.save() }
+			return fmt.Errorf("无效的值类型")
+		}
+		if key == "theme" {
+			if v, ok := value.(string); ok { s.config.UI.Theme = v; return s.save() }
+			return fmt.Errorf("无效的值类型")
+		}
+	}
+
+	if category == "cloud" {
+		if key == "enabled" {
+			if v, ok := value.(bool); ok { s.config.Cloud.Enabled = v; return s.save() }
+			return fmt.Errorf("无效的值类型")
+		}
+		if key == "serverUrl" {
+			if v, ok := value.(string); ok { s.config.Cloud.ServerURL = v; return s.save() }
+			return fmt.Errorf("无效的值类型")
+		}
+		if key == "token" {
+			if v, ok := value.(string); ok { s.config.Cloud.Token = v; return s.save() }
+			return fmt.Errorf("无效的值类型")
+		}
+		if key == "syncInterval" {
+			if v, ok := value.(float64); ok { s.config.Cloud.SyncInterval = int(v); return s.save() }
+			return fmt.Errorf("无效的值类型")
+		}
+		if key == "autoSyncTo" {
+			if v, ok := value.(bool); ok { s.config.Cloud.AutoSyncTo = v; return s.save() }
+			return fmt.Errorf("无效的值类型")
+		}
+		if key == "autoSyncFrom" {
+			if v, ok := value.(bool); ok { s.config.Cloud.AutoSyncFrom = v; return s.save() }
+			return fmt.Errorf("无效的值类型")
+		}
 	}
 
 	return fmt.Errorf("未知的配置项: %s.%s", category, key)
@@ -347,6 +508,10 @@ func (s *ConfigService) ResetCategory(category string) error {
 
 	if category == "terminal" {
 		s.config.Terminal = defaults.Terminal
+		return s.save()
+	}
+	if category == "ui" {
+		s.config.UI = defaults.UI
 		return s.save()
 	}
 

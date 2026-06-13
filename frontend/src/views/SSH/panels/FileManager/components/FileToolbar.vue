@@ -209,8 +209,8 @@ defineEmits([
   align-items: center;
   gap: 1rem;
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(40, 40, 40, 0.5);
+  border-bottom: 1px solid var(--surface-hover);
+  background: var(--surface-2);
 }
 
 .toolbar-left,
@@ -225,16 +225,16 @@ defineEmits([
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: var(--surface-hover);
+  border: 1px solid var(--border-strong);
   border-radius: 0.375rem;
-  color: #e2e8f0;
+  color: var(--text-primary);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .tool-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--border-strong);
 }
 
 .tool-btn:disabled {
@@ -250,24 +250,24 @@ defineEmits([
 }
 
 .path-label {
-  color: #a0aec0;
+  color: var(--text-secondary);
   font-size: 0.8125rem;
 }
 
 .path-input {
   flex: 1;
   padding: 0.375rem 0.75rem;
-  background: rgba(45, 45, 45, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: var(--bg-input);
+  border: 1px solid var(--border-strong);
   border-radius: 0.375rem;
-  color: #e2e8f0;
+  color: var(--text-primary);
   font-size: 0.8125rem;
   font-family: monospace;
 }
 
 .path-input:focus {
   outline: none;
-  border-color: #4299e1;
+  border-color: var(--accent-primary);
 }
 
 .search-bar {
@@ -275,15 +275,15 @@ defineEmits([
   align-items: center;
   gap: 0.5rem;
   padding: 0.375rem 0.75rem;
-  background: rgba(45, 45, 45, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: var(--bg-input);
+  border: 1px solid var(--border-strong);
   border-radius: 0.375rem;
   min-width: 200px;
   max-width: 300px;
 }
 
 .search-icon {
-  color: #a0aec0;
+  color: var(--text-secondary);
   flex-shrink: 0;
 }
 
@@ -291,13 +291,13 @@ defineEmits([
   flex: 1;
   background: transparent;
   border: none;
-  color: #e2e8f0;
+  color: var(--text-primary);
   font-size: 0.8125rem;
   outline: none;
 }
 
 .search-input::placeholder {
-  color: #718096;
+  color: var(--text-muted);
 }
 
 .clear-search {
@@ -306,7 +306,7 @@ defineEmits([
   justify-content: center;
   background: transparent;
   border: none;
-  color: #a0aec0;
+  color: var(--text-secondary);
   cursor: pointer;
   padding: 0.25rem;
   border-radius: 0.25rem;
@@ -314,17 +314,17 @@ defineEmits([
 }
 
 .clear-search:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #e2e8f0;
+  background: var(--surface-hover);
+  color: var(--text-primary);
 }
 
 .cancel-search {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(245, 101, 101, 0.2);
+  background: var(--danger-bg);
   border: none;
-  color: #fc8181;
+  color: var(--accent-danger);
   cursor: pointer;
   padding: 0.25rem;
   border-radius: 0.25rem;
@@ -332,12 +332,12 @@ defineEmits([
 }
 
 .cancel-search:hover {
-  background: rgba(245, 101, 101, 0.3);
-  color: #feb2b2;
+  background: var(--danger-bg);
+  color: var(--danger-light);
 }
 
 .search-bar.searching {
-  border-color: #4299e1;
+  border-color: var(--accent-primary);
 }
 
 .action-btn {
@@ -345,37 +345,37 @@ defineEmits([
   align-items: center;
   gap: 0.375rem;
   padding: 0.375rem 0.75rem;
-  background: rgba(66, 153, 225, 0.2);
-  border: 1px solid rgba(66, 153, 225, 0.5);
+  background: var(--primary-bg);
+  border: 1px solid var(--border-accent);
   border-radius: 0.375rem;
-  color: #63b3ed;
+  color: var(--primary-light);
   cursor: pointer;
   font-size: 0.8125rem;
   transition: all 0.2s;
 }
 
 .action-btn:hover {
-  background: rgba(66, 153, 225, 0.3);
+  background: var(--primary-bg-hover);
 }
 
 .batch-btn {
-  background: rgba(72, 187, 120, 0.2);
-  border-color: rgba(72, 187, 120, 0.5);
-  color: #68d391;
+  background: var(--success-bg);
+  border-color: var(--border-success);
+  color: var(--success-light);
 }
 
 .batch-btn:hover {
-  background: rgba(72, 187, 120, 0.3);
+  background: var(--success-bg);
 }
 
 .batch-btn.danger {
-  background: rgba(245, 101, 101, 0.2);
-  border-color: rgba(245, 101, 101, 0.5);
-  color: #fc8181;
+  background: var(--danger-bg);
+  border-color: var(--border-danger);
+  color: var(--accent-danger);
 }
 
 .batch-btn.danger:hover {
-  background: rgba(245, 101, 101, 0.3);
+  background: var(--danger-bg);
 }
 </style>
 
@@ -393,7 +393,7 @@ defineEmits([
   gap: 0.25rem !important;
   padding: 0.375rem 0.5rem !important;
   scrollbar-width: thin !important;
-  scrollbar-color: rgba(99, 179, 237, 0.2) transparent !important;
+  scrollbar-color: var(--primary-bg) transparent !important;
 }
 
 .toolbar.compact::-webkit-scrollbar {
@@ -405,12 +405,12 @@ defineEmits([
 }
 
 .toolbar.compact::-webkit-scrollbar-thumb {
-  background: linear-gradient(90deg, rgba(99, 179, 237, 0.15), rgba(66, 153, 225, 0.3)) !important;
+  background: var(--scrollbar-thumb) !important;
   border-radius: 999px !important;
 }
 
 .toolbar.compact::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(90deg, rgba(99, 179, 237, 0.3), rgba(66, 153, 225, 0.5)) !important;
+  background: var(--scrollbar-thumb-hover) !important;
 }
 
 .toolbar.compact .toolbar-left,

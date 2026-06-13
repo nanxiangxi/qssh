@@ -1,5 +1,5 @@
 <template>
-  <div class="dockview-container dockview-theme-dark" @contextmenu.prevent="onContainerContextMenu">
+  <div class="dockview-container" :class="themeClass" @contextmenu.prevent="onContainerContextMenu">
     <DockviewVue
       ref="dockviewRef"
       :default-layout="defaultLayout"
@@ -34,7 +34,7 @@
 </template>
 
 <script>
-import { defineComponent, ref, reactive, onMounted, onUnmounted } from 'vue'
+import { defineComponent, ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { DockviewVue } from 'dockview-vue'
 import 'dockview-vue/dist/styles/dockview.css'
 import { PANEL_CONFIG } from '../../../stores/sshLayout'
@@ -78,6 +78,10 @@ export default defineComponent({
 
     const ctxMenu = reactive({ show: false, x: 0, y: 0, panelId: '', panelType: '' })
     const configStore = useConfigStore()
+
+    const themeClass = computed(() => {
+      return configStore.config?.ui?.theme === 'light' ? 'dockview-theme-light' : 'dockview-theme-dark'
+    })
 
     const defaultLayout = {
       orientation: 'HORIZONTAL',
@@ -363,10 +367,20 @@ export default defineComponent({
 </script>
 
 <style scoped>
+/* 覆盖 dockview 默认 CSS 变量 */
+:host,
+.dockview-container {
+  --dv-group-view-background-color: var(--toolbar-4) !important;
+  --dv-tabs-and-actions-container-background: var(--toolbar-2) !important;
+  --dv-tabs-and-actions-container-height: 35px;
+  --dv-tabs-and-actions-container-font-size: 13px;
+}
+
 .dockview-container {
   width: 100%;
   height: 100%;
   position: relative;
+  background: var(--toolbar-4);
 }
 
 .dockview-host {
@@ -376,71 +390,101 @@ export default defineComponent({
 
 /* Dockview 主题覆盖 */
 :deep(.dv-tabs-and-actions-container) {
-  background: rgba(45, 45, 45, 0.95) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
-  flex-shrink: 0 !important;
-  overflow: hidden !important;
-  min-width: 0 !important;
+  background: var(--toolbar-2) !important;
+  border-bottom: 1px solid var(--border-default) !important;
 }
 
-:deep(.dv-tabs-container) {
-  display: flex !important;
-  gap: 0 !important;
-  /* 不设置 overflow-x: auto，dockview 用自己的下拉按钮处理溢出 */
-  overflow: hidden !important;
+:deep(.dv-scrollable) {
   flex: 1 !important;
   min-width: 0 !important;
 }
 
-:deep(.dv-tab) {
-  background: rgba(50, 50, 50, 0.4) !important;
-  color: #e2e8f0 !important;
-  border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
-  padding: 0 0.75rem !important;
+:deep(.dv-scrollbar) {
+  display: none !important;
+}
+
+:deep(.dv-tabs-container) {
+  flex: 1 !important;
   min-width: 0 !important;
-  max-width: 160px !important;
+}
+
+/* void 容器不占空间，让标签填满整行 */
+:deep(.dv-void-container) {
+  flex: 0 0 0 !important;
+  overflow: hidden !important;
+}
+
+/* 外层 dv-tab 承担所有视觉样式 */
+:deep(.dv-tab) {
+  background: var(--toolbar-3) !important;
+  color: var(--text-secondary) !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-bottom: none !important;
+  border-radius: 0 !important;
+  padding: 6px 14px !important;
+  margin-right: -1px !important;
   flex-shrink: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  transition: background 0.15s, color 0.15s, border-color 0.15s !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+
+:deep(.dv-tab:hover) {
+  background: var(--toolbar-4) !important;
+  color: var(--text-primary) !important;
+}
+
+:deep(.dv-active-tab) {
+  background: var(--toolbar-4) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-default) !important;
+  border-bottom: 2px solid var(--accent-primary) !important;
+  z-index: 1 !important;
+}
+
+:deep(.dv-inactive-tab) {
+  background: var(--toolbar-3) !important;
+  color: var(--text-secondary) !important;
+  border-color: var(--border-subtle) !important;
+}
+
+/* 内层消失，布局穿透到外层 */
+:deep(.dv-default-tab) {
+  display: contents !important;
+}
+
+/* 关闭按钮：非激活时隐藏，hover 外层时显示 */
+:deep(.dv-inactive-tab .dv-default-tab-action) {
+  visibility: hidden !important;
+}
+:deep(.dv-tab:hover .dv-default-tab-action) {
+  visibility: visible !important;
+}
+:deep(.dv-active-tab .dv-default-tab-action) {
+  visibility: visible !important;
+}
+
+:deep(.dv-default-tab-content) {
+  flex: 1 !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
   white-space: nowrap !important;
 }
 
-:deep(.dv-tab:last-child) {
-  border-right: none !important;
-}
-
-:deep(.dv-tab:hover) {
-  background: rgba(60, 60, 60, 0.6) !important;
-}
-
-:deep(.dv-active-tab) {
-  background: rgba(45, 45, 45, 0.95) !important;
-  border-bottom: 2px solid #4299e1 !important;
-}
-
-:deep(.dv-inactive-tab) {
-  background: rgba(50, 50, 50, 0.4) !important;
-  border-bottom: 2px solid transparent !important;
-}
-
-:deep(.dv-default-tab) {
-  background: rgba(50, 50, 50, 0.4) !important;
-  color: #a0aec0 !important;
-  border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
-  padding: 0 0.75rem !important;
-  min-width: 100px !important;
-}
-
 :deep(.dv-group-view) {
-  background: rgba(30, 30, 30, 0.95) !important;
+  background: var(--toolbar-4) !important;
 }
 
 :deep(.dv-separator) {
-  background: rgba(255, 255, 255, 0.1) !important;
+  background: var(--border-default) !important;
 }
 
 :deep(.dv-watermark-container) {
-  background: rgba(30, 30, 30, 0.95) !important;
+  background: var(--toolbar-4) !important;
 }
 
 :deep(.dv-group-view > div) {
@@ -477,12 +521,12 @@ export default defineComponent({
 
 .ctx-menu {
   position: fixed;
-  background: rgba(30, 30, 30, 0.98);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--bg-panel);
+  border: 1px solid var(--border-default);
   border-radius: 8px;
   padding: 4px;
   min-width: 160px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 8px 32px var(--shadow-lg);
   z-index: 10001;
   animation: ctxIn 0.12s ease-out;
 }
@@ -496,7 +540,7 @@ export default defineComponent({
   align-items: center;
   gap: 8px;
   padding: 6px 10px;
-  color: #a0aec0;
+  color: var(--text-secondary);
   font-size: 12px;
   border-radius: 5px;
   cursor: pointer;
@@ -504,13 +548,13 @@ export default defineComponent({
 }
 
 .ctx-item:hover {
-  background: rgba(66, 153, 225, 0.15);
-  color: #e2e8f0;
+  background: var(--primary-bg);
+  color: var(--text-primary);
 }
 
 .ctx-sep {
   height: 1px;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--border-subtle);
   margin: 4px 0;
 }
 </style>
@@ -526,8 +570,8 @@ export default defineComponent({
 
 /* === dockview 自定义滚动条（.dv-scrollbar 元素，非浏览器原生） === */
 .dockview-container .dv-scrollbar {
-  background-color: rgba(99, 179, 237, 0.2) !important;
-  background-image: linear-gradient(135deg, rgba(99, 179, 237, 0.1), rgba(66, 153, 225, 0.3)) !important;
+  background-color: var(--primary-bg) !important;
+  background-image: linear-gradient(135deg, var(--primary-bg), var(--border-accent)) !important;
   border-radius: 999px !important;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
   cursor: pointer !important;
@@ -543,9 +587,9 @@ export default defineComponent({
 .dockview-container .dv-scrollable.dv-scrollable-scrolling .dv-scrollbar-horizontal,
 .dockview-container .dv-scrollable.dv-scrollable-resizing .dv-scrollbar-horizontal {
   height: 6px !important;
-  background-color: rgba(99, 179, 237, 0.4) !important;
-  background-image: linear-gradient(135deg, rgba(99, 179, 237, 0.3), rgba(66, 153, 225, 0.6)) !important;
-  box-shadow: 0 0 10px rgba(66, 153, 225, 0.25) !important;
+  background-color: var(--border-accent) !important;
+  background-image: linear-gradient(135deg, var(--border-accent), rgba(66, 153, 225, 0.6)) !important;
+  box-shadow: 0 0 10px var(--primary-bg-hover) !important;
 }
 
 /* 垂直滚动条 */
@@ -558,17 +602,17 @@ export default defineComponent({
 .dockview-container .dv-scrollable.dv-scrollable-scrolling .dv-scrollbar-vertical,
 .dockview-container .dv-scrollable.dv-scrollable-resizing .dv-scrollbar-vertical {
   width: 6px !important;
-  background-color: rgba(99, 179, 237, 0.4) !important;
-  background-image: linear-gradient(135deg, rgba(99, 179, 237, 0.3), rgba(66, 153, 225, 0.6)) !important;
-  box-shadow: 0 0 10px rgba(66, 153, 225, 0.25) !important;
+  background-color: var(--border-accent) !important;
+  background-image: linear-gradient(135deg, var(--border-accent), rgba(66, 153, 225, 0.6)) !important;
+  box-shadow: 0 0 10px var(--primary-bg-hover) !important;
 }
 
 /* === dockview 溢出下拉按钮（.dv-tabs-overflow-dropdown-default） === */
 .dockview-container .dv-tabs-overflow-dropdown-default {
-  background: rgba(66, 153, 225, 0.08) !important;
-  border: 1px solid rgba(66, 153, 225, 0.15) !important;
+  background: var(--primary-bg) !important;
+  border: 1px solid var(--primary-bg) !important;
   border-radius: 6px !important;
-  color: #63b3ed !important;
+  color: var(--primary-light) !important;
   font-size: 11px !important;
   font-weight: 500 !important;
   padding: 2px 10px !important;
@@ -580,25 +624,25 @@ export default defineComponent({
 }
 
 .dockview-container .dv-tabs-overflow-dropdown-default:hover {
-  background: rgba(66, 153, 225, 0.18) !important;
-  border-color: rgba(66, 153, 225, 0.3) !important;
-  color: #90cdf4 !important;
+  background: var(--primary-bg) !important;
+  border-color: var(--border-accent) !important;
+  color: var(--accent-info) !important;
 }
 
 .dockview-container .dv-tabs-overflow-dropdown-default .dv-svg {
-  fill: #63b3ed !important;
+  fill: var(--primary-light) !important;
 }
 
 .dockview-container .dv-tabs-overflow-dropdown-default:hover .dv-svg {
-  fill: #90cdf4 !important;
+  fill: var(--accent-info) !important;
 }
 
 /* === dockview 溢出容器（下拉列表） === */
 .dockview-container .dv-tabs-overflow-container {
-  background: rgba(22, 22, 22, 0.98) !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: var(--bg-panel-solid) !important;
+  border: 1px solid var(--border-default) !important;
   border-radius: 10px !important;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 1px rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 1px var(--surface-hover) !important;
   padding: 4px !important;
   backdrop-filter: blur(12px) !important;
 }
@@ -612,32 +656,32 @@ export default defineComponent({
 }
 
 .dockview-container .dv-tabs-overflow-container::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgba(99, 179, 237, 0.15), rgba(66, 153, 225, 0.3)) !important;
+  background: linear-gradient(180deg, var(--primary-bg), var(--border-accent)) !important;
   border-radius: 999px !important;
 }
 
 .dockview-container .dv-tabs-overflow-container .dv-tab {
   border-radius: 4px !important;
   margin: 1px 0 !important;
-  color: #a0aec0 !important;
+  color: var(--text-secondary) !important;
 }
 
 .dockview-container .dv-tabs-overflow-container .dv-tab:hover {
-  background: rgba(66, 153, 225, 0.1) !important;
-  color: #e2e8f0 !important;
+  background: var(--primary-bg) !important;
+  color: var(--text-primary) !important;
 }
 
 .dockview-container .dv-tabs-overflow-container .dv-active-tab {
-  background: rgba(66, 153, 225, 0.15) !important;
-  color: #63b3ed !important;
+  background: var(--primary-bg) !important;
+  color: var(--primary-light) !important;
 }
 
 /* === 面板内 select 下拉框 === */
 .dockview-container select {
-  background: rgba(30, 30, 30, 0.95) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background: var(--bg-panel) !important;
+  border: 1px solid var(--surface-hover) !important;
   border-radius: 6px !important;
-  color: #a0aec0 !important;
+  color: var(--text-secondary) !important;
   font-size: 12px !important;
   padding: 4px 24px 4px 8px !important;
   outline: none !important;
@@ -649,11 +693,11 @@ export default defineComponent({
 }
 
 .dockview-container select:focus {
-  border-color: rgba(66, 153, 225, 0.4) !important;
+  border-color: var(--border-accent) !important;
 }
 
 .dockview-container select option {
-  background: #1a1a1a !important;
-  color: #e2e8f0 !important;
+  background: var(--bg-panel-solid) !important;
+  color: var(--text-primary) !important;
 }
 </style>

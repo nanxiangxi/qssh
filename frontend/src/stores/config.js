@@ -3,6 +3,7 @@
  */
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { Events } from '@wailsio/runtime'
 import * as ConfigService from '../../bindings/changeme/ssh/configservice.js'
 
 export const useConfigStore = defineStore('config', () => {
@@ -13,6 +14,11 @@ export const useConfigStore = defineStore('config', () => {
       autoSwitchClassic: true,
       switchMode: 'prompt', // prompt | auto | inline
       fontSize: 14
+    },
+    ui: {
+      autoTray: false, // SSH 连接成功后自动最小化到托盘
+      rememberPosition: true, // 记忆窗口位置
+      autoShowHome: true // SSH 窗口全部关闭后自动显示首页
     }
   })
 
@@ -30,6 +36,8 @@ export const useConfigStore = defineStore('config', () => {
         config.value = result
       }
       isLoaded.value = true
+      // 应用主题
+      applyTheme(get('ui', 'theme') || 'dark')
       console.log('[Config] 配置已加载:', config.value)
     } catch (e) {
       console.error('[Config] 加载配置失败:', e)
@@ -65,12 +73,32 @@ export const useConfigStore = defineStore('config', () => {
     return (t === 'structured' || t === 'classic') ? t : 'structured'
   }
 
+  // 应用主题到 DOM
+  function applyTheme(theme) {
+    document.documentElement.dataset.theme = theme || 'dark'
+  }
+
+  // 切换主题（保存 + 同步多窗口）
+  async function setTheme(theme) {
+    applyTheme(theme)
+    await set('ui', 'theme', theme)
+    Events.Emit('ui:theme-changed', { theme })
+  }
+
+  // 监听其他窗口的主题变更
+  Events.On('ui:theme-changed', (e) => {
+    const theme = e?.data?.theme
+    if (theme) applyTheme(theme)
+  })
+
   return {
     config,
     isLoaded,
     init,
     get,
     set,
-    getDefaultTerminalType
+    getDefaultTerminalType,
+    applyTheme,
+    setTheme
   }
 })

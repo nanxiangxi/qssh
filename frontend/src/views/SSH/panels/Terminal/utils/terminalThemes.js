@@ -228,3 +228,68 @@ export function getTheme(key) {
 
 // 默认主题
 export const DEFAULT_THEME = THEMES.tokyoNight
+
+// ===== 浅色主题 =====
+
+THEMES.oneLight = {
+  name: 'One Light',
+  background: '#fafafa', foreground: '#383a42', cursor: '#526fff', cursorAccent: '#fafafa',
+  selectionBackground: '#e5e5e6', selectionForeground: '#383a42',
+  black: '#000000', red: '#e45649', green: '#50a14f', yellow: '#c18401',
+  blue: '#4078f2', magenta: '#a626a4', cyan: '#0184bc', white: '#a0a1a7',
+  brightBlack: '#5c6370', brightRed: '#e45649', brightGreen: '#50a14f', brightYellow: '#c18401',
+  brightBlue: '#4078f2', brightMagenta: '#a626a4', brightCyan: '#0184bc', brightWhite: '#383a42'
+}
+
+THEMES.solarizedLight = {
+  name: 'Solarized Light',
+  background: '#fdf6e3', foreground: '#657b83', cursor: '#657b83', cursorAccent: '#fdf6e3',
+  selectionBackground: '#eee8d5', selectionForeground: '#657b83',
+  black: '#073642', red: '#dc322f', green: '#859900', yellow: '#b58900',
+  blue: '#268bd2', magenta: '#d33682', cyan: '#2aa198', white: '#eee8d5',
+  brightBlack: '#586e75', brightRed: '#cb4b16', brightGreen: '#586e75', brightYellow: '#657b83',
+  brightBlue: '#839496', brightMagenta: '#6c71c4', brightCyan: '#93a1a1', brightWhite: '#fdf6e3'
+}
+
+THEMES.githubLight = {
+  name: 'GitHub Light',
+  background: '#ffffff', foreground: '#24292f', cursor: '#24292f', cursorAccent: '#ffffff',
+  selectionBackground: '#ddf4ff', selectionForeground: '#24292f',
+  black: '#24292f', red: '#cf222e', green: '#116329', yellow: '#4d2d00',
+  blue: '#0969da', magenta: '#8250df', cyan: '#1b7c83', white: '#6e7781',
+  brightBlack: '#57606a', brightRed: '#a40e26', brightGreen: '#1a7f37', brightYellow: '#633c01',
+  brightBlue: '#218bff', brightMagenta: '#a475f9', brightCyan: '#3192aa', brightWhite: '#24292f'
+}
+
+THEMES.classicLight = {
+  name: 'Classic Light',
+  background: '#ffffff', foreground: '#333333', cursor: '#333333', cursorAccent: '#ffffff',
+  selectionBackground: '#add6ff', selectionForeground: '#333333',
+  black: '#000000', red: '#cd3131', green: '#00bc00', yellow: '#949800',
+  blue: '#0451a5', magenta: '#bc05bc', cyan: '#0598bc', white: '#555555',
+  brightBlack: '#666666', brightRed: '#cd3131', brightGreen: '#14ce14', brightYellow: '#b5ba00',
+  brightBlue: '#0451a5', brightMagenta: '#bc05bc', brightCyan: '#0598bc', brightWhite: '#a5a5a5'
+}
+
+// 根据 UI 主题返回对应的终端主题
+export function getThemeForUI(key, uiTheme) {
+  const isLight = uiTheme === 'light'
+  if (!key || key === 'default') {
+    return isLight ? THEMES.oneLight : THEMES.tokyoNight
+  }
+  if (isLight) {
+    const lightMap = {
+      tokyoNight: 'oneLight', dracula: 'githubLight', oneDark: 'oneLight',
+      monokai: 'solarizedLight', solarizedDark: 'solarizedLight',
+      githubDark: 'githubLight', nord: 'oneLight', classic: 'classicLight'
+    }
+    return THEMES[lightMap[key] || 'oneLight'] || THEMES.oneLight
+  }
+  return THEMES[key] || THEMES.tokyoNight
+}
+
+// 当前 UI 主题下的默认终端主题
+export function getCurrentTheme() {
+  const uiTheme = document.documentElement.dataset.theme || 'dark'
+  return getThemeForUI('default', uiTheme)
+}

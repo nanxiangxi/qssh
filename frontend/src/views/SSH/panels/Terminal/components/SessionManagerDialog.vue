@@ -186,7 +186,7 @@ function formatTime(timestamp) {
 .dialog-mask {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--bg-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -198,9 +198,9 @@ function formatTime(timestamp) {
   width: 560px;
   max-height: 70vh;
   background: #1a1b26;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--surface-hover);
   border-radius: 12px;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 16px 48px var(--shadow-lg);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -211,14 +211,14 @@ function formatTime(timestamp) {
   align-items: center;
   justify-content: space-between;
   padding: 16px 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .dialog-title {
   margin: 0;
   font-size: 16px;
   font-weight: 600;
-  color: #c0caf5;
+  color: var(--text-primary);
 }
 
 .close-btn {
@@ -230,25 +230,25 @@ function formatTime(timestamp) {
   background: transparent;
   border: none;
   border-radius: 6px;
-  color: #565f89;
+  color: var(--text-muted);
   cursor: pointer;
   transition: all 0.15s;
 }
 
 .close-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #a9b1d6;
+  background: var(--border-default);
+  color: var(--text-secondary);
 }
 
 .search-bar {
   display: flex;
   align-items: center;
   padding: 12px 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .search-icon {
-  color: #565f89;
+  color: var(--text-muted);
   margin-right: 10px;
 }
 
@@ -257,13 +257,13 @@ function formatTime(timestamp) {
   background: transparent;
   border: none;
   outline: none;
-  color: #c0caf5;
+  color: var(--text-primary);
   font-size: 13px;
   font-family: inherit;
 }
 
 .search-input::placeholder {
-  color: #565f89;
+  color: var(--text-muted);
 }
 
 .session-list {
@@ -283,12 +283,12 @@ function formatTime(timestamp) {
 }
 
 .session-item:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--surface-1);
 }
 
 .session-item.active {
-  background: rgba(122, 162, 247, 0.1);
-  border: 1px solid rgba(122, 162, 247, 0.2);
+  background: var(--primary-bg);
+  border: 1px solid var(--primary-bg);
 }
 
 .session-status {
@@ -303,25 +303,25 @@ function formatTime(timestamp) {
 }
 
 .session-status.active .status-dot {
-  background: #9ece6a;
-  box-shadow: 0 0 6px rgba(158, 206, 106, 0.5);
+  background: var(--accent-success);
+  box-shadow: 0 0 6px var(--success-bg);
 }
 
 .session-status.disconnected .status-dot {
-  background: #f7768e;
+  background: var(--accent-danger);
 }
 
 .session-status.starting .status-dot {
-  background: #e0af68;
+  background: var(--accent-warning);
   animation: pulse 1.5s infinite;
 }
 
 .session-status.idle .status-dot {
-  background: #565f89;
+  background: var(--text-muted);
 }
 
 .session-status.error .status-dot {
-  background: #f7768e;
+  background: var(--accent-danger);
 }
 
 .session-info {
@@ -331,7 +331,7 @@ function formatTime(timestamp) {
 
 .session-name {
   font-size: 13px;
-  color: #c0caf5;
+  color: var(--text-primary);
   display: flex;
   align-items: center;
   gap: 6px;
@@ -340,8 +340,8 @@ function formatTime(timestamp) {
 .ai-badge {
   font-size: 9px;
   padding: 1px 4px;
-  background: rgba(187, 154, 247, 0.2);
-  color: #bb9af7;
+  background: var(--accent-purple);
+  color: var(--accent-purple);
   border-radius: 3px;
   font-weight: 600;
 }
@@ -355,14 +355,14 @@ function formatTime(timestamp) {
 
 .meta-item {
   font-size: 11px;
-  color: #565f89;
+  color: var(--text-muted);
 }
 
 .recording-badge {
   font-size: 10px;
   padding: 1px 4px;
-  background: rgba(247, 118, 142, 0.15);
-  color: #f7768e;
+  background: var(--danger-bg);
+  color: var(--accent-danger);
   border-radius: 3px;
 }
 
@@ -375,8 +375,8 @@ function formatTime(timestamp) {
 .tag {
   font-size: 10px;
   padding: 2px 6px;
-  background: rgba(255, 255, 255, 0.05);
-  color: #a9b1d6;
+  background: var(--surface-1);
+  color: var(--text-secondary);
   border-radius: 4px;
 }
 
@@ -401,24 +401,24 @@ function formatTime(timestamp) {
   background: transparent;
   border: none;
   border-radius: 4px;
-  color: #565f89;
+  color: var(--text-muted);
   cursor: pointer;
   transition: all 0.15s;
 }
 
 .action-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #a9b1d6;
+  background: var(--border-default);
+  color: var(--text-secondary);
 }
 
 .action-btn.reconnect:hover {
-  background: rgba(224, 175, 104, 0.15);
-  color: #e0af68;
+  background: var(--warning-bg, rgba(224, 175, 104, 0.15));
+  color: var(--accent-warning);
 }
 
 .action-btn.close:hover {
-  background: rgba(247, 118, 142, 0.15);
-  color: #f7768e;
+  background: var(--danger-bg);
+  color: var(--accent-danger);
 }
 
 .empty-state {
@@ -427,7 +427,7 @@ function formatTime(timestamp) {
   align-items: center;
   justify-content: center;
   padding: 40px;
-  color: #565f89;
+  color: var(--text-muted);
 }
 
 .empty-state p {
@@ -437,7 +437,7 @@ function formatTime(timestamp) {
 
 .dialog-footer {
   padding: 12px 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: 1px solid var(--border-subtle);
 }
 
 .stats {
@@ -447,11 +447,11 @@ function formatTime(timestamp) {
 
 .stat-item {
   font-size: 11px;
-  color: #565f89;
+  color: var(--text-muted);
 }
 
 .stat-item.active {
-  color: #9ece6a;
+  color: var(--accent-success);
 }
 
 @keyframes pulse {

@@ -106,18 +106,18 @@ onMounted(() => {
 }
 
 .app-name {
-  color: #e2e8f0;
+  color: var(--text-primary);
   font-size: 1.3em;
   font-weight: 700;
   letter-spacing: 0.03125rem;
 }
 
 .version {
-  color: #565f89;
+  color: var(--text-muted);
   font-size: 0.7em;
   font-weight: 400;
   padding: 2px 6px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--surface-1);
   border-radius: 4px;
 }
 
@@ -137,7 +137,7 @@ onMounted(() => {
   height: 2.25rem;
   border: none;
   background: transparent;
-  color: #a0aec0;
+  color: var(--text-secondary);
   cursor: pointer;
   border-radius: 0.5rem;
   display: flex;
@@ -147,12 +147,12 @@ onMounted(() => {
 }
 
 .control-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #e2e8f0;
+  background: var(--surface-hover);
+  color: var(--text-primary);
 }
 
 .control-btn.close:hover {
-  background: rgba(229, 62, 62, 0.2);
-  color: #fc8181;
+  background: var(--danger-bg);
+  color: var(--accent-danger);
 }
 </style>

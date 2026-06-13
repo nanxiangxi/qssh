@@ -107,10 +107,10 @@ defineExpose({ handleKey })
   bottom: 100%;
   left: 40px;
   margin-bottom: 4px;
-  background: #1e1e1e;
-  border: 1px solid #444;
+  background: var(--bg-toolbar);
+  border: 1px solid var(--border-default);
   border-radius: 6px;
-  box-shadow: 0 4px 16px rgba(0,0,0,.5);
+  box-shadow: 0 4px 16px var(--shadow-lg);
   z-index: 100;
   min-width: 280px;
   max-width: 450px;
@@ -138,28 +138,28 @@ defineExpose({ handleKey })
 
 .suggestion-item:hover,
 .suggestion-item.selected {
-  background: #333;
+  background: var(--surface-hover);
 }
 
 .suggestion-icon {
   flex-shrink: 0;
-  color: #666;
+  color: var(--text-muted);
 }
 
-.suggestion-icon.command { color: #4caf50; }
-.suggestion-icon.subcommand { color: #888; }
-.suggestion-icon.option { color: #ff9800; }
+.suggestion-icon.command { color: var(--accent-success); }
+.suggestion-icon.subcommand { color: var(--text-muted); }
+.suggestion-icon.option { color: var(--accent-warning); }
 
 .suggestion-value {
   font-family: 'Cascadia Code', monospace;
   font-size: 13px;
-  color: #d4d4d4;
+  color: var(--text-primary);
   white-space: nowrap;
 }
 
 .suggestion-desc {
   font-size: 11px;
-  color: #666;
+  color: var(--text-muted);
   margin-left: auto;
   white-space: nowrap;
   overflow: hidden;
@@ -169,12 +169,12 @@ defineExpose({ handleKey })
 
 .popup-footer {
   padding: 4px 8px;
-  border-top: 1px solid #333;
+  border-top: 1px solid var(--surface-hover);
 }
 
 .hint {
   font-size: 10px;
-  color: #555;
+  color: var(--text-muted);
 }
 
 .popup-enter-active { transition: all .15s ease; }
@@ -183,5 +183,5 @@ defineExpose({ handleKey })
 
 .suggestions-list::-webkit-scrollbar { width: 4px; }
 .suggestions-list::-webkit-scrollbar-track { background: transparent; }
-.suggestions-list::-webkit-scrollbar-thumb { background: #444; border-radius: 2px; }
+.suggestions-list::-webkit-scrollbar-thumb { background: var(--border-default); border-radius: 2px; }
 </style>

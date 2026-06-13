@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
+	"github.com/wailsapp/wails/v3/pkg/events"
 )
 
 // Wails 使用 Go 的 `embed` 包将前端文件嵌入到二进制文件中。
@@ -20,9 +21,12 @@ import (
 //go:embed all:frontend/dist
 var assets embed.FS
 
+//go:embed build/appicon.png
+var trayIcon []byte
+
 // 版本信息
 const (
-	AppVersion = "0.2.0"
+	AppVersion = "0.3.0"
 	AppName    = "启SSH"
 )
 
@@ -49,7 +53,7 @@ func main() {
 			Handler: application.AssetFileServerFS(assets),
 		},
 		Mac: application.MacOptions{
-			ApplicationShouldTerminateAfterLastWindowClosed: true,
+			ApplicationShouldTerminateAfterLastWindowClosed: false, // 托盘应用：关闭窗口不退出
 		},
 	})
 
@@ -63,13 +67,9 @@ func main() {
 	configService := ssh.NewConfigService()
 	configService.SetApp(app)
 
-	// 创建窗口管理器（传入分组关闭回调）
-	windowManager := ssh.NewWindowManager(app, func(groupID string) {
-		fmt.Printf("[Main] 🗑️ 窗口销毁，关闭分组: %s\n", groupID)
-		if err := sshService.CloseGroup(groupID); err != nil {
-			fmt.Printf("[Main] ⚠️ 关闭分组失败: %v\n", err)
-		}
-	})
+	// 创建窗口管理器（分组关闭回调稍后设置）
+	windowManager := ssh.NewWindowManager(app, nil)
+	windowManager.SetConfigService(configService)
 	sshService.SetWindowManager(windowManager)
 	sshService.SetApp(app)
 
@@ -89,17 +89,23 @@ func main() {
 	// 创建进程守护服务
 	guardianService := ssh.NewProcessGuardianService(sshService)
 
+	// 创建云端服务
+	cloudService := ssh.NewCloudService(configService)
+	cloudService.SetApp(app)
+
 	// 注册服务到应用
-	app.RegisterService(application.NewService(&ssh.GreetService{}))
+	app.RegisterService(application.NewService(ssh.NewGreetService(AppVersion)))
 	app.RegisterService(application.NewService(sshService))
 	app.RegisterService(application.NewService(aiService))
 	app.RegisterService(application.NewService(configService))
 	app.RegisterService(application.NewService(portForwardService))
 	app.RegisterService(application.NewService(firewallService))
 	app.RegisterService(application.NewService(guardianService))
+	app.RegisterService(application.NewService(cloudService))
 
 	// 使用必要的选项创建一个新窗口。
 	mainWindow := app.Window.NewWithOptions(application.WebviewWindowOptions{
+		Name:             "main",
 		Title:            fmt.Sprintf("启SSH - SSH工具 (v%s)", AppVersion),
 		URL:              "/",
 		DisableResize:    false,
@@ -107,11 +113,94 @@ func main() {
 		BackgroundColour: application.NewRGB(255, 255, 255),
 	})
 
-	// 根据屏幕大小设置窗口尺寸
-	w, h := calculateWindowSize(app)
-	mainWindow.SetSize(w, h)
-	mainWindow.Center()
-	fmt.Printf("[Main] 主窗口大小: %dx%d\n", w, h)
+	// 尝试恢复主窗口位置，否则使用默认尺寸居中
+	mainWindowRegistered := windowManager.RestoreMainWindowPosition(mainWindow)
+	if !mainWindowRegistered {
+		w, h := calculateWindowSize(app)
+		mainWindow.SetSize(w, h)
+		mainWindow.Center()
+		fmt.Printf("[Main] 主窗口大小: %dx%d\n", w, h)
+	}
+
+	// 设置分组关闭回调（所有 SSH 窗口关闭后自动显示主窗口）
+	windowManager.SetOnGroupClose(func(groupID string) {
+		fmt.Printf("[Main] 🗑️ 窗口销毁，关闭分组: %s\n", groupID)
+		if err := sshService.CloseGroup(groupID); err != nil {
+			fmt.Printf("[Main] ⚠️ 关闭分组失败: %v\n", err)
+		}
+		// 检查是否启用了自动显示首页
+		cfg := configService.GetConfig()
+		if windowManager.GetWindowCount() == 0 && cfg.UI.AutoShowHome {
+			fmt.Println("[Main] 所有 SSH 窗口已关闭，显示主窗口")
+			mainWindow.Show()
+			mainWindow.Focus()
+		}
+	})
+
+	// 定时保存主窗口位置（每3秒检查一次）
+	go func() {
+		ticker := time.NewTicker(3 * time.Second)
+		defer ticker.Stop()
+		for range ticker.C {
+			windowManager.SaveMainWindowPositionIfChanged(mainWindow)
+		}
+	}()
+
+	// 监听主窗口关闭事件，保存位置
+	mainWindow.OnWindowEvent(events.Common.WindowClosing, func(e *application.WindowEvent) {
+		fmt.Println("[Main] 主窗口关闭，保存位置")
+		windowManager.SaveMainWindowPosition(mainWindow)
+	})
+
+	// ========== 系统托盘 ==========
+	systray := app.SystemTray.New()
+	systray.SetIcon(trayIcon)
+	systray.SetLabel(AppName)
+
+	// 托盘菜单
+	trayMenu := app.NewMenu()
+	trayMenu.Add("显示主窗口").OnClick(func(ctx *application.Context) {
+		mainWindow.Show()
+		mainWindow.Focus()
+	})
+	trayMenu.Add("显示全部窗口").OnClick(func(ctx *application.Context) {
+		mainWindow.Show()
+		mainWindow.Focus()
+		windowManager.ShowAllWindows()
+	})
+	trayMenu.AddSeparator()
+	trayMenu.Add("隐藏全部窗口").OnClick(func(ctx *application.Context) {
+		windowManager.HideAllWindows()
+		windowManager.SaveMainWindowPosition(mainWindow)
+		mainWindow.Hide()
+	})
+	trayMenu.AddSeparator()
+	trayMenu.Add("退出").OnClick(func(ctx *application.Context) {
+		mainWindow.Show() // 退出前显示窗口，确保正常关闭
+		windowManager.ShowAllWindows()
+		app.Quit()
+	})
+	systray.SetMenu(trayMenu)
+
+	// 左键点击托盘图标切换主窗口显示/隐藏
+	systray.OnClick(func() {
+		if mainWindow.IsVisible() {
+			windowManager.SaveMainWindowPosition(mainWindow)
+			mainWindow.Hide()
+		} else {
+			mainWindow.Show()
+			mainWindow.Focus()
+		}
+	})
+
+	// 监听前端请求隐藏主窗口的事件（SSH连接成功后自动隐藏主窗口，不影响SSH窗口）
+	app.Event.On("ssh:tray-hide", func(event *application.CustomEvent) {
+		fmt.Println("[Main] 收到托盘隐藏请求，隐藏主窗口")
+		windowManager.SaveMainWindowPosition(mainWindow)
+		mainWindow.Hide()
+	})
+
+	fmt.Println("[Main] 系统托盘已初始化")
 
 	// 创建一个 goroutine，每秒发射一个包含当前时间的事件。
 	// 前端可以监听此事件并相应地更新 UI。

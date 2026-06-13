@@ -349,6 +349,49 @@ func (sm *StorageManager) UpdateConnection(conn *ConnectionInfo) error {
 	return nil
 }
 
+// SyncImportConnection 云端同步导入（按 host:port 去重：存在则更新，不存在则新增）
+func (sm *StorageManager) SyncImportConnection(conn *ConnectionInfo) error {
+	sm.mu.Lock()
+	defer sm.mu.Unlock()
+
+	// 查找是否已存在同 host:port 的连接
+	var existingID string
+	for id, existing := range sm.connections {
+		if existing.Host == conn.Host && existing.Port == conn.Port {
+			existingID = id
+			break
+		}
+	}
+
+	if existingID != "" {
+		// 已存在：更新
+		existing := sm.connections[existingID]
+		existing.Name = conn.Name
+		existing.Username = conn.Username
+		if conn.Password != "" {
+			existing.Password = conn.Password
+		}
+		if conn.KeyPath != "" {
+			existing.KeyPath = conn.KeyPath
+		}
+		existing.Saved = true
+		fmt.Printf("[StorageManager] 同步更新连接: %s (%s:%d)\n", existing.Name, existing.Host, existing.Port)
+	} else {
+		// 不存在：新增
+		conn.ID = generateConnectionID()
+		conn.Status = "disconnected"
+		conn.Saved = true
+		sm.connections[conn.ID] = conn
+		fmt.Printf("[StorageManager] 同步新增连接: %s (%s:%d)\n", conn.Name, conn.Host, conn.Port)
+	}
+
+	// 保存到缓存和永久文件
+	sm.saveConnectionsLocked()
+	sm.saveToPermanentLocked()
+
+	return nil
+}
+
 // DeleteConnection 删除连接（同时从永久文件中移除）
 func (sm *StorageManager) DeleteConnection(id string) error {
 	sm.mu.Lock()

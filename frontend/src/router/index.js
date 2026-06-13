@@ -25,6 +25,12 @@ const routes = [
         name: 'Settings',
         component: () => import('../views/Home/Settings.vue'),
         meta: { title: '设置' }
+      },
+      {
+        path: 'cloud',
+        name: 'Cloud',
+        component: () => import('../views/Home/Cloud/CloudPanel.vue'),
+        meta: { title: '私有云端' }
       }
       // 后续可以添加更多 Home 子路由
     ]

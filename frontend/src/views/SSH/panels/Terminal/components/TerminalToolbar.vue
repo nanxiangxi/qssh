@@ -163,39 +163,39 @@ function saveRecording(format) {
 <style scoped>
 .terminal-toolbar {
   height: 32px; display: flex; align-items: center;
-  padding: 0 10px; background: #222; border-bottom: 1px solid #333; flex-shrink: 0;
+  padding: 0 10px; background: #222; border-bottom: 1px solid var(--surface-hover); flex-shrink: 0;
 }
 .toolbar-left, .toolbar-center, .toolbar-right { display: flex; align-items: center; gap: 6px; }
 .toolbar-left { flex: 1; min-width: 0; }
 .toolbar-center { flex-shrink: 0; }
 .toolbar-right { flex: 1; min-width: 0; justify-content: flex-end; }
-.status-indicator { display: flex; align-items: center; gap: 4px; padding: 2px 6px; border-radius: 3px; background: #2a2a2a; }
+.status-indicator { display: flex; align-items: center; gap: 4px; padding: 2px 6px; border-radius: 3px; background: var(--border-default); }
 .status-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-.status-indicator.active .status-dot { background: #4caf50; box-shadow: 0 0 5px rgba(76,175,80,.4); }
-.status-indicator.disconnected .status-dot { background: #f44336; }
-.status-indicator.starting .status-dot { background: #ff9800; animation: pulse 1.5s infinite; }
-.status-indicator.error .status-dot { background: #f44336; }
-.status-indicator.idle .status-dot { background: #666; }
-.status-text { font-size: 12px; color: #ccc; }
-.session-label { font-size: 11px; color: #888; padding: 1px 5px; background: #2a2a2a; border-radius: 3px; }
-.command-count { font-size: 11px; color: #666; }
+.status-indicator.active .status-dot { background: var(--accent-success); box-shadow: 0 0 5px rgba(76,175,80,.4); }
+.status-indicator.disconnected .status-dot { background: var(--accent-danger); }
+.status-indicator.starting .status-dot { background: var(--accent-warning); animation: pulse 1.5s infinite; }
+.status-indicator.error .status-dot { background: var(--accent-danger); }
+.status-indicator.idle .status-dot { background: var(--text-muted, #666); }
+.status-text { font-size: 12px; color: var(--text-primary, #ccc); }
+.session-label { font-size: 11px; color: var(--text-muted, #888); padding: 1px 5px; background: var(--border-default); border-radius: 3px; }
+.command-count { font-size: 11px; color: var(--text-muted, #666); }
 .toolbar-btn {
   display: flex; align-items: center; gap: 3px; padding: 3px 6px;
   background: transparent; border: none; border-radius: 3px;
-  color: #aaa; cursor: pointer; font-size: 12px;
+  color: var(--text-secondary, #aaa); cursor: pointer; font-size: 12px;
 }
-.toolbar-btn:hover { background: #333; color: #ddd; }
-.toolbar-btn.recording { background: rgba(244,67,54,.12); color: #f44336; }
-.toolbar-btn.reconnect { background: rgba(255,152,0,.12); color: #ff9800; }
+.toolbar-btn:hover { background: var(--surface-hover); color: var(--text-primary, #ddd); }
+.toolbar-btn.recording { background: var(--danger-bg, rgba(244,67,54,.12)); color: var(--accent-danger); }
+.toolbar-btn.reconnect { background: var(--warning-bg, rgba(255,152,0,.12)); color: var(--accent-warning); }
 .btn-text { font-size: 12px; }
-.recording-duration { display: flex; align-items: center; gap: 4px; font-size: 12px; color: #f44336; }
-.recording-dot { width: 5px; height: 5px; border-radius: 50%; background: #f44336; animation: pulse 1s infinite; }
+.recording-duration { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--accent-danger); }
+.recording-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent-danger); animation: pulse 1s infinite; }
 .save-menu {
   position: absolute; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 2px;
-  background: #1a1a1a; border: 1px solid #333; border-radius: 4px;
-  padding: 2px; min-width: 120px; box-shadow: 0 8px 20px rgba(0,0,0,.5); z-index: 100;
+  background: var(--bg-panel-solid); border: 1px solid var(--surface-hover); border-radius: 4px;
+  padding: 2px; min-width: 120px; box-shadow: 0 8px 20px var(--shadow-lg); z-index: 100;
 }
-.save-option { padding: 4px 10px; font-size: 12px; color: #aaa; cursor: pointer; border-radius: 3px; }
-.save-option:hover { background: #333; color: #ddd; }
+.save-option { padding: 4px 10px; font-size: 12px; color: var(--text-secondary, #aaa); cursor: pointer; border-radius: 3px; }
+.save-option:hover { background: var(--surface-hover); color: var(--text-primary, #ddd); }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
 </style>

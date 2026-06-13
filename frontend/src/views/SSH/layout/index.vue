@@ -90,7 +90,7 @@ const currentConnectionId = computed(() => sshLayoutStore.currentConnectionId)
   flex-direction: column;
   height: 100%;
   width: 100%;
-  background: rgba(30, 30, 30, 0.95);
+  background: var(--bg-panel);
 }
 
 /* 内容区容器 */

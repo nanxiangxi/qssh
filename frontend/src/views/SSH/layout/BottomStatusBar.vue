@@ -137,8 +137,8 @@ onUnmounted(() => {
 <style scoped>
 .bottom-bar {
   height: 2.5rem;
-  background: rgba(40, 40, 40, 0.95);
-  border-top: 0.0625rem solid rgba(255, 255, 255, 0.1);
+  background: var(--toolbar-1);
+  border-top: 0.0625rem solid var(--surface-hover);
   padding: 0 1rem;
   display: flex;
   align-items: center;
@@ -171,7 +171,7 @@ onUnmounted(() => {
 }
 
 .info-item {
-  color: #a0aec0;
+  color: var(--text-secondary);
   font-size: 0.75rem;
   white-space: nowrap;
 }
@@ -185,13 +185,13 @@ onUnmounted(() => {
   background: transparent;
   border: none;
   border-radius: 0.25rem;
-  color: #a0aec0;
+  color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .action-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #e2e8f0;
+  background: var(--surface-hover);
+  color: var(--text-primary);
 }
 </style>

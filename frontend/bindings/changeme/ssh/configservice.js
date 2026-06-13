@@ -88,7 +88,7 @@ export function GetTerminalConfig() {
 }
 
 /**
- * GetUIConfig 获取界面配置（预留，供 Wails 绑定）
+ * GetUIConfig 获取界面配置
  * @returns {$CancellablePromise<$models.UIConfig>}
  */
 export function GetUIConfig() {

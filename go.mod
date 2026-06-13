@@ -3,6 +3,7 @@ module changeme
 go 1.25
 
 require (
+	github.com/gorilla/websocket v1.5.3
 	github.com/pkg/sftp v1.13.6
 	github.com/wailsapp/wails/v3 v3.0.0-alpha.74
 	golang.org/x/crypto v0.47.0

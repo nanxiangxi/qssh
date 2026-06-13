@@ -66,8 +66,8 @@ const isActive = (panelType) => {
 <style scoped>
 .left-sidebar {
   width: 3rem;
-  background: rgba(24, 24, 24, 0.98);
-  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--toolbar-1);
+  border-right: 1px solid var(--border-subtle);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
@@ -87,7 +87,7 @@ const isActive = (panelType) => {
   background: transparent;
   border: none;
   border-radius: 0.5rem;
-  color: #718096;
+  color: var(--text-muted);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -97,12 +97,12 @@ const isActive = (panelType) => {
 }
 
 .tool-btn:hover {
-  background: rgba(255, 255, 255, 0.06);
-  color: #a0aec0;
+  background: var(--border-subtle);
+  color: var(--text-secondary);
 }
 
 .tool-btn.active {
-  color: #63b3ed;
+  color: var(--primary-light);
   background: rgba(66, 153, 225, 0.12);
 }
 
@@ -114,7 +114,7 @@ const isActive = (panelType) => {
   transform: translateY(-50%);
   width: 3px;
   height: 1rem;
-  background: #4299e1;
+  background: var(--accent-primary);
   border-radius: 0 2px 2px 0;
 }
 </style>

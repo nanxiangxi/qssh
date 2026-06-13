@@ -3,7 +3,7 @@
     <!-- 工具栏 -->
     <div class="bc-toolbar">
       <div class="bc-toolbar-left">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ed8936" stroke-width="2">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-warning">
           <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
           <line x1="12" y1="5" x2="20" y2="5"/>
         </svg>
@@ -98,8 +98,8 @@
       <div class="bc-result-scroll">
         <div v-for="(r, i) in results" :key="i" class="bc-result-row">
           <span class="bc-result-icon">
-            <svg v-if="r.success" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#68d391" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-            <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fc8181" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+            <svg v-if="r.success" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-success"><polyline points="20 6 9 17 4 12"/></svg>
+            <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-danger"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
           </span>
           <span class="bc-result-name">{{ r.name }}</span>
           <span class="bc-result-msg">{{ r.success ? '已发送' : r.error }}</span>
@@ -248,30 +248,30 @@ onUnmounted(() => {
 .bc-panel {
   width: 100%; height: 100%;
   display: flex; flex-direction: column;
-  background: rgba(30, 30, 30, 0.95);
+  background: var(--bg-panel);
   overflow: hidden; font-size: 13px;
 }
 
 /* 工具栏 */
 .bc-toolbar {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.08);
-  background: rgba(40,40,40,0.5); flex-shrink: 0;
+  padding: 10px 14px; border-bottom: 1px solid var(--border-default);
+  background: var(--bg-toolbar); flex-shrink: 0;
 }
 .bc-toolbar-left { display: flex; align-items: center; gap: 8px; }
 .bc-toolbar-right { display: flex; gap: 6px; }
-.bc-title { color: #e2e8f0; font-weight: 600; font-size: 14px; }
+.bc-title { color: var(--text-primary); font-weight: 600; font-size: 14px; }
 
 .bc-btn {
   display: inline-flex; align-items: center; gap: 6px;
-  padding: 6px 12px; background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.1); border-radius: 6px;
-  color: #a0aec0; font-size: 12px; cursor: pointer; transition: all 0.15s;
+  padding: 6px 12px; background: var(--border-subtle);
+  border: 1px solid var(--surface-hover); border-radius: 6px;
+  color: var(--text-secondary); font-size: 12px; cursor: pointer; transition: all 0.15s;
 }
-.bc-btn:hover:not(:disabled) { background: rgba(255,255,255,0.1); color: #e2e8f0; }
+.bc-btn:hover:not(:disabled) { background: var(--surface-hover); color: var(--text-primary); }
 .bc-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-.bc-btn-primary { background: rgba(237,137,54,0.2); border-color: rgba(237,137,54,0.4); color: #f6ad55; }
-.bc-btn-primary:hover:not(:disabled) { background: rgba(237,137,54,0.35); }
+.bc-btn-primary { background: var(--warning-bg); border-color: rgba(237,137,54,0.4); color: var(--warning-light); }
+.bc-btn-primary:hover:not(:disabled) { background: var(--warning-bg); }
 
 /* 目标区域 */
 .bc-targets {
@@ -281,12 +281,12 @@ onUnmounted(() => {
   display: flex; align-items: center; justify-content: space-between;
   padding: 8px 14px; flex-shrink: 0;
 }
-.bc-targets-title { color: #a0aec0; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.bc-targets-title { color: var(--text-secondary); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
 .bc-targets-actions { display: flex; gap: 8px; }
-.bc-link-btn { background: none; border: none; color: #63b3ed; font-size: 11px; cursor: pointer; padding: 0; }
+.bc-link-btn { background: none; border: none; color: var(--primary-light); font-size: 11px; cursor: pointer; padding: 0; }
 .bc-link-btn:hover { text-decoration: underline; }
 
-.bc-empty-hint { padding: 20px; text-align: center; color: #4a5568; font-size: 12px; }
+.bc-empty-hint { padding: 20px; text-align: center; color: var(--text-disabled); font-size: 12px; }
 
 /* 连接卡片网格 */
 .bc-conn-grid {
@@ -295,75 +295,80 @@ onUnmounted(() => {
 }
 
 .bc-conn-card {
-  background: rgba(45,45,45,0.6); border: 1px solid rgba(255,255,255,0.06);
+  background: var(--card-bg, #252525); border: 1px solid var(--border-subtle);
   border-radius: 8px; padding: 10px; cursor: pointer; transition: all 0.15s;
 }
-.bc-conn-card:hover { background: rgba(55,55,55,0.8); border-color: rgba(255,255,255,0.12); }
-.bc-conn-card.selected { border-color: rgba(237,137,54,0.5); background: rgba(237,137,54,0.06); }
+.bc-conn-card:hover { background: var(--card-bg, #252525); border-color: var(--border-default); }
+.bc-conn-card.selected { border-color: var(--border-warning); background: var(--warning-bg); }
 .bc-conn-card.offline { opacity: 0.5; cursor: not-allowed; }
 
 .bc-conn-head {
   display: flex; align-items: center; gap: 8px;
 }
-.bc-check { accent-color: #ed8936; }
-.bc-conn-name { flex: 1; color: #e2e8f0; font-size: 12px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bc-check { accent-color: var(--accent-warning); }
+.bc-conn-name { flex: 1; color: var(--text-primary); font-size: 12px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .bc-conn-badge {
   font-size: 10px; padding: 1px 6px; border-radius: 4px; font-weight: 600;
 }
-.bc-on { background: rgba(72,187,120,0.15); color: #68d391; }
-.bc-off { background: rgba(160,174,192,0.1); color: #718096; }
+.bc-on { background: var(--success-bg, rgba(72,187,120,0.15)); color: var(--success-light); }
+.bc-off { background: var(--surface-2, rgba(160,174,192,0.1)); color: var(--text-muted); }
 
 /* 终端选择 */
 .bc-term-select {
   display: flex; align-items: center; gap: 6px; margin-top: 8px;
 }
-.bc-term-label { font-size: 10px; color: #718096; white-space: nowrap; }
+.bc-term-label { font-size: 10px; color: var(--text-muted); white-space: nowrap; }
 .bc-term-dropdown {
-  flex: 1; background: rgba(30,30,30,0.8); border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 4px; color: #e2e8f0; font-size: 11px; padding: 3px 6px;
+  flex: 1; background: var(--bg-panel); border: 1px solid var(--border-default);
+  border-radius: 4px; color: var(--text-primary); font-size: 11px; padding: 3px 6px;
   font-family: monospace; outline: none; cursor: pointer;
 }
 .bc-term-dropdown:focus { border-color: rgba(237,137,54,0.4); }
-.bc-term-dropdown option { background: #1a1a1a; color: #e2e8f0; }
+.bc-term-dropdown option { background: var(--bg-panel-solid); color: var(--text-primary); }
 
 /* 命令输入 */
 .bc-input-area {
-  padding: 10px 14px; border-top: 1px solid rgba(255,255,255,0.06);
+  padding: 10px 14px; border-top: 1px solid var(--border-subtle);
   display: flex; gap: 8px; align-items: stretch; flex-shrink: 0;
 }
 .bc-input {
-  flex: 1; background: rgba(30,30,30,0.8);
-  border: 1px solid rgba(255,255,255,0.1); border-radius: 6px;
-  color: #e2e8f0; font-size: 13px; font-family: 'Courier New', monospace;
+  flex: 1; background: var(--bg-panel);
+  border: 1px solid var(--surface-hover); border-radius: 6px;
+  color: var(--text-primary); font-size: 13px; font-family: 'Courier New', monospace;
   padding: 8px 10px; outline: none; resize: none;
 }
 .bc-input:focus { border-color: rgba(237,137,54,0.4); }
-.bc-input::placeholder { color: #4a5568; }
+.bc-input::placeholder { color: var(--text-disabled); }
 .bc-send-btn { align-self: stretch; white-space: nowrap; }
 
 /* 结果 */
 .bc-results {
-  border-top: 1px solid rgba(255,255,255,0.06); flex-shrink: 0;
+  border-top: 1px solid var(--border-subtle); flex-shrink: 0;
   max-height: 35%; display: flex; flex-direction: column;
 }
 .bc-results-header {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 6px 14px; color: #a0aec0; font-size: 12px; font-weight: 600;
-  border-bottom: 1px solid rgba(255,255,255,0.04); flex-shrink: 0;
+  padding: 6px 14px; color: var(--text-secondary); font-size: 12px; font-weight: 600;
+  border-bottom: 1px solid var(--surface-1); flex-shrink: 0;
 }
 .bc-result-scroll { overflow-y: auto; padding: 6px 14px; }
 .bc-result-row {
   display: flex; align-items: center; gap: 8px;
-  padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.03);
+  padding: 5px 0; border-bottom: 1px solid var(--surface-1);
 }
 .bc-result-icon { flex-shrink: 0; display: flex; }
-.bc-result-name { color: #e2e8f0; font-size: 12px; font-weight: 500; min-width: 80px; }
-.bc-result-msg { color: #718096; font-size: 11px; flex: 1; }
+.bc-result-name { color: var(--text-primary); font-size: 12px; font-weight: 500; min-width: 80px; }
+.bc-result-msg { color: var(--text-muted); font-size: 11px; flex: 1; }
+
+/* 图标颜色 */
+.icon-warning { color: var(--warning-light, #ed8936); }
+.icon-success { color: var(--success-light, #68d391); }
+.icon-danger { color: var(--accent-danger, #fc8181); }
 
 /* 底部 */
 .bc-footer {
   display: flex; align-items: center; padding: 4px 14px;
-  border-top: 1px solid rgba(255,255,255,0.08); background: rgba(40,40,40,0.5);
-  font-size: 11px; color: #718096; flex-shrink: 0;
+  border-top: 1px solid var(--border-default); background: var(--bg-toolbar);
+  font-size: 11px; color: var(--text-muted); flex-shrink: 0;
 }
 </style>

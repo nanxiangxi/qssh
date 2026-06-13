@@ -90,6 +90,13 @@ func (s *SSHService) SetWindowManager(wm *WindowManager) {
 	s.windowManager = wm
 }
 
+// ClearWindowPositions 清除所有窗口位置记忆
+func (s *SSHService) ClearWindowPositions() {
+	if s.windowManager != nil {
+		s.windowManager.ClearPositions()
+	}
+}
+
 // formatSSHError 将SSH错误消息转换为友好的中文提示
 func formatSSHError(err error) error {
 	if err == nil {
@@ -884,6 +891,15 @@ func (s *SSHService) AddConnection(conn *ConnectionInfo) error {
 // UpdateConnection 更新连接信息
 func (s *SSHService) UpdateConnection(conn *ConnectionInfo) error {
 	return s.storage.UpdateConnection(conn)
+}
+
+// SyncImportConnection 云端同步导入（按 host:port 去重：存在则更新，不存在则新增，永久保存）
+func (s *SSHService) SyncImportConnection(conn *ConnectionInfo) error {
+	err := s.storage.SyncImportConnection(conn)
+	if err == nil {
+		s.broadcastConnections()
+	}
+	return err
 }
 
 // DeleteConnection 删除连接

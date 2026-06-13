@@ -3,7 +3,7 @@
     <!-- 顶部工具栏 -->
     <div class="pf-toolbar">
       <div class="pf-toolbar-left">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#63b3ed" stroke-width="2" stroke-linecap="round">
+        <svg class="pf-icon-accent" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
           <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
           <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
           <line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
@@ -21,7 +21,7 @@
     <!-- 转发列表 -->
     <div class="pf-list">
       <div v-if="forwards.length === 0" class="pf-empty">
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#4a5568" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        <svg class="pf-icon-muted" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
         <p>暂无端口转发规则</p>
         <button class="pf-btn pf-btn-primary pf-btn-sm" @click="closeDialog(); showAdd = true">添加转发</button>
       </div>
@@ -30,6 +30,7 @@
         <table class="pf-table">
           <thead>
             <tr>
+              <th>名称</th>
               <th>类型</th>
               <th>监听地址</th>
               <th>目标地址</th>
@@ -41,6 +42,9 @@
           </thead>
           <tbody>
             <tr v-for="fwd in forwards" :key="fwd.id" :class="'pf-row-' + fwd.status">
+              <td class="pf-name-cell" :title="getForwardName(fwd)">
+                {{ getForwardName(fwd) || '—' }}
+              </td>
               <td>
                 <span class="pf-type-tag" :class="'pf-type-' + fwd.type">
                   {{ fwd.type === 'local' ? '远程→本地' : '本地→远程' }}
@@ -99,6 +103,10 @@
             <button @click="closeDialog">&times;</button>
           </div>
           <div class="pf-modal-body">
+            <div class="pf-field">
+              <label>名称 <span class="pf-hint-inline">（可选，方便记录用途）</span></label>
+              <input v-model="form.name" placeholder="例如：数据库、Web服务、Redis" class="pf-input pf-input-full" />
+            </div>
             <div class="pf-field">
               <label>转发类型</label>
               <div class="pf-radio-group">
@@ -164,12 +172,29 @@ const formError = ref('')
 const editingId = ref(null)
 
 const form = ref({
+  name: '',
   type: 'local',
   bindAddr: '127.0.0.1',
   bindPort: null,
   remoteHost: '127.0.0.1',
   remotePort: null
 })
+
+// 名称存储（localStorage）
+const NAMES_KEY = 'pf_names'
+function loadNames() {
+  try { return JSON.parse(localStorage.getItem(NAMES_KEY) || '{}') } catch { return {} }
+}
+function saveName(fwd, name) {
+  if (!name) return
+  const names = loadNames()
+  names[fwd.id] = name
+  localStorage.setItem(NAMES_KEY, JSON.stringify(names))
+}
+function getForwardName(fwd) {
+  const names = loadNames()
+  return names[fwd.id] || ''
+}
 
 const runningCount = computed(() => forwards.value.filter(f => f.status === 'running').length)
 
@@ -201,6 +226,7 @@ const loadForwards = async () => {
 const editForward = (fwd) => {
   editingId.value = fwd.id
   form.value = {
+    name: getForwardName(fwd),
     type: fwd.type,
     bindAddr: fwd.bindAddr,
     bindPort: fwd.bindPort,
@@ -223,11 +249,20 @@ const addForward = async () => {
     if (editingId.value) {
       try {
         await PortForwardService.RemoveForward(editingId.value)
+        // 清除旧名称
+        const names = loadNames()
+        delete names[editingId.value]
+        localStorage.setItem(NAMES_KEY, JSON.stringify(names))
       } catch (e) {}
     }
 
     const fn = form.value.type === 'local' ? 'AddLocalForward' : 'AddRemoteForward'
-    await PortForwardService[fn](connId, form.value.bindAddr, form.value.bindPort, form.value.remoteHost, form.value.remotePort)
+    const result = await PortForwardService[fn](connId, form.value.bindAddr, form.value.bindPort, form.value.remoteHost, form.value.remotePort)
+
+    // 保存名称
+    if (form.value.name && result) {
+      saveName(result, form.value.name)
+    }
 
     const typeLabel = form.value.type === 'local' ? '远程→本地' : '本地→远程'
     addLog(connId, 'portForward', LogLevel.SUCCESS,
@@ -245,6 +280,7 @@ const addForward = async () => {
 const closeDialog = () => {
   showAdd.value = false
   editingId.value = null
+  form.value.name = ''
   form.value.bindPort = null
   form.value.remotePort = null
   form.value.bindAddr = '127.0.0.1'
@@ -280,6 +316,10 @@ const stopForward = async (id) => {
 const removeForward = async (id) => {
   try {
     await PortForwardService.RemoveForward(id)
+    // 清除名称
+    const names = loadNames()
+    delete names[id]
+    localStorage.setItem(NAMES_KEY, JSON.stringify(names))
     addLog(connId, 'portForward', LogLevel.INFO, '删除端口转发: ' + id)
     showMessage('转发已删除', 'success')
     await loadForwards()
@@ -311,7 +351,7 @@ onUnmounted(() => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: rgba(30, 30, 30, 0.95);
+  background: var(--bg-panel);
   overflow: hidden;
 }
 
@@ -321,8 +361,8 @@ onUnmounted(() => {
   align-items: center;
   justify-content: space-between;
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(40, 40, 40, 0.5);
+  border-bottom: 1px solid var(--surface-hover);
+  background: var(--card-bg, #252525);
   flex-shrink: 0;
 }
 
@@ -332,8 +372,16 @@ onUnmounted(() => {
   gap: 0.5rem;
 }
 
+.pf-icon-accent {
+  color: var(--primary-light, #63b3ed);
+}
+
+.pf-icon-muted {
+  color: var(--text-disabled, #4a5568);
+}
+
 .pf-title {
-  color: #e2e8f0;
+  color: var(--text-primary, #e2e8f0);
   font-weight: 600;
   font-size: 0.875rem;
 }
@@ -353,7 +401,7 @@ onUnmounted(() => {
   justify-content: center;
   height: 100%;
   gap: 0.75rem;
-  color: #718096;
+  color: var(--text-muted, #718096);
 }
 
 .pf-empty p {
@@ -375,16 +423,16 @@ onUnmounted(() => {
 .pf-table th {
   padding: 0.5rem 0.75rem;
   text-align: left;
-  color: #a0aec0;
+  color: var(--text-secondary, #a0aec0);
   font-weight: 600;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 2px solid var(--surface-hover);
   white-space: nowrap;
 }
 
 .pf-table td {
   padding: 0.5rem 0.75rem;
-  color: #e2e8f0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  color: var(--text-primary, #e2e8f0);
+  border-bottom: 1px solid var(--surface-1);
   white-space: nowrap;
 }
 
@@ -394,11 +442,11 @@ onUnmounted(() => {
 }
 
 .pf-row-running td {
-  background: rgba(72, 187, 120, 0.03);
+  background: var(--success-bg, rgba(72, 187, 120, 0.03));
 }
 
 .pf-row-error td {
-  background: rgba(245, 101, 101, 0.03);
+  background: var(--danger-bg, rgba(245, 101, 101, 0.03));
 }
 
 /* 连接和流量统计 */
@@ -408,16 +456,16 @@ onUnmounted(() => {
 }
 
 .pf-conn-count {
-  color: #e2e8f0;
+  color: var(--text-primary, #e2e8f0);
   font-weight: 600;
 }
 
 .pf-conn-count.pf-conn-active {
-  color: #68d391;
+  color: var(--success-light, #68d391);
 }
 
 .pf-conn-total {
-  color: #4a5568;
+  color: var(--text-disabled, #4a5568);
   font-size: 0.5625rem;
 }
 
@@ -426,15 +474,15 @@ onUnmounted(() => {
 }
 
 .pf-traffic-up {
-  color: #f6ad55;
+  color: var(--warning-light, #f6ad55);
 }
 
 .pf-traffic-down {
-  color: #63b3ed;
+  color: var(--primary-light, #63b3ed);
 }
 
 .pf-traffic-sep {
-  color: #4a5568;
+  color: var(--text-disabled, #4a5568);
   margin: 0 0.125rem;
 }
 
@@ -448,13 +496,13 @@ onUnmounted(() => {
 }
 
 .pf-type-local {
-  background: rgba(66, 153, 225, 0.2);
-  color: #63b3ed;
+  background: var(--primary-bg, rgba(66, 153, 225, 0.2));
+  color: var(--primary-light, #63b3ed);
 }
 
 .pf-type-remote {
-  background: rgba(159, 122, 234, 0.2);
-  color: #b794f4;
+  background: var(--accent-purple-bg, rgba(159, 122, 234, 0.2));
+  color: var(--accent-purple, #b794f4);
 }
 
 /* 状态 */
@@ -467,18 +515,18 @@ onUnmounted(() => {
 }
 
 .pf-status-running {
-  background: rgba(72, 187, 120, 0.2);
-  color: #68d391;
+  background: var(--success-bg, rgba(72, 187, 120, 0.2));
+  color: var(--success-light, #68d391);
 }
 
 .pf-status-stopped {
-  background: rgba(160, 174, 192, 0.2);
-  color: #a0aec0;
+  background: var(--surface-2, rgba(160, 174, 192, 0.2));
+  color: var(--text-secondary, #a0aec0);
 }
 
 .pf-status-error {
-  background: rgba(245, 101, 101, 0.2);
-  color: #fc8181;
+  background: var(--danger-bg, rgba(245, 101, 101, 0.2));
+  color: var(--accent-danger, #fc8181);
 }
 
 /* 操作按钮 */
@@ -493,18 +541,18 @@ onUnmounted(() => {
   align-items: center;
   gap: 0.375rem;
   padding: 0.375rem 0.75rem;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: var(--border-subtle);
+  border: 1px solid var(--border-strong);
   border-radius: 0.375rem;
-  color: #a0aec0;
+  color: var(--text-secondary, #a0aec0);
   font-size: 0.75rem;
   cursor: pointer;
   transition: all 0.15s;
 }
 
 .pf-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #e2e8f0;
+  background: var(--surface-hover);
+  color: var(--text-primary, #e2e8f0);
 }
 
 .pf-btn-sm {
@@ -512,43 +560,43 @@ onUnmounted(() => {
 }
 
 .pf-btn-primary {
-  background: rgba(66, 153, 225, 0.2);
-  border-color: rgba(66, 153, 225, 0.4);
-  color: #63b3ed;
+  background: var(--primary-bg, rgba(66, 153, 225, 0.2));
+  border-color: var(--border-accent, rgba(66, 153, 225, 0.4));
+  color: var(--primary-light, #63b3ed);
 }
 
 .pf-btn-primary:hover {
-  background: rgba(66, 153, 225, 0.35);
+  background: var(--primary-bg-hover, rgba(66, 153, 225, 0.35));
 }
 
 .pf-btn-success {
-  background: rgba(72, 187, 120, 0.2);
-  border-color: rgba(72, 187, 120, 0.4);
-  color: #68d391;
+  background: var(--success-bg, rgba(72, 187, 120, 0.2));
+  border-color: var(--border-success, rgba(72, 187, 120, 0.4));
+  color: var(--success-light, #68d391);
 }
 
 .pf-btn-success:hover {
-  background: rgba(72, 187, 120, 0.35);
+  background: var(--success-bg, rgba(72, 187, 120, 0.35));
 }
 
 .pf-btn-warn {
-  background: rgba(237, 137, 54, 0.2);
-  border-color: rgba(237, 137, 54, 0.4);
-  color: #f6ad55;
+  background: var(--warning-bg, rgba(237, 137, 54, 0.2));
+  border-color: var(--border-warning, rgba(237, 137, 54, 0.4));
+  color: var(--warning-light, #f6ad55);
 }
 
 .pf-btn-warn:hover {
-  background: rgba(237, 137, 54, 0.35);
+  background: var(--warning-bg, rgba(237, 137, 54, 0.35));
 }
 
 .pf-btn-danger {
-  background: rgba(245, 101, 101, 0.2);
-  border-color: rgba(245, 101, 101, 0.4);
-  color: #fc8181;
+  background: var(--danger-bg, rgba(245, 101, 101, 0.2));
+  border-color: var(--border-danger, rgba(245, 101, 101, 0.4));
+  color: var(--accent-danger, #fc8181);
 }
 
 .pf-btn-danger:hover {
-  background: rgba(245, 101, 101, 0.35);
+  background: var(--danger-bg, rgba(245, 101, 101, 0.35));
 }
 
 .pf-btn-text {
@@ -560,9 +608,9 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   padding: 0.375rem 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(40, 40, 40, 0.5);
-  color: #718096;
+  border-top: 1px solid var(--surface-hover);
+  background: var(--card-bg, #252525);
+  color: var(--text-muted, #718096);
   font-size: 0.6875rem;
   flex-shrink: 0;
 }
@@ -571,7 +619,7 @@ onUnmounted(() => {
 .pf-modal-mask {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: var(--bg-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -580,12 +628,12 @@ onUnmounted(() => {
 }
 
 .pf-modal {
-  background: #1a1a1a;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-panel-solid);
+  border: 1px solid var(--surface-hover);
   border-radius: 0.75rem;
   width: 400px;
   max-width: 90vw;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-lg, 0 16px 48px rgba(0, 0, 0, 0.5));
 }
 
 .pf-modal-head {
@@ -593,25 +641,25 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
   padding: 1rem 1.25rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .pf-modal-head h3 {
   margin: 0;
-  color: #e2e8f0;
+  color: var(--text-primary, #e2e8f0);
   font-size: 0.9375rem;
 }
 
 .pf-modal-head button {
   background: none;
   border: none;
-  color: #718096;
+  color: var(--text-muted, #718096);
   font-size: 1.25rem;
   cursor: pointer;
 }
 
 .pf-modal-head button:hover {
-  color: #e2e8f0;
+  color: var(--text-primary, #e2e8f0);
 }
 
 .pf-modal-body {
@@ -623,7 +671,7 @@ onUnmounted(() => {
 
 .pf-field label {
   display: block;
-  color: #a0aec0;
+  color: var(--text-secondary, #a0aec0);
   font-size: 0.75rem;
   margin-bottom: 0.375rem;
 }
@@ -634,10 +682,10 @@ onUnmounted(() => {
 }
 
 .pf-input {
-  background: rgba(30, 30, 30, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--toolbar-4);
+  border: 1px solid var(--surface-hover);
   border-radius: 0.375rem;
-  color: #e2e8f0;
+  color: var(--text-primary, #e2e8f0);
   font-size: 0.8125rem;
   padding: 0.5rem 0.75rem;
   outline: none;
@@ -645,7 +693,7 @@ onUnmounted(() => {
 }
 
 .pf-input:focus {
-  border-color: rgba(66, 153, 225, 0.5);
+  border-color: var(--border-accent, rgba(66, 153, 225, 0.5));
 }
 
 .pf-input-addr {
@@ -654,6 +702,25 @@ onUnmounted(() => {
 
 .pf-input-port {
   width: 80px;
+}
+
+.pf-input-full {
+  width: 100%;
+}
+
+.pf-hint-inline {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.pf-name-cell {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-primary);
+  font-size: 0.8125rem;
 }
 
 .pf-radio-group {
@@ -666,10 +733,10 @@ onUnmounted(() => {
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 0.75rem;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--surface-1);
+  border: 1px solid var(--surface-hover);
   border-radius: 0.375rem;
-  color: #a0aec0;
+  color: var(--text-secondary, #a0aec0);
   font-size: 0.75rem;
   cursor: pointer;
   transition: all 0.15s;
@@ -677,13 +744,13 @@ onUnmounted(() => {
 }
 
 .pf-radio:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--border-subtle);
 }
 
 .pf-radio.active {
-  background: rgba(66, 153, 225, 0.15);
-  border-color: rgba(66, 153, 225, 0.4);
-  color: #e2e8f0;
+  background: var(--primary-bg, rgba(66, 153, 225, 0.15));
+  border-color: var(--border-accent, rgba(66, 153, 225, 0.4));
+  color: var(--text-primary, #e2e8f0);
 }
 
 .pf-radio input {
@@ -707,13 +774,13 @@ onUnmounted(() => {
 }
 
 .pf-hint {
-  color: #4a5568;
+  color: var(--text-disabled, #4a5568);
   font-size: 0.625rem;
   margin-bottom: 0.375rem;
 }
 
 .pf-error {
-  color: #fc8181;
+  color: var(--accent-danger, #fc8181);
   font-size: 0.75rem;
 }
 
@@ -722,7 +789,7 @@ onUnmounted(() => {
   justify-content: flex-end;
   gap: 0.5rem;
   padding: 0.875rem 1.25rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: 1px solid var(--border-subtle);
 }
 
 /* 滚动条 */
@@ -735,7 +802,7 @@ onUnmounted(() => {
 }
 
 .pf-list::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--border-default);
   border-radius: 999px;
 }
 </style>

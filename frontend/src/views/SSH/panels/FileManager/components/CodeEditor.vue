@@ -110,6 +110,10 @@ const editorContainer = ref(null)
 const loading = ref(true)
 let editorView = null
 
+function isDarkTheme() {
+  return document.documentElement.dataset.theme !== 'light'
+}
+
 // 获取语言扩展
 function getLanguageExtension(lang) {
   return languageExtensions[lang.toLowerCase()] || null
@@ -126,7 +130,7 @@ onMounted(async () => {
   // 创建 CodeMirror 编辑器
   const extensions = [
     basicSetup,
-    props.theme === 'vs-dark' ? oneDark : [],
+    (props.theme === 'vs-dark' && isDarkTheme()) ? oneDark : [],
     props.readonly ? EditorView.editable.of(false) : [],
     props.wordWrap ? EditorView.lineWrapping : [],
     EditorView.updateListener.of((update) => {
@@ -178,7 +182,7 @@ watch(() => props.readonly, () => {
     const langExtension = getLanguageExtension(props.language)
     const extensions = [
       basicSetup,
-      props.theme === 'vs-dark' ? oneDark : [],
+      (props.theme === 'vs-dark' && isDarkTheme()) ? oneDark : [],
       props.readonly ? EditorView.editable.of(false) : [],
       props.wordWrap ? EditorView.lineWrapping : [],
       EditorView.updateListener.of((update) => {
@@ -255,15 +259,15 @@ onUnmounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: #1e1e1e;
-  color: #d4d4d4;
+  background: var(--bg-toolbar);
+  color: var(--text-primary);
 }
 
 .spinner {
   width: 40px;
   height: 40px;
-  border: 3px solid rgba(255, 255, 255, 0.1);
-  border-top-color: #007acc;
+  border: 3px solid var(--surface-hover);
+  border-top-color: var(--accent-primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
   margin-bottom: 16px;
@@ -291,15 +295,27 @@ onUnmounted(() => {
 }
 
 :deep(.cm-gutters) {
-  background-color: #1e1e1e;
-  border-right: 1px solid #3e3e3e;
+  background-color: var(--bg-toolbar);
+  border-right: 1px solid var(--border-default);
 }
 
 :deep(.cm-activeLineGutter) {
-  background-color: #2d2d2d;
+  background-color: var(--bg-panel-solid);
 }
 
 :deep(.cm-cursor) {
-  border-left-color: #d4d4d4;
+  border-left-color: var(--text-primary);
+}
+
+:deep(.cm-content) {
+  caret-color: var(--text-primary);
+}
+
+:deep(.cm-selectionBackground) {
+  background: var(--bg-selected) !important;
+}
+
+:deep(.cm-activeLine) {
+  background-color: var(--surface-1) !important;
 }
 </style>

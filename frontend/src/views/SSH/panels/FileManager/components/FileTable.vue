@@ -131,15 +131,15 @@ defineEmits(['open-file', 'sort', 'show-menu', 'select-file', 'select-all'])
   align-items: center;
   justify-content: center;
   gap: 1rem;
-  color: #a0aec0;
-  background: rgba(30, 30, 30, 0.8);
+  color: var(--text-secondary);
+  background: var(--bg-panel);
 }
 
 .spinner {
   width: 40px;
   height: 40px;
-  border: 3px solid rgba(255, 255, 255, 0.1);
-  border-top-color: #4299e1;
+  border: 3px solid var(--surface-hover);
+  border-top-color: var(--accent-primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -157,16 +157,16 @@ defineEmits(['open-file', 'sort', 'show-menu', 'select-file', 'select-all'])
 .file-table thead {
   position: sticky;
   top: 0;
-  background: rgba(40, 40, 40, 0.95);
+  background: var(--bg-toolbar);
   z-index: 1;
 }
 
 .file-table th {
   padding: 0.625rem 0.75rem;
   text-align: left;
-  color: #a0aec0;
+  color: var(--text-secondary);
   font-weight: 600;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 2px solid var(--surface-hover);
   white-space: nowrap;
 }
 
@@ -176,18 +176,18 @@ defineEmits(['open-file', 'sort', 'show-menu', 'select-file', 'select-all'])
 }
 
 .file-table th.sortable:hover {
-  color: #e2e8f0;
+  color: var(--text-primary);
 }
 
 .sort-indicator {
   margin-left: 0.25rem;
-  color: #63b3ed;
+  color: var(--primary-light);
 }
 
 .file-table td {
   padding: 0.5rem 0.75rem;
-  color: #e2e8f0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--surface-1);
 }
 
 .file-row {
@@ -196,7 +196,7 @@ defineEmits(['open-file', 'sort', 'show-menu', 'select-file', 'select-all'])
 }
 
 .file-row:hover {
-  background: rgba(66, 153, 225, 0.1);
+  background: var(--bg-hover);
 }
 
 .file-name {
@@ -206,7 +206,7 @@ defineEmits(['open-file', 'sort', 'show-menu', 'select-file', 'select-all'])
 }
 
 .file-path {
-  color: #718096;
+  color: var(--text-muted);
   font-size: 0.75rem;
   margin-left: 0.25rem;
 }
@@ -216,16 +216,16 @@ defineEmits(['open-file', 'sort', 'show-menu', 'select-file', 'select-all'])
 }
 
 .file-icon.folder {
-  color: #f6e05e;
+  color: var(--accent-warning);
 }
 
 .file-icon.file {
-  color: #63b3ed;
+  color: var(--primary-light);
 }
 
 .mode-text {
   font-family: monospace;
-  color: #a0aec0;
+  color: var(--text-secondary);
   font-size: 0.75rem;
 }
 
@@ -238,12 +238,12 @@ defineEmits(['open-file', 'sort', 'show-menu', 'select-file', 'select-all'])
   cursor: pointer;
   width: 16px;
   height: 16px;
-  accent-color: #4299e1;
+  accent-color: var(--accent-primary);
 }
 
 .file-checkbox:hover,
 .select-all-checkbox:hover {
-  accent-color: #63b3ed;
+  accent-color: var(--primary-light);
 }
 
 .menu-btn {
@@ -255,14 +255,14 @@ defineEmits(['open-file', 'sort', 'show-menu', 'select-file', 'select-all'])
   background: transparent;
   border: 1px solid transparent;
   border-radius: 0.25rem;
-  color: #63b3ed;
+  color: var(--primary-light);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .menu-btn:hover {
-  background: rgba(99, 179, 237, 0.2);
-  border-color: rgba(99, 179, 237, 0.5);
+  background: var(--primary-bg);
+  border-color: var(--border-accent);
 }
 
 .file-list-container::-webkit-scrollbar {
@@ -274,12 +274,12 @@ defineEmits(['open-file', 'sort', 'show-menu', 'select-file', 'select-all'])
 }
 
 .file-list-container::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--scrollbar-thumb);
   border-radius: 3px;
 }
 
 .file-list-container::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--scrollbar-thumb-hover);
 }
 
 /* === 响应式布局 === */

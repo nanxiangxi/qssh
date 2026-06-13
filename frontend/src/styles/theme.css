@@ -1,0 +1,277 @@
+:root,
+[data-theme="dark"] {
+  /* ===== Backgrounds ===== */
+  --bg-app: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1f1f1f 100%);
+  --bg-panel: rgba(45, 45, 45, 0.95);
+  --bg-panel-solid: #2d2d2d;
+  --bg-sidebar: rgba(24, 24, 24, 0.98);
+  --bg-sidebar-solid: #181818;
+  --bg-toolbar: #1e1e1e;
+  --bg-toolbar-hover: #2a2a2a;
+  --bg-input: #1e1e1e;
+  --bg-input-focus: #252525;
+
+  /* ===== Toolbar Levels（由外到内，逐层变浅） ===== */
+  --toolbar-1: #151515;        /* 最外层：顶栏、左右侧栏 */
+  --toolbar-2: #1c1c1c;        /* 第二层：Dockview 标签栏 */
+  --toolbar-3: #242424;        /* 第三层：面板内工具栏 */
+  --toolbar-4: #2d2d2d;        /* 第四层：内容区、输入框 */
+  --bg-hover: rgba(255, 255, 255, 0.05);
+  --bg-active: rgba(255, 255, 255, 0.08);
+  --bg-selected: rgba(66, 153, 225, 0.15);
+  --bg-overlay: rgba(0, 0, 0, 0.7);
+  --bg-tooltip: rgba(30, 30, 30, 0.95);
+  --bg-terminal: #121212;
+
+  /* ===== Surfaces / Elevated cards ===== */
+  --surface-1: rgba(255, 255, 255, 0.03);
+  --surface-2: rgba(255, 255, 255, 0.05);
+  --surface-3: rgba(255, 255, 255, 0.08);
+  --surface-hover: rgba(255, 255, 255, 0.1);
+
+  /* ===== Card / Panel Component ===== */
+  --card-bg: #252525;
+  --card-border: rgba(255, 255, 255, 0.08);
+  --card-header-bg: rgba(255, 255, 255, 0.03);
+  --table-header-bg: #1e1e1e;
+  --table-row-hover: rgba(66, 153, 225, 0.08);
+  --table-border: rgba(255, 255, 255, 0.06);
+
+  /* ===== Text ===== */
+  --text-primary: #e2e8f0;
+  --text-secondary: #a0aec0;
+  --text-muted: #718096;
+  --text-disabled: #4a5568;
+  --text-on-accent: #ffffff;
+
+  /* ===== Accents ===== */
+  --accent-primary: #4299e1;
+  --primary-light: #63b3ed;
+  --primary-bg: rgba(66, 153, 225, 0.15);
+  --primary-bg-hover: rgba(66, 153, 225, 0.25);
+  --accent-success: #48bb78;
+  --success-light: #68d391;
+  --success-bg: rgba(72, 187, 120, 0.15);
+  --accent-warning: #fbd38d;
+  --warning-light: #f6ad55;
+  --warning-bg: rgba(251, 211, 141, 0.15);
+  --accent-danger: #fc8181;
+  --danger-light: #f56565;
+  --danger-bg: rgba(245, 101, 101, 0.15);
+  --accent-info: #90cdf4;
+  --accent-purple: #9f7aea;
+  --accent-purple-bg: rgba(159, 122, 234, 0.15);
+
+  /* ===== Borders ===== */
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-default: rgba(255, 255, 255, 0.1);
+  --border-strong: rgba(255, 255, 255, 0.15);
+  --border-accent: rgba(66, 153, 225, 0.4);
+  --border-success: rgba(72, 187, 120, 0.4);
+  --border-warning: rgba(246, 173, 85, 0.4);
+  --border-danger: rgba(245, 101, 101, 0.4);
+  --border-purple: rgba(159, 122, 234, 0.4);
+
+  /* ===== Shadows ===== */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.5);
+
+  /* ===== Scrollbar ===== */
+  --scrollbar-track: transparent;
+  --scrollbar-thumb: rgba(255, 255, 255, 0.2);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.3);
+  --scrollbar-width: 6px;
+}
+
+[data-theme="light"] {
+  /* ===== Backgrounds ===== */
+  --bg-app: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 50%, #f0f4f8 100%);
+  --bg-panel: #ffffff;
+  --bg-panel-solid: #ffffff;
+  --bg-sidebar: #f8fafc;
+  --bg-sidebar-solid: #f8fafc;
+  --bg-toolbar: #f1f5f9;
+  --bg-toolbar-hover: #e2e8f0;
+  --bg-input: #ffffff;
+  --bg-input-focus: #f8fafc;
+
+  /* ===== Toolbar Levels（由外到内，逐层变浅） ===== */
+  --toolbar-1: #e2e8f0;        /* 最外层：顶栏、左右侧栏 */
+  --toolbar-2: #eaeef3;        /* 第二层：Dockview 标签栏 */
+  --toolbar-3: #f1f5f9;        /* 第三层：面板内工具栏 */
+  --toolbar-4: #f8fafc;        /* 第四层：内容区、输入框 */
+
+  --bg-hover: rgba(59, 130, 246, 0.06);
+  --bg-active: rgba(59, 130, 246, 0.1);
+  --bg-selected: rgba(59, 130, 246, 0.12);
+  --bg-overlay: rgba(15, 23, 42, 0.5);
+  --bg-tooltip: #ffffff;
+  --bg-terminal: #fafbfc;
+
+  /* ===== Surfaces / Elevated cards ===== */
+  --surface-1: #f8fafc;
+  --surface-2: #f1f5f9;
+  --surface-3: #e2e8f0;
+  --surface-hover: rgba(59, 130, 246, 0.08);
+
+  /* ===== Card / Panel Component ===== */
+  --card-bg: #ffffff;
+  --card-border: #e2e8f0;
+  --card-header-bg: #f8fafc;
+  --table-header-bg: #f1f5f9;
+  --table-row-hover: rgba(59, 130, 246, 0.06);
+  --table-border: #e2e8f0;
+
+  /* ===== Text ===== */
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --text-disabled: #cbd5e1;
+  --text-on-accent: #ffffff;
+
+  /* ===== Accents ===== */
+  --accent-primary: #2563eb;
+  --primary-light: #3b82f6;
+  --primary-bg: rgba(37, 99, 235, 0.08);
+  --primary-bg-hover: rgba(37, 99, 235, 0.14);
+  --accent-success: #16a34a;
+  --success-light: #22c55e;
+  --success-bg: rgba(22, 163, 74, 0.08);
+  --accent-warning: #d97706;
+  --warning-light: #f59e0b;
+  --warning-bg: rgba(217, 119, 6, 0.08);
+  --accent-danger: #dc2626;
+  --danger-light: #ef4444;
+  --danger-bg: rgba(220, 38, 38, 0.08);
+  --accent-info: #0284c7;
+  --accent-purple: #7c3aed;
+  --accent-purple-bg: rgba(124, 58, 237, 0.1);
+
+  /* ===== Borders ===== */
+  --border-subtle: #f1f5f9;
+  --border-default: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --border-accent: rgba(37, 99, 235, 0.3);
+  --border-success: rgba(22, 163, 74, 0.3);
+  --border-warning: rgba(217, 119, 6, 0.3);
+  --border-danger: rgba(220, 38, 38, 0.3);
+  --border-purple: rgba(124, 58, 237, 0.3);
+
+  /* ===== Shadows ===== */
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08), 0 2px 4px rgba(15, 23, 42, 0.04);
+  --shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.1), 0 4px 8px rgba(15, 23, 42, 0.06);
+
+  /* ===== Scrollbar ===== */
+  --scrollbar-track: transparent;
+  --scrollbar-thumb: rgba(15, 23, 42, 0.12);
+  --scrollbar-thumb-hover: rgba(15, 23, 42, 0.22);
+  --scrollbar-width: 6px;
+}
+
+/* ===== Base styles ===== */
+html,
+body {
+  color: var(--text-primary);
+  background: transparent;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+*::-webkit-scrollbar {
+  width: var(--scrollbar-width);
+  height: var(--scrollbar-width);
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 3px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* ===== Utility classes ===== */
+.btn-primary {
+  background: var(--primary-bg);
+  border: 1px solid var(--border-accent);
+  color: var(--primary-light);
+}
+
+.btn-primary:hover {
+  background: var(--primary-bg-hover);
+}
+
+.btn-secondary {
+  background: var(--surface-2);
+  border: 1px solid var(--border-default);
+  color: var(--text-secondary);
+}
+
+.btn-secondary:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+}
+
+.btn-danger {
+  background: var(--danger-bg);
+  border: 1px solid var(--border-danger);
+  color: var(--accent-danger);
+}
+
+.input-base {
+  background: var(--bg-input);
+  border: 1px solid var(--border-default);
+  color: var(--text-primary);
+}
+
+.input-base:focus {
+  border-color: var(--border-accent);
+  outline: none;
+  background: var(--bg-input-focus);
+}
+
+.card-base {
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+}
+
+.panel-base {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-default);
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid var(--border-default);
+}
+
+.text-primary { color: var(--text-primary); }
+.text-secondary { color: var(--text-secondary); }
+.text-muted { color: var(--text-muted); }
+.text-disabled { color: var(--text-disabled); }
+
+/* ===== Transitions for smooth theme switching ===== */
+* {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Prevent transition on page load */
+.no-theme-transition,
+.no-theme-transition * {
+  transition: none !important;
+}

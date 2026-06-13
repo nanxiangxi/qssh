@@ -71,6 +71,20 @@ export class AppConfig {
              */
             this["terminal"] = (new TerminalConfig());
         }
+        if (!("ui" in $$source)) {
+            /**
+             * @member
+             * @type {UIConfig}
+             */
+            this["ui"] = (new UIConfig());
+        }
+        if (!("cloud" in $$source)) {
+            /**
+             * @member
+             * @type {CloudConfig}
+             */
+            this["cloud"] = (new CloudConfig());
+        }
 
         Object.assign(this, $$source);
     }
@@ -82,9 +96,17 @@ export class AppConfig {
      */
     static createFrom($$source = {}) {
         const $$createField0_0 = $$createType0;
+        const $$createField1_0 = $$createType1;
+        const $$createField2_0 = $$createType2;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("terminal" in $$parsedSource) {
             $$parsedSource["terminal"] = $$createField0_0($$parsedSource["terminal"]);
+        }
+        if ("ui" in $$parsedSource) {
+            $$parsedSource["ui"] = $$createField1_0($$parsedSource["ui"]);
+        }
+        if ("cloud" in $$parsedSource) {
+            $$parsedSource["cloud"] = $$createField2_0($$parsedSource["cloud"]);
         }
         return new AppConfig(/** @type {Partial<AppConfig>} */($$parsedSource));
     }
@@ -141,8 +163,8 @@ export class CPUStats {
      * @returns {CPUStats}
      */
     static createFrom($$source = {}) {
-        const $$createField2_0 = $$createType1;
-        const $$createField3_0 = $$createType2;
+        const $$createField2_0 = $$createType3;
+        const $$createField3_0 = $$createType4;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("perCpuUsage" in $$parsedSource) {
             $$parsedSource["perCpuUsage"] = $$createField2_0($$parsedSource["perCpuUsage"]);
@@ -151,6 +173,75 @@ export class CPUStats {
             $$parsedSource["loadAvg"] = $$createField3_0($$parsedSource["loadAvg"]);
         }
         return new CPUStats(/** @type {Partial<CPUStats>} */($$parsedSource));
+    }
+}
+
+/**
+ * CloudConfig 云端配置
+ */
+export class CloudConfig {
+    /**
+     * Creates a new CloudConfig instance.
+     * @param {Partial<CloudConfig>} [$$source = {}] - The source object to create the CloudConfig.
+     */
+    constructor($$source = {}) {
+        if (!("enabled" in $$source)) {
+            /**
+             * @member
+             * @type {boolean}
+             */
+            this["enabled"] = false;
+        }
+        if (!("serverUrl" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["serverUrl"] = "";
+        }
+        if (!("token" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["token"] = "";
+        }
+        if (!("syncInterval" in $$source)) {
+            /**
+             * 同步间隔（秒）
+             * @member
+             * @type {number}
+             */
+            this["syncInterval"] = 0;
+        }
+        if (!("autoSyncTo" in $$source)) {
+            /**
+             * 自动同步到云端
+             * @member
+             * @type {boolean}
+             */
+            this["autoSyncTo"] = false;
+        }
+        if (!("autoSyncFrom" in $$source)) {
+            /**
+             * 自动从云端同步
+             * @member
+             * @type {boolean}
+             */
+            this["autoSyncFrom"] = false;
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new CloudConfig instance from a string or object.
+     * @param {any} [$$source = {}]
+     * @returns {CloudConfig}
+     */
+    static createFrom($$source = {}) {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new CloudConfig(/** @type {Partial<CloudConfig>} */($$parsedSource));
     }
 }
 
@@ -478,8 +569,8 @@ export class DiskStats {
      * @returns {DiskStats}
      */
     static createFrom($$source = {}) {
-        const $$createField0_0 = $$createType4;
-        const $$createField1_0 = $$createType5;
+        const $$createField0_0 = $$createType6;
+        const $$createField1_0 = $$createType7;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("partitions" in $$parsedSource) {
             $$parsedSource["partitions"] = $$createField0_0($$parsedSource["partitions"]);
@@ -681,8 +772,8 @@ export class FirewallInfo {
      * @returns {FirewallInfo}
      */
     static createFrom($$source = {}) {
-        const $$createField2_0 = $$createType7;
-        const $$createField4_0 = $$createType8;
+        const $$createField2_0 = $$createType9;
+        const $$createField4_0 = $$createType10;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("rules" in $$parsedSource) {
             $$parsedSource["rules"] = $$createField2_0($$parsedSource["rules"]);
@@ -1120,7 +1211,7 @@ export class NetworkStats {
      * @returns {NetworkStats}
      */
     static createFrom($$source = {}) {
-        const $$createField0_0 = $$createType10;
+        const $$createField0_0 = $$createType12;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("interfaces" in $$parsedSource) {
             $$parsedSource["interfaces"] = $$createField0_0($$parsedSource["interfaces"]);
@@ -1546,7 +1637,7 @@ export class SSHGroup {
      * @returns {SSHGroup}
      */
     static createFrom($$source = {}) {
-        const $$createField2_0 = $$createType8;
+        const $$createField2_0 = $$createType10;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("conn_ids" in $$parsedSource) {
             $$parsedSource["conn_ids"] = $$createField2_0($$parsedSource["conn_ids"]);
@@ -1683,10 +1774,10 @@ export class SystemStats {
      * @returns {SystemStats}
      */
     static createFrom($$source = {}) {
-        const $$createField2_0 = $$createType11;
-        const $$createField3_0 = $$createType12;
-        const $$createField4_0 = $$createType13;
-        const $$createField5_0 = $$createType14;
+        const $$createField2_0 = $$createType13;
+        const $$createField3_0 = $$createType14;
+        const $$createField4_0 = $$createType15;
+        const $$createField5_0 = $$createType16;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("cpu" in $$parsedSource) {
             $$parsedSource["cpu"] = $$createField2_0($$parsedSource["cpu"]);
@@ -1745,6 +1836,22 @@ export class TerminalConfig {
              */
             this["fontSize"] = 0;
         }
+        if (!("commandSendMode" in $$source)) {
+            /**
+             * enter | button
+             * @member
+             * @type {string}
+             */
+            this["commandSendMode"] = "";
+        }
+        if (!("codeHighlight" in $$source)) {
+            /**
+             * 经典终端代码高亮
+             * @member
+             * @type {boolean}
+             */
+            this["codeHighlight"] = false;
+        }
 
         Object.assign(this, $$source);
     }
@@ -1761,7 +1868,7 @@ export class TerminalConfig {
 }
 
 /**
- * UIConfig 界面配置（预留）
+ * UIConfig 界面配置
  */
 export class UIConfig {
     /**
@@ -1769,33 +1876,37 @@ export class UIConfig {
      * @param {Partial<UIConfig>} [$$source = {}] - The source object to create the UIConfig.
      */
     constructor($$source = {}) {
-        if (!("language" in $$source)) {
+        if (!("autoTray" in $$source)) {
             /**
+             * SSH 连接成功后自动最小化到托盘
              * @member
-             * @type {string}
+             * @type {boolean}
              */
-            this["language"] = "";
+            this["autoTray"] = false;
+        }
+        if (!("rememberPosition" in $$source)) {
+            /**
+             * 记忆窗口位置
+             * @member
+             * @type {boolean}
+             */
+            this["rememberPosition"] = false;
+        }
+        if (!("autoShowHome" in $$source)) {
+            /**
+             * SSH 窗口全部关闭后自动显示首页
+             * @member
+             * @type {boolean}
+             */
+            this["autoShowHome"] = false;
         }
         if (!("theme" in $$source)) {
             /**
+             * 主题 dark/light
              * @member
              * @type {string}
              */
             this["theme"] = "";
-        }
-        if (!("sidebarCollapsed" in $$source)) {
-            /**
-             * @member
-             * @type {boolean}
-             */
-            this["sidebarCollapsed"] = false;
-        }
-        if (!("showStatusBar" in $$source)) {
-            /**
-             * @member
-             * @type {boolean}
-             */
-            this["showStatusBar"] = false;
         }
 
         Object.assign(this, $$source);
@@ -1838,17 +1949,19 @@ export class WindowManager {
 
 // Private type creation functions
 const $$createType0 = TerminalConfig.createFrom;
-const $$createType1 = $Create.Array($Create.Any);
-const $$createType2 = LoadAvg.createFrom;
-const $$createType3 = DiskPartition.createFrom;
-const $$createType4 = $Create.Array($$createType3);
-const $$createType5 = DiskIOStats.createFrom;
-const $$createType6 = FirewallRule.createFrom;
-const $$createType7 = $Create.Array($$createType6);
-const $$createType8 = $Create.Array($Create.Any);
-const $$createType9 = NetInterface.createFrom;
-const $$createType10 = $Create.Array($$createType9);
-const $$createType11 = CPUStats.createFrom;
-const $$createType12 = MemoryStats.createFrom;
-const $$createType13 = DiskStats.createFrom;
-const $$createType14 = NetworkStats.createFrom;
+const $$createType1 = UIConfig.createFrom;
+const $$createType2 = CloudConfig.createFrom;
+const $$createType3 = $Create.Array($Create.Any);
+const $$createType4 = LoadAvg.createFrom;
+const $$createType5 = DiskPartition.createFrom;
+const $$createType6 = $Create.Array($$createType5);
+const $$createType7 = DiskIOStats.createFrom;
+const $$createType8 = FirewallRule.createFrom;
+const $$createType9 = $Create.Array($$createType8);
+const $$createType10 = $Create.Array($Create.Any);
+const $$createType11 = NetInterface.createFrom;
+const $$createType12 = $Create.Array($$createType11);
+const $$createType13 = CPUStats.createFrom;
+const $$createType14 = MemoryStats.createFrom;
+const $$createType15 = DiskStats.createFrom;
+const $$createType16 = NetworkStats.createFrom;

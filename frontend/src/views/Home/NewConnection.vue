@@ -2,7 +2,8 @@
 import { ref, reactive } from 'vue'
 import { SSHService } from "../../../bindings/changeme/ssh"
 import { useSSHConnectionsStore } from '../../stores/sshConnections'
-import { Dialogs } from '@wailsio/runtime'
+import { useConfigStore } from '../../stores/config'
+import { Events, Dialogs } from '@wailsio/runtime'
 import ConnectionOptionsDialog from './ConnectionOptionsDialog.vue'
 import Message from '../../components/Message.vue'
 
@@ -222,8 +223,15 @@ const handleDialogSelect = async (type: string) => {
     console.log('[NewConnection]    - activeConn:', result.connID)
     
     await SSHService.OpenSSHWindow(result.groupID, config.name, result.connID)
-    
+
     console.log('[NewConnection] 🪟 窗口操作完成')
+
+    // 如果开启了自动托盘，连接成功后隐藏主窗口
+    const configStore = useConfigStore()
+    await configStore.init()
+    if (configStore.get('ui', 'autoTray')) {
+      Events.Emit('ssh:tray-hide')
+    }
     
   } catch (error: any) {
     console.error('[NewConnection] ❌ 错误:', error)
@@ -430,12 +438,12 @@ const resetForm = () => {
 }
 
 .section-title {
-  color: #e2e8f0;
+  color: var(--text-primary);
   font-size: 1.25rem;
   font-weight: 600;
   margin: 0 0 1.5rem 0;
   padding-bottom: 0.75rem;
-  border-bottom: 0.0625rem solid rgba(255, 255, 255, 0.1);
+  border-bottom: 0.0625rem solid var(--surface-hover);
 }
 
 .form-grid {
@@ -455,30 +463,30 @@ const resetForm = () => {
 }
 
 .form-group label {
-  color: #a0aec0;
+  color: var(--text-secondary);
   font-size: 0.875rem;
   font-weight: 500;
 }
 
 .form-input {
   padding: 0.625rem 0.875rem;
-  background: rgba(30, 30, 30, 0.8);
-  border: 0.0625rem solid rgba(255, 255, 255, 0.15);
+  background: var(--bg-panel);
+  border: 0.0625rem solid var(--border-strong);
   border-radius: 0.5rem;
-  color: #e2e8f0;
+  color: var(--text-primary);
   font-size: 0.9375rem;
   transition: all 0.2s;
   outline: none;
 }
 
 .form-input:focus {
-  border-color: #4299e1;
-  background: rgba(30, 30, 30, 1);
-  box-shadow: 0 0 0 0.1875rem rgba(66, 153, 225, 0.2);
+  border-color: var(--accent-primary);
+  background: var(--bg-input-focus);
+  box-shadow: 0 0 0 0.1875rem var(--primary-bg);
 }
 
 .form-input::placeholder {
-  color: #718096;
+  color: var(--text-muted);
 }
 
 .auth-type-selector {
@@ -489,25 +497,25 @@ const resetForm = () => {
 .auth-btn {
   flex: 1;
   padding: 0.625rem 1rem;
-  background: rgba(30, 30, 30, 0.8);
-  border: 0.0625rem solid rgba(255, 255, 255, 0.15);
+  background: var(--bg-panel);
+  border: 0.0625rem solid var(--border-strong);
   border-radius: 0.5rem;
-  color: #a0aec0;
+  color: var(--text-secondary);
   font-size: 0.875rem;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .auth-btn:hover {
-  background: rgba(40, 40, 40, 0.9);
-  border-color: rgba(255, 255, 255, 0.25);
-  color: #e2e8f0;
+  background: var(--bg-toolbar);
+  border-color: var(--scrollbar-thumb-hover);
+  color: var(--text-primary);
 }
 
 .auth-btn.active {
-  background: linear-gradient(135deg, #4299e1, #3182ce);
-  border-color: #4299e1;
-  color: white;
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: var(--text-on-accent);
   font-weight: 500;
 }
 
@@ -517,22 +525,22 @@ const resetForm = () => {
   font-size: 0.75rem;
   line-height: 1.6;
   resize: vertical;
-  background: rgba(20, 20, 20, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-input);
+  border: 1px solid var(--surface-hover);
   border-radius: 0.5rem;
   padding: 0.75rem;
-  color: #e2e8f0;
+  color: var(--text-primary);
   white-space: pre;
   overflow-x: auto;
 }
 
 .key-textarea:focus {
-  border-color: rgba(66, 153, 225, 0.5);
-  box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.1);
+  border-color: var(--border-accent);
+  box-shadow: 0 0 0 2px var(--primary-bg);
 }
 
 .key-textarea::placeholder {
-  color: #4a5568;
+  color: var(--text-disabled);
 }
 
 .action-section {
@@ -562,34 +570,34 @@ const resetForm = () => {
 }
 
 .btn-reset {
-  background: rgba(255, 255, 255, 0.1);
-  color: #e2e8f0;
+  background: var(--surface-hover);
+  color: var(--text-primary);
 }
 
 .btn-reset:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--border-strong);
 }
 
 .btn-test {
-  background: linear-gradient(135deg, #ed8936, #dd6b20);
-  color: white;
+  background: var(--accent-warning);
+  color: var(--text-on-accent);
 }
 
 .btn-test:hover:not(:disabled) {
-  background: linear-gradient(135deg, #f09546, #e07830);
+  background: var(--warning-light);
   transform: translateY(-0.0625rem);
-  box-shadow: 0 0.25rem 0.75rem rgba(237, 137, 54, 0.3);
+  box-shadow: 0 0.25rem 0.75rem var(--warning-bg);
 }
 
 .btn-connect {
-  background: linear-gradient(135deg, #48bb78, #38a169);
-  color: white;
+  background: var(--accent-success);
+  color: var(--text-on-accent);
 }
 
 .btn-connect:hover:not(:disabled) {
-  background: linear-gradient(135deg, #58c688, #48b179);
+  background: var(--success-light);
   transform: translateY(-0.0625rem);
-  box-shadow: 0 0.25rem 0.75rem rgba(72, 187, 120, 0.3);
+  box-shadow: 0 0.25rem 0.75rem var(--success-bg);
 }
 
 /* 滚动条样式 */
@@ -598,17 +606,17 @@ const resetForm = () => {
 }
 
 .form-section::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--bg-input);
   border-radius: 0.25rem;
 }
 
 .form-section::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--scrollbar-thumb);
   border-radius: 0.25rem;
 }
 
 .form-section::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--scrollbar-thumb-hover);
 }
 
 </style>

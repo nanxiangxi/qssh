@@ -5,7 +5,7 @@
       <!-- CPU -->
       <div class="stat-card cpu">
         <div class="card-header">
-          <svg class="card-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#63b3ed" stroke-width="2" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>
+          <svg class="card-icon icon-cpu" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>
           <span class="card-title">CPU</span>
         </div>
         <div class="card-body">
@@ -32,7 +32,7 @@
       <!-- 内存 -->
       <div class="stat-card memory">
         <div class="card-header">
-          <svg class="card-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#48bb78" stroke-width="2" stroke-linecap="round"><rect x="2" y="6" width="20" height="12" rx="2"/><line x1="6" y1="10" x2="6" y2="14"/><line x1="10" y1="10" x2="10" y2="14"/><line x1="14" y1="10" x2="14" y2="14"/><line x1="18" y1="10" x2="18" y2="14"/><line x1="2" y1="10" x2="2" y2="6"/><line x1="22" y1="10" x2="22" y2="6"/></svg>
+          <svg class="card-icon icon-memory" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="6" width="20" height="12" rx="2"/><line x1="6" y1="10" x2="6" y2="14"/><line x1="10" y1="10" x2="10" y2="14"/><line x1="14" y1="10" x2="14" y2="14"/><line x1="18" y1="10" x2="18" y2="14"/><line x1="2" y1="10" x2="2" y2="6"/><line x1="22" y1="10" x2="22" y2="6"/></svg>
           <span class="card-title">内存</span>
         </div>
         <div class="card-body">
@@ -62,7 +62,7 @@
       <!-- 磁盘 -->
       <div class="stat-card disk">
         <div class="card-header">
-          <svg class="card-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ecc94b" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="6"/></svg>
+          <svg class="card-icon icon-disk" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="6"/></svg>
           <span class="card-title">磁盘</span>
         </div>
         <div class="card-body">
@@ -87,7 +87,7 @@
               <polyline
                 :points="getDiskIoPoints()"
                 fill="none"
-                stroke="#63b3ed"
+                class="chart-line-primary"
                 stroke-width="1.5"
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -101,7 +101,7 @@
       <!-- 网络 -->
       <div class="stat-card network">
         <div class="card-header">
-          <svg class="card-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f6ad55" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          <svg class="card-icon icon-network" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
           <span class="card-title">网络</span>
         </div>
         <div class="card-body">
@@ -122,7 +122,7 @@
               <polyline
                 :points="getNetworkRxPoints()"
                 fill="none"
-                stroke="#48bb78"
+                class="chart-line-success"
                 stroke-width="1.5"
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -131,7 +131,7 @@
               <polyline
                 :points="getNetworkTxPoints()"
                 fill="none"
-                stroke="#f6ad55"
+                class="chart-line-warning"
                 stroke-width="1.5"
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -537,12 +537,17 @@ const formatBytes = (bytes) => {
 // 获取 CPU 渐变色
 const getCpuGradient = () => {
   const percent = systemStats.value?.cpu?.usagePercent || 0
+  const cs = getComputedStyle(document.documentElement)
+  const bg = cs.getPropertyValue('--surface-3').trim() || '#2d3748'
+  const green = cs.getPropertyValue('--accent-success').trim() || '#48bb78'
+  const yellow = cs.getPropertyValue('--accent-warning').trim() || '#ecc94b'
+  const red = cs.getPropertyValue('--danger-light').trim() || '#f56565'
   if (percent < 50) {
-    return `conic-gradient(#48bb78 ${percent}%, #2d3748 ${percent}%)`
+    return `conic-gradient(${green} ${percent}%, ${bg} ${percent}%)`
   } else if (percent < 80) {
-    return `conic-gradient(#ecc94b ${percent}%, #2d3748 ${percent}%)`
+    return `conic-gradient(${yellow} ${percent}%, ${bg} ${percent}%)`
   } else {
-    return `conic-gradient(#f56565 ${percent}%, #2d3748 ${percent}%)`
+    return `conic-gradient(${red} ${percent}%, ${bg} ${percent}%)`
   }
 }
 
@@ -634,7 +639,7 @@ onUnmounted(() => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: rgba(30, 30, 30, 0.95);
+  background: var(--bg-panel);
   overflow: hidden;
 }
 
@@ -644,17 +649,17 @@ onUnmounted(() => {
   grid-template-columns: repeat(4, 1fr);
   gap: 1rem;
   padding: 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--surface-hover);
   max-height: 45%;
   overflow-y: auto;
   flex-shrink: 0;
 }
 
 .stat-card {
-  background: rgba(45, 45, 45, 0.6);
+  background: var(--surface-2, rgba(45, 45, 45, 0.6));
   border-radius: 0.5rem;
   padding: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-default);
 }
 
 .card-header {
@@ -668,8 +673,17 @@ onUnmounted(() => {
   flex-shrink: 0;
 }
 
+.icon-cpu { color: var(--primary-light, #63b3ed); }
+.icon-memory { color: var(--accent-success, #48bb78); }
+.icon-disk { color: var(--accent-warning, #ecc94b); }
+.icon-network { color: var(--warning-light, #f6ad55); }
+
+.chart-line-primary { stroke: var(--primary-light, #63b3ed); }
+.chart-line-success { stroke: var(--accent-success, #48bb78); }
+.chart-line-warning { stroke: var(--warning-light, #f6ad55); }
+
 .card-title {
-  color: #e2e8f0;
+  color: var(--text-primary, #e2e8f0);
   font-weight: 600;
   font-size: 0.875rem;
 }
@@ -697,14 +711,14 @@ onUnmounted(() => {
   position: absolute;
   width: 60px;
   height: 60px;
-  background: rgba(45, 45, 45, 0.9);
+  background: var(--bg-panel);
   border-radius: 50%;
 }
 
 .usage-text {
   position: relative;
   z-index: 1;
-  color: #e2e8f0;
+  color: var(--text-primary, #e2e8f0);
   font-size: 1rem;
   font-weight: 700;
 }
@@ -713,7 +727,7 @@ onUnmounted(() => {
 .usage-bar {
   width: 100%;
   height: 8px;
-  background: rgba(45, 45, 45, 0.8);
+  background: var(--surface-3, rgba(45, 45, 45, 0.8));
   border-radius: 4px;
   overflow: hidden;
 }
@@ -724,16 +738,16 @@ onUnmounted(() => {
 
 .usage-fill {
   height: 100%;
-  background: linear-gradient(90deg, #48bb78, #68d391);
+  background: linear-gradient(90deg, var(--accent-success, #48bb78), var(--success-light, #68d391));
   transition: width 0.3s ease;
 }
 
 .usage-high .usage-fill {
-  background: linear-gradient(90deg, #f56565, #fc8181);
+  background: linear-gradient(90deg, var(--danger-light, #f56565), var(--accent-danger, #fc8181));
 }
 
 .usage-medium .usage-fill {
-  background: linear-gradient(90deg, #ecc94b, #f6e05e);
+  background: linear-gradient(90deg, var(--accent-warning, #ecc94b), var(--warning-light, #f6e05e));
 }
 
 /* 卡片详情 */
@@ -750,16 +764,16 @@ onUnmounted(() => {
 }
 
 .detail-item .label {
-  color: #a0aec0;
+  color: var(--text-secondary, #a0aec0);
 }
 
 .detail-item .value {
-  color: #e2e8f0;
+  color: var(--text-primary, #e2e8f0);
   font-weight: 500;
 }
 
 .uptime-value {
-  color: #63b3ed;
+  color: var(--primary-light, #63b3ed);
   font-weight: 600;
 }
 
@@ -784,20 +798,20 @@ onUnmounted(() => {
 }
 
 .disk-name {
-  color: #e2e8f0;
+  color: var(--text-primary, #e2e8f0);
   font-size: 0.75rem;
   font-family: monospace;
 }
 
 .disk-size {
-  color: #a0aec0;
+  color: var(--text-secondary, #a0aec0);
   font-size: 0.625rem;
 }
 
 .disk-percent {
   flex: 0 0 40px;
   text-align: right;
-  color: #e2e8f0;
+  color: var(--text-primary, #e2e8f0);
   font-size: 0.75rem;
   font-weight: 600;
 }
@@ -816,11 +830,11 @@ onUnmounted(() => {
 }
 
 .net-label {
-  color: #a0aec0;
+  color: var(--text-secondary, #a0aec0);
 }
 
 .net-value {
-  color: #e2e8f0;
+  color: var(--text-primary, #e2e8f0);
   font-weight: 500;
   font-family: monospace;
 }
@@ -829,7 +843,7 @@ onUnmounted(() => {
 .chart-container {
   margin-top: 0.5rem;
   padding-top: 0.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: 1px solid var(--surface-1);
   position: relative;
 }
 
@@ -844,7 +858,7 @@ onUnmounted(() => {
   top: 0.25rem;
   right: 0.25rem;
   font-size: 0.6875rem;
-  color: #63b3ed;
+  color: var(--primary-light, #63b3ed);
   font-weight: 600;
   font-family: monospace;
 }
@@ -864,11 +878,11 @@ onUnmounted(() => {
 }
 
 .rate-item.rx {
-  color: #48bb78;
+  color: var(--accent-success, #48bb78);
 }
 
 .rate-item.tx {
-  color: #f6ad55;
+  color: var(--warning-light, #f6ad55);
 }
 
 /* 进程区域 */
@@ -884,29 +898,29 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--surface-hover);
 }
 
 .section-header h3 {
   margin: 0;
-  color: #e2e8f0;
+  color: var(--text-primary, #e2e8f0);
   font-size: 0.875rem;
   font-weight: 600;
 }
 
 .refresh-btn {
   padding: 0.375rem 0.75rem;
-  background: rgba(66, 153, 225, 0.2);
-  border: 1px solid rgba(66, 153, 225, 0.5);
+  background: var(--primary-bg, rgba(66, 153, 225, 0.2));
+  border: 1px solid var(--border-accent, rgba(66, 153, 225, 0.5));
   border-radius: 0.25rem;
-  color: #63b3ed;
+  color: var(--primary-light, #63b3ed);
   cursor: pointer;
   font-size: 0.75rem;
   transition: all 0.2s;
 }
 
 .refresh-btn:hover:not(:disabled) {
-  background: rgba(66, 153, 225, 0.3);
+  background: var(--primary-bg-hover, rgba(66, 153, 225, 0.3));
 }
 
 .refresh-btn:disabled {
@@ -929,16 +943,16 @@ onUnmounted(() => {
 .process-table thead {
   position: sticky;
   top: 0;
-  background: rgba(40, 40, 40, 0.95);
+  background: var(--bg-toolbar);
   z-index: 1;
 }
 
 .process-table th {
   padding: 0.625rem 0.75rem;
   text-align: left;
-  color: #a0aec0;
+  color: var(--text-secondary, #a0aec0);
   font-weight: 600;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 2px solid var(--surface-hover);
   white-space: nowrap;
 }
 
@@ -948,22 +962,22 @@ onUnmounted(() => {
 }
 
 .process-table th.sortable:hover {
-  color: #e2e8f0;
+  color: var(--text-primary, #e2e8f0);
 }
 
 .sort-indicator {
   margin-left: 0.25rem;
-  color: #63b3ed;
+  color: var(--primary-light, #63b3ed);
 }
 
 .process-table td {
   padding: 0.5rem 0.75rem;
-  color: #e2e8f0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  color: var(--text-primary, #e2e8f0);
+  border-bottom: 1px solid var(--surface-1);
 }
 
 .process-row:hover {
-  background: rgba(66, 153, 225, 0.1);
+  background: var(--bg-hover, rgba(66, 153, 225, 0.1));
 }
 
 .process-name {
@@ -976,33 +990,33 @@ onUnmounted(() => {
 
 /* 使用率颜色 */
 .usage-low {
-  color: #68d391;
+  color: var(--success-light, #68d391);
 }
 
 .usage-medium {
-  color: #f6e05e;
+  color: var(--accent-warning, #f6e05e);
 }
 
 .usage-high {
-  color: #fc8181;
+  color: var(--accent-danger, #fc8181);
   font-weight: 600;
 }
 
 /* 终止进程按钮 */
 .kill-btn {
   padding: 0.25rem 0.5rem;
-  background: rgba(245, 101, 101, 0.2);
-  border: 1px solid rgba(245, 101, 101, 0.5);
+  background: var(--danger-bg, rgba(245, 101, 101, 0.2));
+  border: 1px solid var(--border-danger, rgba(245, 101, 101, 0.5));
   border-radius: 0.25rem;
-  color: #fc8181;
+  color: var(--accent-danger, #fc8181);
   cursor: pointer;
   font-size: 0.6875rem;
   transition: all 0.2s;
 }
 
 .kill-btn:hover {
-  background: rgba(245, 101, 101, 0.3);
-  border-color: rgba(245, 101, 101, 0.7);
+  background: var(--danger-bg, rgba(245, 101, 101, 0.3));
+  border-color: var(--border-danger, rgba(245, 101, 101, 0.7));
 }
 
 /* 操作按钮组 */
@@ -1013,27 +1027,27 @@ onUnmounted(() => {
 
 .signal-btn {
   padding: 0.25rem 0.5rem;
-  background: rgba(99, 179, 237, 0.2);
-  border: 1px solid rgba(99, 179, 237, 0.5);
+  background: var(--primary-bg, rgba(99, 179, 237, 0.2));
+  border: 1px solid var(--border-accent, rgba(99, 179, 237, 0.5));
   border-radius: 0.25rem;
-  color: #63b3ed;
+  color: var(--primary-light, #63b3ed);
   cursor: pointer;
   font-size: 0.6875rem;
   transition: all 0.2s;
 }
 
 .signal-btn:hover {
-  background: rgba(99, 179, 237, 0.3);
-  border-color: rgba(99, 179, 237, 0.7);
+  background: var(--primary-bg-hover, rgba(99, 179, 237, 0.3));
+  border-color: var(--border-accent, rgba(99, 179, 237, 0.7));
 }
 
 /* 信号下拉菜单 */
 .signal-dropdown {
   position: fixed;
-  background: rgba(45, 45, 45, 0.98);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: var(--bg-tooltip, rgba(45, 45, 45, 0.98));
+  border: 1px solid var(--border-strong);
   border-radius: 0.5rem;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-lg, 0 10px 30px rgba(0, 0, 0, 0.5));
   padding: 0.5rem;
   min-width: 200px;
   z-index: 10000;
@@ -1053,9 +1067,9 @@ onUnmounted(() => {
 
 .dropdown-header {
   padding: 0.5rem;
-  color: #a0aec0;
+  color: var(--text-secondary, #a0aec0);
   font-size: 0.75rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--surface-hover);
   margin-bottom: 0.375rem;
 }
 
@@ -1066,7 +1080,7 @@ onUnmounted(() => {
   background: transparent;
   border: none;
   border-radius: 0.25rem;
-  color: #e2e8f0;
+  color: var(--text-primary, #e2e8f0);
   cursor: pointer;
   font-size: 0.8125rem;
   text-align: left;
@@ -1074,15 +1088,15 @@ onUnmounted(() => {
 }
 
 .dropdown-item:hover {
-  background: rgba(66, 153, 225, 0.2);
+  background: var(--primary-bg, rgba(66, 153, 225, 0.2));
 }
 
 .dropdown-item.danger {
-  color: #fc8181;
+  color: var(--accent-danger, #fc8181);
 }
 
 .dropdown-item.danger:hover {
-  background: rgba(245, 101, 101, 0.2);
+  background: var(--danger-bg, rgba(245, 101, 101, 0.2));
 }
 
 /* 滚动条 */
@@ -1095,12 +1109,12 @@ onUnmounted(() => {
 }
 
 .process-table-container::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--scrollbar-thumb);
   border-radius: 3px;
 }
 
 .process-table-container::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--scrollbar-thumb-hover, rgba(255, 255, 255, 0.3));
 }
 
 /* === 响应式布局 === */

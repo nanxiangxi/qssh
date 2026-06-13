@@ -101,10 +101,10 @@ defineEmits([
 .context-menu {
   position: fixed;
   min-width: 180px;
-  background: rgba(45, 45, 45, 0.98);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: var(--bg-tooltip);
+  border: 1px solid var(--border-strong);
   border-radius: 0.5rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 12px var(--shadow-lg);
   z-index: 9999;
   padding: 0.5rem 0;
 }
@@ -114,27 +114,27 @@ defineEmits([
   align-items: center;
   gap: 0.75rem;
   padding: 0.625rem 1rem;
-  color: #e2e8f0;
+  color: var(--text-primary);
   cursor: pointer;
   transition: background 0.15s;
   font-size: 0.875rem;
 }
 
 .menu-item:hover {
-  background: rgba(66, 153, 225, 0.2);
+  background: var(--primary-bg);
 }
 
 .menu-item.danger {
-  color: #fc8181;
+  color: var(--accent-danger);
 }
 
 .menu-item.danger:hover {
-  background: rgba(252, 129, 129, 0.2);
+  background: var(--danger-bg);
 }
 
 .menu-divider {
   height: 1px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--surface-hover);
   margin: 0.5rem 0;
 }
 </style>

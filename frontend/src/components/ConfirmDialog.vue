@@ -29,25 +29,25 @@ const { confirmState, handleConfirm, handleCancel } = useConfirm()
 <style scoped>
 .cd-mask {
   position: fixed; inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--bg-overlay);
   display: flex; align-items: center; justify-content: center;
   z-index: 20000;
   backdrop-filter: blur(2px);
 }
 
 .cd-modal {
-  background: #1e1e1e;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-toolbar);
+  border: 1px solid var(--surface-hover);
   border-radius: 12px;
   padding: 1.5rem;
   width: 360px;
   max-width: 90vw;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 16px 48px var(--shadow-lg);
   text-align: center;
 }
 
 .cd-modal.cd-danger {
-  border-color: rgba(245, 101, 101, 0.3);
+  border-color: var(--border-danger);
 }
 
 .cd-icon {
@@ -56,14 +56,14 @@ const { confirmState, handleConfirm, handleCancel } = useConfirm()
 
 .cd-title {
   margin: 0 0 0.5rem;
-  color: #e2e8f0;
+  color: var(--text-primary);
   font-size: 1rem;
   font-weight: 600;
 }
 
 .cd-message {
   margin: 0 0 1.25rem;
-  color: #a0aec0;
+  color: var(--text-secondary);
   font-size: 0.8125rem;
   line-height: 1.5;
   white-space: pre-line;
@@ -85,31 +85,31 @@ const { confirmState, handleConfirm, handleCancel } = useConfirm()
 }
 
 .cd-btn-cancel {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.12);
-  color: #a0aec0;
+  background: var(--border-subtle);
+  border-color: var(--border-default);
+  color: var(--text-secondary);
 }
 .cd-btn-cancel:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #e2e8f0;
+  background: var(--surface-hover);
+  color: var(--text-primary);
 }
 
 .cd-btn-primary {
-  background: rgba(66, 153, 225, 0.2);
-  border-color: rgba(66, 153, 225, 0.4);
-  color: #63b3ed;
+  background: var(--primary-bg);
+  border-color: var(--border-accent);
+  color: var(--primary-light);
 }
 .cd-btn-primary:hover {
-  background: rgba(66, 153, 225, 0.35);
+  background: var(--primary-bg-hover);
 }
 
 .cd-btn-danger {
-  background: rgba(245, 101, 101, 0.2);
-  border-color: rgba(245, 101, 101, 0.4);
-  color: #fc8181;
+  background: var(--danger-bg);
+  border-color: var(--border-danger);
+  color: var(--accent-danger);
 }
 .cd-btn-danger:hover {
-  background: rgba(245, 101, 101, 0.35);
+  background: var(--danger-bg);
 }
 
 .cd-fade-enter-active,

@@ -72,15 +72,6 @@ export function usePermissions(loadFiles) {
   }
 
   /**
-   * 设置预设权限
-   * @param {string} value - 预设权限值（如 "755"）
-   */
-  const setPreset = (value) => {
-    chmodValue.value = value
-    parsePermissions(value)
-  }
-
-  /**
    * 打开权限修改对话框
    * @param {Object} file - 目标文件
    */
@@ -147,7 +138,6 @@ export function usePermissions(loadFiles) {
     chmodPermissions,
     openChmodDialog,
     confirmChmod,
-    closeChmodDialog,
-    setPreset
+    closeChmodDialog
   }
 }

@@ -61,8 +61,8 @@ const togglePanel = (panelType) => {
 .right-sidebar {
   width: 3.5rem;
   height: 100%;
-  background: rgba(35, 35, 35, 0.9);
-  border-left: 0.0625rem solid rgba(255, 255, 255, 0.1);
+  background: var(--toolbar-1);
+  border-left: 0.0625rem solid var(--surface-hover);
   padding: 0.75rem 0;
   display: flex;
   flex-direction: column;
@@ -79,7 +79,7 @@ const togglePanel = (panelType) => {
 .divider {
   height: 1px;
   margin: 0.5rem 0.75rem;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--surface-hover);
 }
 
 .tool-btn {
@@ -92,19 +92,19 @@ const togglePanel = (panelType) => {
   background: transparent;
   border: none;
   border-radius: 0.5rem;
-  color: #a0aec0;
+  color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .tool-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #e2e8f0;
+  background: var(--surface-hover);
+  color: var(--text-primary);
 }
 
 .tool-btn.active {
-  background: rgba(66, 153, 225, 0.2);
-  color: #4299e1;
+  background: var(--primary-bg);
+  color: var(--accent-primary);
 }
 
 /* SVG图标 */

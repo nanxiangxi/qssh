@@ -176,7 +176,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(30, 30, 30, 0.95);
+  background: var(--bg-panel);
 }
 
 .terminal-placeholder {
@@ -233,8 +233,8 @@ p {
 
 .terminal-header {
   padding: 1rem 1.5rem;
-  background: rgba(40, 40, 40, 0.9);
-  border-bottom: 0.0625rem solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-toolbar);
+  border-bottom: 0.0625rem solid var(--surface-hover);
   display: flex;
   align-items: center;
   gap: 1rem;

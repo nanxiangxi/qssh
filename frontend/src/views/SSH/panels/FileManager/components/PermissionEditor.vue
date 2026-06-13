@@ -81,13 +81,6 @@
           />
         </div>
         
-        <div class="chmod-presets">
-          <button @click="setPreset('755')" class="preset-btn">755 (rwxr-xr-x)</button>
-          <button @click="setPreset('644')" class="preset-btn">644 (rw-r--r--)</button>
-          <button @click="setPreset('600')" class="preset-btn">600 (rw-------)</button>
-          <button @click="setPreset('777')" class="preset-btn">777 (rwxrwxrwx)</button>
-        </div>
-        
         <!-- 只有在选择目录时才显示此选项 -->
         <label v-if="chmodTarget?.isDir" class="checkbox-item apply-to-subdirs">
           <input type="checkbox" :checked="applyToSubdirs" @change="$emit('update:applyToSubdirs', $event.target.checked)">
@@ -138,7 +131,7 @@ watch(() => props.chmodTarget, (newVal) => {
   console.log('[PermissionEditor] chmodTarget 变化:', newVal ? newVal.name : null)
 }, { immediate: true })
 
-const emit = defineEmits(['confirm', 'close', 'update:showChmodDialog', 'update:applyToSubdirs', 'set-preset', 'update:permission'])
+const emit = defineEmits(['confirm', 'close', 'update:showChmodDialog', 'update:applyToSubdirs', 'update:permission'])
 
 // 安全的权限访问 - 使用可选链和默认值
 const getSafePermission = (group, perm) => {
@@ -152,10 +145,6 @@ const handleClose = () => {
 const handleCancel = () => {
   emit('update:showChmodDialog', false)
 }
-
-const setPreset = (value) => {
-  emit('set-preset', value)
-}
 </script>
 
 <style scoped>
@@ -166,11 +155,11 @@ const setPreset = (value) => {
 }
 
 .chmod-file-name {
-  color: #63b3ed;
+  color: var(--primary-light);
   font-weight: 600;
   font-size: 1rem;
   padding: 0.5rem;
-  background: rgba(66, 153, 225, 0.1);
+  background: var(--primary-bg);
   border-radius: 0.375rem;
   text-align: center;
 }
@@ -186,13 +175,13 @@ const setPreset = (value) => {
 .chmod-section {
   flex: 1;
   padding: 1rem;
-  background: rgba(40, 40, 40, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--surface-2);
+  border: 1px solid var(--surface-hover);
   border-radius: 0.5rem;
 }
 
 .chmod-section legend {
-  color: #e2e8f0;
+  color: var(--text-primary);
   font-weight: 600;
   font-size: 0.9rem;
   padding: 0 0.5rem;
@@ -210,20 +199,20 @@ const setPreset = (value) => {
   align-items: center;
   gap: 0.5rem;
   cursor: pointer;
-  color: #cbd5e0;
+  color: var(--text-secondary);
   font-size: 0.875rem;
   transition: color 0.2s;
 }
 
 .checkbox-item:hover {
-  color: #e2e8f0;
+  color: var(--text-primary);
 }
 
 .checkbox-item input[type="checkbox"] {
   width: 1rem;
   height: 1rem;
   cursor: pointer;
-  accent-color: #4299e1;
+  accent-color: var(--accent-primary);
 }
 
 /* 底部区域 */
@@ -232,7 +221,7 @@ const setPreset = (value) => {
   flex-direction: column;
   gap: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--surface-hover);
 }
 
 .chmod-number-input {
@@ -242,42 +231,20 @@ const setPreset = (value) => {
 }
 
 .chmod-number-input label {
-  color: #a0aec0;
+  color: var(--text-secondary);
   font-size: 0.875rem;
 }
 
 .chmod-input {
   width: 6rem;
   padding: 0.5rem 0.75rem;
-  background: rgba(45, 45, 45, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: var(--bg-input);
+  border: 1px solid var(--border-strong);
   border-radius: 0.375rem;
-  color: #e2e8f0;
+  color: var(--text-primary);
   font-size: 1rem;
   font-family: monospace;
   text-align: center;
-}
-
-.chmod-presets {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0.5rem;
-}
-
-.preset-btn {
-  padding: 0.5rem;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 0.375rem;
-  color: #e2e8f0;
-  cursor: pointer;
-  font-size: 0.75rem;
-  transition: all 0.2s;
-}
-
-.preset-btn:hover {
-  background: rgba(66, 153, 225, 0.2);
-  border-color: rgba(66, 153, 225, 0.5);
 }
 
 .apply-to-subdirs {

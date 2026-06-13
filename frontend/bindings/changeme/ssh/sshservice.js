@@ -75,6 +75,14 @@ export function CheckConnectionHealth(connID) {
 }
 
 /**
+ * ClearWindowPositions 清除所有窗口位置记忆
+ * @returns {$CancellablePromise<void>}
+ */
+export function ClearWindowPositions() {
+    return $Call.ByID(4159453682);
+}
+
+/**
  * CloseGroup 关闭分组（断开所有连接并删除分组）
  * @param {string} groupID
  * @returns {$CancellablePromise<void>}
@@ -664,6 +672,15 @@ export function StartShellSession(connID) {
  */
 export function StartShellSessionWithID(connID, sessionID) {
     return $Call.ByID(4239965024, connID, sessionID);
+}
+
+/**
+ * SyncImportConnection 云端同步导入（按 host:port 去重：存在则更新，不存在则新增，永久保存）
+ * @param {$models.ConnectionInfo | null} conn
+ * @returns {$CancellablePromise<void>}
+ */
+export function SyncImportConnection(conn) {
+    return $Call.ByID(1683906883, conn);
 }
 
 /**

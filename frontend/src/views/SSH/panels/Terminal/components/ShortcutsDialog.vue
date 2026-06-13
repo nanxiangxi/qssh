@@ -38,50 +38,50 @@ const sections = getKeybindingCategories()
 
 <style scoped>
 .mask {
-  position: fixed; inset: 0; background: rgba(0,0,0,.6);
+  position: fixed; inset: 0; background: var(--bg-overlay);
   display: flex; align-items: center; justify-content: center;
   z-index: 99999; backdrop-filter: blur(2px);
 }
 .dialog {
   width: 650px; max-width: 90vw; max-height: 80vh;
-  background: #1a1a1a; border: 1px solid #333; border-radius: 12px;
-  box-shadow: 0 16px 48px rgba(0,0,0,.5);
+  background: var(--bg-panel-solid); border: 1px solid var(--surface-hover); border-radius: 12px;
+  box-shadow: 0 16px 48px var(--shadow-lg);
   display: flex; flex-direction: column; overflow: hidden;
 }
 .dialog-header {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 18px; border-bottom: 1px solid #2a2a2a;
+  padding: 14px 18px; border-bottom: 1px solid var(--border-default);
 }
-.dialog-header h3 { margin: 0; font-size: 15px; color: #d4d4d4; }
+.dialog-header h3 { margin: 0; font-size: 15px; color: var(--text-primary); }
 .close-btn {
   display: flex; align-items: center; justify-content: center;
   width: 28px; height: 28px; background: transparent; border: none;
-  border-radius: 6px; color: #666; cursor: pointer;
+  border-radius: 6px; color: var(--text-muted); cursor: pointer;
 }
-.close-btn:hover { background: #333; color: #aaa; }
+.close-btn:hover { background: var(--surface-hover); color: var(--text-secondary); }
 .dialog-body { flex: 1; overflow-y: auto; padding: 14px 18px; }
 .section { margin-bottom: 18px; }
 .section-title {
   margin: 0 0 8px; font-size: 11px; font-weight: 600;
-  color: #666; text-transform: uppercase; letter-spacing: 0.5px;
+  color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;
 }
 .shortcut-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; }
 .shortcut-item {
   display: flex; align-items: center; gap: 8px;
   padding: 5px 8px; border-radius: 4px;
 }
-.shortcut-item:hover { background: #222; }
+.shortcut-item:hover { background: var(--surface-hover); }
 kbd {
   display: inline-flex; align-items: center; justify-content: center;
   min-width: 55px; height: 22px; padding: 0 6px;
-  background: #2a2a2a; border: 1px solid #444; border-radius: 4px;
-  font-size: 10px; color: #ccc; font-family: 'Cascadia Code', monospace;
+  background: var(--border-default); border: 1px solid var(--border-default); border-radius: 4px;
+  font-size: 10px; color: var(--text-secondary); font-family: 'Cascadia Code', monospace;
   white-space: nowrap;
 }
-.desc { font-size: 11px; color: #888; }
+.desc { font-size: 11px; color: var(--text-muted); }
 .dialog-body::-webkit-scrollbar { width: 4px; }
 .dialog-body::-webkit-scrollbar-track { background: transparent; }
-.dialog-body::-webkit-scrollbar-thumb { background: #444; border-radius: 2px; }
+.dialog-body::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 2px; }
 .fade-enter-active { transition: all .2s ease; }
 .fade-leave-active { transition: all .15s ease; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }

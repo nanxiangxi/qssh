@@ -3,7 +3,7 @@
     <div v-if="visible" class="mask" @mousedown.self="$emit('cancel')">
       <div class="dialog">
         <div class="dialog-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff9800" stroke-width="2">
+          <svg class="dialog-icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="10"/>
             <line x1="12" y1="8" x2="12" y2="12"/>
             <line x1="12" y1="16" x2="12.01" y2="16"/>
@@ -41,7 +41,7 @@ defineEmits(['confirm', 'cancel'])
 .mask {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,.6);
+  background: var(--bg-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -50,13 +50,13 @@ defineEmits(['confirm', 'cancel'])
 }
 
 .dialog {
-  background: #1e1e1e;
-  border: 1px solid #444;
+  background: var(--bg-toolbar);
+  border: 1px solid var(--border-default);
   border-radius: 12px;
   padding: 24px;
   max-width: 380px;
   width: 90%;
-  box-shadow: 0 16px 48px rgba(0,0,0,.5);
+  box-shadow: 0 16px 48px var(--shadow-lg);
   text-align: center;
 }
 
@@ -64,16 +64,20 @@ defineEmits(['confirm', 'cancel'])
   margin-bottom: 16px;
 }
 
+.dialog-icon-svg {
+  color: var(--warning-light, #ff9800);
+}
+
 .dialog-title {
   margin: 0 0 8px;
   font-size: 16px;
-  color: #d4d4d4;
+  color: var(--text-primary);
 }
 
 .dialog-desc {
   margin: 0 0 24px;
   font-size: 13px;
-  color: #888;
+  color: var(--text-muted);
   line-height: 1.5;
 }
 
@@ -96,23 +100,23 @@ defineEmits(['confirm', 'cancel'])
 }
 
 .btn-cancel {
-  background: #333;
-  color: #aaa;
+  background: var(--surface-hover);
+  color: var(--text-secondary);
 }
 
 .btn-cancel:hover {
-  background: #444;
-  color: #d4d4d4;
+  background: var(--border-default);
+  color: var(--text-primary);
 }
 
 .btn-confirm {
-  background: rgba(76,175,80,.2);
-  color: #4caf50;
-  border: 1px solid rgba(76,175,80,.3);
+  background: var(--success-bg);
+  color: var(--accent-success);
+  border: 1px solid var(--border-success);
 }
 
 .btn-confirm:hover {
-  background: rgba(76,175,80,.3);
+  background: var(--border-success);
 }
 
 .fade-enter-active { transition: all .2s ease; }
