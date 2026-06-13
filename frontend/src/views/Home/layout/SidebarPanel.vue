@@ -30,8 +30,8 @@
       <template v-else>
         <!-- 已保存的连接 -->
         <div v-if="savedConnections.length > 0" class="connection-section">
-          <div class="section-header">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#68d391" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          <div class="section-header saved-section">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
             <span class="section-title">已保存</span>
             <span class="section-count">{{ savedConnections.length }}</span>
           </div>
@@ -67,8 +67,8 @@
 
         <!-- 缓存的连接 -->
         <div v-if="cachedConnections.length > 0" class="connection-section">
-          <div class="section-header">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#718096" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <div class="section-header cached-section">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             <span class="section-title">缓存</span>
             <span class="section-count">{{ cachedConnections.length }}</span>
           </div>
@@ -820,6 +820,14 @@ const openSettings = () => {
   user-select: none;
 }
 
+.section-header.saved-section {
+  color: var(--success-light);
+}
+
+.section-header.cached-section {
+  color: var(--text-muted);
+}
+
 .section-title {
   color: var(--text-muted);
   font-size: 0.6875rem;
@@ -929,7 +937,7 @@ const openSettings = () => {
 .status-badge.connected {
   background: var(--success-bg);
   color: var(--accent-success);
-  border: 0.0625rem solid rgba(72, 187, 120, 0.3);
+  border: 0.0625rem solid color-mix(in srgb, var(--accent-success), transparent 70%);
 }
 
 .status-badge.disconnected {

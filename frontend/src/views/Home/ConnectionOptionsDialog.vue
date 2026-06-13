@@ -61,7 +61,7 @@ const handleCancel = () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: var(--bg-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -70,17 +70,17 @@ const handleCancel = () => {
 }
 
 .dialog-container {
-  background: rgba(45, 45, 45, 0.98);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-panel-solid);
+  border: 1px solid var(--border-default);
   border-radius: 12px;
   padding: 24px;
   min-width: 400px;
   max-width: 500px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--shadow-lg);
 }
 
 .dialog-title {
-  color: #e2e8f0;
+  color: var(--text-primary);
   font-size: 1.25rem;
   font-weight: 600;
   margin: 0 0 20px 0;
@@ -98,22 +98,22 @@ const handleCancel = () => {
   align-items: center;
   gap: 16px;
   padding: 16px;
-  background: rgba(60, 60, 60, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--surface-2);
+  border: 1px solid var(--border-default);
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .option-item:hover {
-  background: rgba(70, 70, 70, 0.8);
-  border-color: rgba(66, 153, 225, 0.5);
+  background: var(--bg-hover);
+  border-color: color-mix(in srgb, var(--accent-primary), transparent 50%);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-md);
 }
 
 .option-item.cancel:hover {
-  border-color: rgba(245, 101, 101, 0.5);
+  border-color: color-mix(in srgb, var(--accent-danger), transparent 50%);
 }
 
 .option-icon {
@@ -126,14 +126,14 @@ const handleCancel = () => {
 }
 
 .option-name {
-  color: #e2e8f0;
+  color: var(--text-primary);
   font-size: 1rem;
   font-weight: 600;
   margin-bottom: 4px;
 }
 
 .option-desc {
-  color: #a0aec0;
+  color: var(--text-secondary);
   font-size: 0.875rem;
 }
 </style>
