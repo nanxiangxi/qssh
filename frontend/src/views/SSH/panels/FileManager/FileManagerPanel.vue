@@ -64,6 +64,7 @@
       @duplicate="duplicateFile"
       @cut="cutFile"
       @copy="copyFile"
+      @copy-path="copyFilePath"
       @chmod="chmodFile"
       @delete="deleteFile"
     />
@@ -951,6 +952,18 @@ const cutFile = (file) => {
 const copyFile = (file) => {
   closeContextMenu()
   copyFileOp(file)
+}
+
+// 复制路径
+const copyFilePath = (file) => {
+  closeContextMenu()
+  if (file && file.path) {
+    navigator.clipboard.writeText(file.path).then(() => {
+      showMessage(`已复制路径: ${file.path}`, 'success')
+    }).catch(() => {
+      showMessage('复制路径失败', 'error')
+    })
+  }
 }
 
 // 粘贴

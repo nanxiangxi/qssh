@@ -56,6 +56,13 @@
         </svg>
         <span>复制</span>
       </div>
+      <div class="menu-item" @click="$emit('copy-path', file)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="16 18 22 12 16 6"></polyline>
+          <polyline points="8 6 2 12 8 18"></polyline>
+        </svg>
+        <span>复制路径</span>
+      </div>
       <div class="menu-divider"></div>
       <div class="menu-item" @click="$emit('chmod', file)">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -100,6 +107,7 @@ defineEmits([
   'duplicate',
   'cut',
   'copy',
+  'copy-path',
   'chmod',
   'delete'
 ])
