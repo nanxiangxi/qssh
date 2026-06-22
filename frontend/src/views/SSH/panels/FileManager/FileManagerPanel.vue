@@ -1275,40 +1275,52 @@ const handleResize = () => {
 onMounted(() => {
   console.log('[FileManager] 🎬 组件挂载, connId:', currentConnId.value)
   loadFiles()
-  
+
   // 注册 resize 监听器
   window.addEventListener('resize', handleResize)
   console.log('[FileManager] 👂 已注册 resize 监听器')
-  
+
   // 注册目录上传进度事件监听器
   Events.On('directory-upload-progress', (event) => {
     const data = event.data || event
     console.log('[FileManager] 收到目录上传进度:', data)
-    
+
     // 如果有正在进行的目录上传任务，更新它
     if (directoryUploadTask && directoryUploadTask.status === 'uploading') {
       directoryUploadTask.fileName = data.message || '处理中...'
       directoryUploadTask.progress = data.progress || 0
-      
+
       // 如果收到了文件大小，更新任务
       if (data.fileSize) {
         directoryUploadTask.fileSize = data.fileSize
       }
     }
   })
+
+  // 监听终端 cd 命令，自动同步目录
+  Events.On('terminal:cd', (event) => {
+    const data = event.data || event
+    if (!data || data.connId !== currentConnId.value) return
+    const newPath = data.path
+    if (newPath && newPath !== currentPath.value) {
+      console.log('[FileManager] 终端 cd 同步:', currentPath.value, '->', newPath)
+      currentPath.value = newPath
+      navigateToPath()
+    }
+  })
 })
 
 onUnmounted(() => {
   console.log('[FileManager] 🔇 组件卸载')
-  
+
   // 清理 resize 监听器
   if (resizeTimeout) {
     clearTimeout(resizeTimeout)
   }
   window.removeEventListener('resize', handleResize)
-  
+
   document.removeEventListener('click', closeContextMenu)
-  
+
   // 清理搜索事件监听器
   if (searchResultUnsubscribe) {
     searchResultUnsubscribe()
@@ -1318,6 +1330,9 @@ onUnmounted(() => {
     searchCompleteUnsubscribe()
     searchCompleteUnsubscribe = null
   }
+
+  // 清理终端 cd 事件监听器
+  Events.Off('terminal:cd')
 })
 
 // 切换文件选择状态

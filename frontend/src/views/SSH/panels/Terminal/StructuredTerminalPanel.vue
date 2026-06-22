@@ -624,6 +624,8 @@ function initXterm() {
         ch.addCommand(xtermBuf.trim())
         // 记录日志
         logTerminalCommand(connId, xtermBuf.trim())
+        // 检测 cd 命令，通知文件管理器
+        detectCdCommand(xtermBuf.trim())
       }
       xtermBuf = ''
       send('\r'); return
@@ -1093,6 +1095,9 @@ function exec() {
     // 记录日志
     logTerminalCommand(connId, c)
 
+    // 检测 cd 命令，通知文件管理器
+    detectCdCommand(c)
+
     // 只有在没有活跃命令时才创建新块
     if (!bm.activeBlock.value) {
       bm.startCommand(c)
@@ -1105,6 +1110,42 @@ function exec() {
       console.log('[MainTerminal] 命令正在运行，输入属于当前块')
     }
   }
+}
+
+// 检测 cd 命令并通知文件管理器
+function detectCdCommand(command) {
+  const trimmed = command.trim()
+  // 匹配 cd 命令：cd [选项] <路径>
+  const cdMatch = trimmed.match(/^cd\s+(.+)$/)
+  if (!cdMatch) return
+
+  let targetPath = cdMatch[1].trim()
+  // 去掉引号
+  if ((targetPath.startsWith('"') && targetPath.endsWith('"')) ||
+      (targetPath.startsWith("'") && targetPath.endsWith("'"))) {
+    targetPath = targetPath.slice(1, -1)
+  }
+  // 忽略 cd - (切换上一个目录，无法确定路径)
+  if (targetPath === '-') return
+  // 忽略纯选项如 cd --help
+  if (targetPath.startsWith('-') && !targetPath.startsWith('/')) return
+
+  // 通过 SSH 执行 pwd 获取实际路径（在 cd 之后延迟执行）
+  // 使用独立通道执行 "cd <path> && pwd" 来解析路径
+  setTimeout(async () => {
+    try {
+      const result = await SSHService.RunCommand(connId, `cd ${cdMatch[1]} && pwd`)
+      const resolvedPath = result.trim()
+      if (resolvedPath && resolvedPath.startsWith('/')) {
+        Events.Emit('terminal:cd', { connId, path: resolvedPath })
+      }
+    } catch (e) {
+      // 解析失败，尝试直接使用参数
+      if (targetPath.startsWith('/') || targetPath.startsWith('~')) {
+        Events.Emit('terminal:cd', { connId, path: targetPath })
+      }
+    }
+  }, 300)
 }
 
 async function send(data) {
