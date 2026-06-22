@@ -32,15 +32,15 @@ jobs:
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
 
-      - name: Install Wails CLI
-        run: go install github.com/wailsapp/wails/v3/cmd/wails3@latest
+      - name: Install Wails CLI (matching project version)
+        run: go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-alpha.74
 
       - name: Install Frontend Dependencies
         working-directory: frontend
         run: npm ci
 
       - name: Generate Bindings
-        run: wails3 generate bindings -f -clean=true
+        run: wails3 generate bindings -f -clean
 
       - name: Generate Icons
         working-directory: build
