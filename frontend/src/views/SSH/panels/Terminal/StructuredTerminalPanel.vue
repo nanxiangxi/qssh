@@ -294,6 +294,7 @@ let xtermBuf = ''
 let yankBuf = ''
 let isUserScrolling = false
 let scrollTimer = null
+let terminalCwd = '' // 跟踪终端 shell 的当前工作目录
 
 // 滚动到底部
 function scrollToBottom() {
@@ -404,6 +405,16 @@ onMounted(async () => {
     await SSHService.ResizeTerminalByID(connId, sessionId, xterm?.cols || 120, xterm?.rows || 40).catch(() => {})
     status.value = 'active'
     logConnectionEvent(connId, 'connect')
+
+    // 初始化终端工作目录（获取 home 目录）
+    try {
+      const homeResult = await SSHService.RunCommand(connId, 'pwd')
+      terminalCwd = homeResult.trim()
+      terminalHomeDir = terminalCwd // 记住 home 目录，供裸 cd 使用
+    } catch (e) {
+      terminalCwd = '/root'
+      terminalHomeDir = '/root'
+    }
 
     // 通知 DockviewLayout 终端就绪
     // isAI=true 时 DockviewLayout 会转发为 terminal:ai-session-ready
@@ -1113,56 +1124,78 @@ function exec() {
 }
 
 // 检测 cd 命令并通知文件管理器
+// 本地解析路径，不依赖 RunCommand（独立 session 与终端 shell 不同步）
 function detectCdCommand(command) {
   const trimmed = command.trim()
-  // 匹配 cd 命令：cd 或 cd [选项] <路径>
-  // 裸 cd（无参数）回到 home 目录
   const isBareCd = trimmed === 'cd'
   const cdMatch = trimmed.match(/^cd\s+(.+)$/)
   if (!isBareCd && !cdMatch) return
 
-  // 裸 cd：延迟后执行 pwd 获取 home 目录
+  let resolvedPath
+
   if (isBareCd) {
-    setTimeout(async () => {
-      try {
-        const result = await SSHService.RunCommand(connId, 'pwd')
-        const resolvedPath = result.trim()
-        if (resolvedPath && resolvedPath.startsWith('/')) {
-          Events.Emit('terminal:cd', { connId, path: resolvedPath })
-        }
-      } catch (e) {}
-    }, 500)
-    return
-  }
-
-  let targetPath = cdMatch[1].trim()
-  // 去掉引号
-  if ((targetPath.startsWith('"') && targetPath.endsWith('"')) ||
-      (targetPath.startsWith("'") && targetPath.endsWith("'"))) {
-    targetPath = targetPath.slice(1, -1)
-  }
-  // 忽略 cd - (切换上一个目录，无法确定路径)
-  if (targetPath === '-') return
-  // 忽略纯选项如 cd --help
-  if (targetPath.startsWith('-') && !targetPath.startsWith('/')) return
-
-  // 延迟后通过独立通道执行 pwd 获取终端 shell 的实际当前目录
-  // 不再执行 "cd <path> && pwd"（那会在独立 session 中 cd，与终端 shell 不同步）
-  // 而是直接执行 "pwd" 获取终端 shell 已切换后的目录
-  setTimeout(async () => {
-    try {
-      const result = await SSHService.RunCommand(connId, 'pwd')
-      const resolvedPath = result.trim()
-      if (resolvedPath && resolvedPath.startsWith('/')) {
-        Events.Emit('terminal:cd', { connId, path: resolvedPath })
-      }
-    } catch (e) {
-      // 解析失败，尝试直接使用参数
-      if (targetPath.startsWith('/') || targetPath.startsWith('~')) {
-        Events.Emit('terminal:cd', { connId, path: targetPath })
-      }
+    // 裸 cd → 回到 home 目录
+    // home 目录在连接时已初始化为 terminalCwd
+    // 需要获取 home：从 SSH 配置中无法直接获取，使用初始 terminalCwd
+    // 更可靠的方式：记住 home 目录
+    resolvedPath = terminalHomeDir || terminalCwd
+  } else {
+    let targetPath = cdMatch[1].trim()
+    // 去掉引号
+    if ((targetPath.startsWith('"') && targetPath.endsWith('"')) ||
+        (targetPath.startsWith("'") && targetPath.endsWith("'"))) {
+      targetPath = targetPath.slice(1, -1)
     }
-  }, 500)
+    // 忽略 cd - (切换上一个目录，无法确定路径)
+    if (targetPath === '-') return
+    // 忽略纯选项如 cd --help
+    if (targetPath.startsWith('-') && !targetPath.startsWith('/')) return
+
+    resolvedPath = resolveCdPath(targetPath)
+  }
+
+  if (resolvedPath && resolvedPath.startsWith('/')) {
+    terminalCwd = resolvedPath
+    Events.Emit('terminal:cd', { connId, path: resolvedPath })
+  }
+}
+
+// 记住 home 目录
+let terminalHomeDir = ''
+
+// 解析 cd 的目标路径为绝对路径
+function resolveCdPath(target) {
+  if (!terminalCwd) return null
+
+  // 绝对路径
+  if (target.startsWith('/')) {
+    return normalizePath(target)
+  }
+
+  // ~ 展开
+  if (target.startsWith('~')) {
+    const home = terminalHomeDir || terminalCwd
+    const rest = target.slice(1)
+    return normalizePath(home + rest)
+  }
+
+  // 相对路径：基于 terminalCwd 解析
+  return normalizePath(terminalCwd + '/' + target)
+}
+
+// 规范化路径（处理 .. 和 .）
+function normalizePath(p) {
+  const parts = p.split('/')
+  const result = []
+  for (const part of parts) {
+    if (part === '' || part === '.') continue
+    if (part === '..') {
+      result.pop()
+    } else {
+      result.push(part)
+    }
+  }
+  return '/' + result.join('/')
 }
 
 async function send(data) {
