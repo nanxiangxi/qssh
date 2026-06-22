@@ -1121,17 +1121,17 @@ function detectCdCommand(command) {
   const cdMatch = trimmed.match(/^cd\s+(.+)$/)
   if (!isBareCd && !cdMatch) return
 
-  // 裸 cd：执行 pwd 获取 home 目录
+  // 裸 cd：延迟后执行 pwd 获取 home 目录
   if (isBareCd) {
     setTimeout(async () => {
       try {
-        const result = await SSHService.RunCommand(connId, 'cd && pwd')
+        const result = await SSHService.RunCommand(connId, 'pwd')
         const resolvedPath = result.trim()
         if (resolvedPath && resolvedPath.startsWith('/')) {
           Events.Emit('terminal:cd', { connId, path: resolvedPath })
         }
       } catch (e) {}
-    }, 300)
+    }, 500)
     return
   }
 
@@ -1146,11 +1146,12 @@ function detectCdCommand(command) {
   // 忽略纯选项如 cd --help
   if (targetPath.startsWith('-') && !targetPath.startsWith('/')) return
 
-  // 通过 SSH 执行 pwd 获取实际路径（在 cd 之后延迟执行）
-  // 使用独立通道执行 "cd <path> && pwd" 来解析路径
+  // 延迟后通过独立通道执行 pwd 获取终端 shell 的实际当前目录
+  // 不再执行 "cd <path> && pwd"（那会在独立 session 中 cd，与终端 shell 不同步）
+  // 而是直接执行 "pwd" 获取终端 shell 已切换后的目录
   setTimeout(async () => {
     try {
-      const result = await SSHService.RunCommand(connId, `cd ${cdMatch[1]} && pwd`)
+      const result = await SSHService.RunCommand(connId, 'pwd')
       const resolvedPath = result.trim()
       if (resolvedPath && resolvedPath.startsWith('/')) {
         Events.Emit('terminal:cd', { connId, path: resolvedPath })
@@ -1161,7 +1162,7 @@ function detectCdCommand(command) {
         Events.Emit('terminal:cd', { connId, path: targetPath })
       }
     }
-  }, 300)
+  }, 500)
 }
 
 async function send(data) {
