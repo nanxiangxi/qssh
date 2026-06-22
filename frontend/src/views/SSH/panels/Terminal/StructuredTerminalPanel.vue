@@ -96,7 +96,7 @@
     <TerminalContextMenu
       v-model:visible="showContextMenu"
       :position="contextMenuPos"
-      :has-selection="hasSelection"
+      :has-selection="contextHasSelection"
       @copy="ctxCopy"
       @paste="ctxPaste"
       @select-all="ctxSelectAll"
@@ -272,6 +272,7 @@ const miniInitialKey = ref('')
 // 右键菜单
 const showContextMenu = ref(false)
 const contextMenuPos = ref({ x: 0, y: 0 })
+const contextHasSelection = ref(false) // 右键菜单打开时的选区快照
 
 // 视图模式：block=结构化, classic=经典
 const view = ref(cfg.getDefaultTerminalType() === 'classic' ? 'classic' : 'block')
@@ -280,6 +281,7 @@ const statusLabel = computed(() => ({ idle:'空闲', starting:'连接中', activ
 const stats = computed(() => bm.getStats())
 const hasSelection = computed(() => {
   if (view.value === 'classic' && xterm) return xterm.hasSelection()
+  // 结构化模式：检查浏览器原生选区
   const sel = window.getSelection()
   return sel ? sel.toString().length > 0 : false
 })
@@ -520,10 +522,27 @@ function initXterm() {
   xterm.open(xtRef.value)
   fitAddon.fit()
 
-  // 拦截 Ctrl+←/→，让 document 层的快捷键监听处理
+  // 拦截快捷键：Ctrl+C 复制 / Ctrl+V 粘贴 / Ctrl+←/→ 让 document 层处理
   xterm.attachCustomKeyEventHandler((e) => {
     if (e.ctrlKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
       return false // 阻止 xterm 处理，让事件冒泡到 document
+    }
+    // Ctrl+C: 有选区时复制，不发送中断
+    if (e.ctrlKey && e.key === 'c' && !e.altKey && !e.shiftKey) {
+      if (xterm.hasSelection()) {
+        navigator.clipboard.writeText(xterm.getSelection()).catch(() => {})
+        xterm.clearSelection()
+        return false // 阻止 xterm 将 Ctrl+C 当作输入
+      }
+      // 无选区时允许 Ctrl+C 作为中断信号继续传递
+      return true
+    }
+    // Ctrl+V: 粘贴剪贴板内容
+    if (e.ctrlKey && e.key === 'v' && !e.altKey && !e.shiftKey) {
+      navigator.clipboard.readText().then(text => {
+        if (text) send(text)
+      }).catch(() => {})
+      return false // 阻止 xterm 将 Ctrl+V 当作输入
     }
     return true
   })
@@ -555,15 +574,15 @@ function initXterm() {
       send(data); return
     }
 
-    // Tab 补全
+    // Tab 补全（异步支持远程路径）
     if (cc === 9) {
       if (showCompletion.value && completionSuggestions.value.length > 0) {
         // 应用选中的补全
         const idx = completionRef.value?.selectedIndex || 0
         applyCompletionClassic(idx)
       } else if (xtermBuf) {
-        // 触发补全
-        const sugs = completion.getSuggestions(xtermBuf)
+        // 先同步获取命令/选项补全
+        const sugs = completion.getSuggestions(xtermBuf, { connId })
         if (sugs.length === 1) {
           // 直接补全
           const completed = completion.applyCompletion(xtermBuf, sugs[0])
@@ -573,6 +592,24 @@ function initXterm() {
           // 显示补全列表
           completionSuggestions.value = sugs
           showCompletion.value = true
+        }
+        // 如果是路径补全，异步获取远程路径
+        const parts = xtermBuf.split(/\s+/)
+        if (parts.length > 1) {
+          const lastWord = parts[parts.length - 1]
+          if (lastWord.startsWith('/') || lastWord.startsWith('~') || lastWord.startsWith('.')) {
+            completion.getSuggestionsAsync(xtermBuf, { connId }).then(asyncSugs => {
+              if (asyncSugs.length === 1) {
+                const completed = completion.applyCompletion(xtermBuf, asyncSugs[0])
+                send('\b'.repeat(xtermBuf.length) + completed)
+                xtermBuf = completed
+                showCompletion.value = false
+              } else if (asyncSugs.length > 1) {
+                completionSuggestions.value = asyncSugs
+                showCompletion.value = true
+              }
+            })
+          }
         }
       }
       return
@@ -754,14 +791,34 @@ function onKey(e) {
   }
 
   // ========== 依附当前命令（中断/暂停） ==========
-  // Ctrl+C: 中断
+  // Ctrl+C: 有选区时复制，无选区时中断
   if (e.ctrlKey && e.key === 'c') {
     e.preventDefault()
+    // 检查浏览器原生选区（结构化模式中用户选中的文本）
+    const sel = window.getSelection()
+    if (sel && sel.toString().length > 0) {
+      navigator.clipboard.writeText(sel.toString()).catch(() => {})
+      sel.removeAllRanges()
+      return
+    }
+    // 无选区：发送中断信号
     console.log('[MainTerminal] onKey: Ctrl+C')
     bm.cancelCommand()
     send('\x03')
     cmd.value = ''
     showCompletion.value = false
+    return
+  }
+
+  // Ctrl+V: 粘贴剪贴板内容到输入框
+  if (e.ctrlKey && e.key === 'v') {
+    e.preventDefault()
+    navigator.clipboard.readText().then(text => {
+      if (text) {
+        cmd.value += text
+        inpRef.value?.focus()
+      }
+    }).catch(() => {})
     return
   }
 
@@ -868,18 +925,35 @@ function onKey(e) {
     return
   }
 
-  // ========== Tab: 补全（仅 Tab 触发） ==========
+  // ========== Tab: 补全（仅 Tab 触发，异步支持远程路径） ==========
   if (e.key === 'Tab') {
     e.preventDefault()
     if (showCompletion.value && completionSuggestions.value.length > 0) {
       applyCompletion(completionRef.value?.selectedIndex || 0)
     } else if (cmd.value) {
-      const sugs = completion.getSuggestions(cmd.value)
+      // 先同步获取命令/选项补全
+      const sugs = completion.getSuggestions(cmd.value, { connId })
       if (sugs.length === 1) {
         cmd.value = completion.applyCompletion(cmd.value, sugs[0])
       } else if (sugs.length > 1) {
         completionSuggestions.value = sugs
         showCompletion.value = true
+      }
+      // 如果是路径补全，异步获取远程路径
+      const parts = cmd.value.split(/\s+/)
+      if (parts.length > 1) {
+        const lastWord = parts[parts.length - 1]
+        if (lastWord.startsWith('/') || lastWord.startsWith('~') || lastWord.startsWith('.')) {
+          completion.getSuggestionsAsync(cmd.value, { connId }).then(asyncSugs => {
+            if (asyncSugs.length === 1) {
+              cmd.value = completion.applyCompletion(cmd.value, asyncSugs[0])
+              showCompletion.value = false
+            } else if (asyncSugs.length > 1) {
+              completionSuggestions.value = asyncSugs
+              showCompletion.value = true
+            }
+          })
+        }
       }
     }
     return
@@ -898,9 +972,15 @@ function onKeyButton(e) {
     return
   }
 
-  // Ctrl+C: 中断
+  // Ctrl+C: 有选区时复制，无选区时中断
   if (e.ctrlKey && e.key === 'c') {
     e.preventDefault()
+    const sel = window.getSelection()
+    if (sel && sel.toString().length > 0) {
+      navigator.clipboard.writeText(sel.toString()).catch(() => {})
+      sel.removeAllRanges()
+      return
+    }
     bm.cancelCommand()
     send('\x03')
     cmd.value = ''
@@ -908,18 +988,47 @@ function onKeyButton(e) {
     return
   }
 
-  // Tab: 补全
+  // Ctrl+V: 粘贴
+  if (e.ctrlKey && e.key === 'v') {
+    e.preventDefault()
+    navigator.clipboard.readText().then(text => {
+      if (text) {
+        cmd.value += text
+        inpRef.value?.focus()
+        nextTick(() => autoResizeTextarea())
+      }
+    }).catch(() => {})
+    return
+  }
+
+  // Tab: 补全（异步支持远程路径）
   if (e.key === 'Tab') {
     e.preventDefault()
     if (showCompletion.value && completionSuggestions.value.length > 0) {
       applyCompletion(completionRef.value?.selectedIndex || 0)
     } else if (cmd.value) {
-      const sugs = completion.getSuggestions(cmd.value)
+      const sugs = completion.getSuggestions(cmd.value, { connId })
       if (sugs.length === 1) {
         cmd.value = completion.applyCompletion(cmd.value, sugs[0])
       } else if (sugs.length > 1) {
         completionSuggestions.value = sugs
         showCompletion.value = true
+      }
+      // 如果是路径补全，异步获取远程路径
+      const parts = cmd.value.split(/\s+/)
+      if (parts.length > 1) {
+        const lastWord = parts[parts.length - 1]
+        if (lastWord.startsWith('/') || lastWord.startsWith('~') || lastWord.startsWith('.')) {
+          completion.getSuggestionsAsync(cmd.value, { connId }).then(asyncSugs => {
+            if (asyncSugs.length === 1) {
+              cmd.value = completion.applyCompletion(cmd.value, asyncSugs[0])
+              showCompletion.value = false
+            } else if (asyncSugs.length > 1) {
+              completionSuggestions.value = asyncSugs
+              showCompletion.value = true
+            }
+          })
+        }
       }
     }
     return
@@ -1221,12 +1330,17 @@ function clearAll() {
 function onClassicContextMenu(e) {
   e.preventDefault()
   contextMenuPos.value = { x: e.clientX, y: e.clientY }
+  // 快照当前选区状态（xterm.hasSelection() 不是响应式的，需要手动捕获）
+  contextHasSelection.value = xterm ? xterm.hasSelection() : false
   showContextMenu.value = true
 }
 
 function onBlockContextMenu(e) {
   e.preventDefault()
   contextMenuPos.value = { x: e.clientX, y: e.clientY }
+  // 结构化模式：检查浏览器原生选区
+  const sel = window.getSelection()
+  contextHasSelection.value = sel ? sel.toString().length > 0 : false
   showContextMenu.value = true
 }
 

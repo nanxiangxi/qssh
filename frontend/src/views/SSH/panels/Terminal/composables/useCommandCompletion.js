@@ -1,8 +1,9 @@
 /**
  * 命令补全组合式函数
- * 支持命令、子命令、选项、路径补全
+ * 支持命令、子命令、选项、远程路径补全
  */
 import { ref, computed } from 'vue'
+import { SSHService } from '@bindings/changeme/ssh/index.js'
 
 // 内置命令库
 const BUILTIN_COMMANDS = {
@@ -551,7 +552,7 @@ export function useCommandCompletion() {
   const hasSuggestions = computed(() => suggestions.value.length > 0)
   const selectedSuggestion = computed(() => suggestions.value[selectedIndex.value])
 
-  // 获取补全建议
+  // 获取补全建议（同步版本，不含远程路径补全）
   function getSuggestions(input, context = {}) {
     if (!input) {
       suggestions.value = []
@@ -626,7 +627,7 @@ export function useCommandCompletion() {
 
       // 路径补全（如果当前词看起来像路径）
       if (currentWord.startsWith('/') || currentWord.startsWith('~') || currentWord.startsWith('.')) {
-        const pathMatches = getPathCompletions(currentWord, context.cwd)
+        const pathMatches = getLocalPathCompletions(currentWord, context.cwd)
         results.push(...pathMatches)
       }
     }
@@ -638,12 +639,122 @@ export function useCommandCompletion() {
     return results
   }
 
-  // 路径补全
-  function getPathCompletions(partial, cwd) {
-    // 这里简化处理，实际应该调用后端 API
+  // 获取补全建议（异步版本，包含远程路径补全）
+  async function getSuggestionsAsync(input, context = {}) {
+    if (!input) {
+      suggestions.value = []
+      return []
+    }
+
+    // 先获取同步结果（命令、选项等）
+    const syncResults = getSuggestions(input, context)
+
+    // 如果有路径补全需求，尝试远程补全
+    const parts = input.split(/\s+/)
+    if (parts.length > 1) {
+      const currentWord = parts[parts.length - 1]
+      if ((currentWord.startsWith('/') || currentWord.startsWith('~') || currentWord.startsWith('.')) && context.connId) {
+        try {
+          const remotePaths = await getRemotePathCompletions(currentWord, context.connId)
+          if (remotePaths.length > 0) {
+            // 移除本地路径补全结果，替换为远程结果
+            const nonPathResults = syncResults.filter(r => r.type !== 'path')
+            const finalResults = [...nonPathResults, ...remotePaths].slice(0, 20)
+            suggestions.value = finalResults
+            selectedIndex.value = finalResults.length > 0 ? 0 : -1
+            isVisible.value = finalResults.length > 0
+            return finalResults
+          }
+        } catch (e) {
+          // 远程补全失败，保留本地结果
+        }
+      }
+    }
+
+    return syncResults
+  }
+
+  // 路径补全缓存（避免短时间内重复请求）
+  let pathCache = { key: '', results: [], timestamp: 0 }
+  const PATH_CACHE_TTL = 3000 // 3 秒缓存
+
+  // 路径补全（支持远程服务器路径）
+  function getPathCompletions(partial, context = {}) {
+    // 先尝试远程补全
+    if (context.connId) {
+      return getRemotePathCompletions(partial, context.connId)
+    }
+    // 回退：本地静态路径
+    return getLocalPathCompletions(partial, context.cwd)
+  }
+
+  // 远程路径补全
+  async function getRemotePathCompletions(partial, connId) {
+    try {
+      // 解析目录部分和前缀部分
+      // 例如: "/etc/pas" → dir="/etc/", prefix="pas"
+      // 例如: "~/Doc" → dir="~/", prefix="Doc"
+      let dir, prefix
+
+      const lastSlash = partial.lastIndexOf('/')
+      if (lastSlash >= 0) {
+        dir = partial.substring(0, lastSlash + 1)
+        prefix = partial.substring(lastSlash + 1)
+      } else {
+        dir = ''
+        prefix = partial
+      }
+
+      // 处理 ~ 开头的路径
+      if (dir.startsWith('~') || partial.startsWith('~')) {
+        // 将 ~ 替换为 $HOME 后再列目录
+        // 但先尝试直接列出（某些服务器支持）
+      }
+
+      // 检查缓存
+      const cacheKey = `${connId}:${dir}`
+      const now = Date.now()
+      if (pathCache.key === cacheKey && now - pathCache.timestamp < PATH_CACHE_TTL) {
+        return filterPathResults(pathCache.results, prefix)
+      }
+
+      // 调用后端列出目录内容
+      const targetDir = dir || './'
+      const files = await SSHService.ListDirectory(connId, targetDir)
+
+      if (!files || !Array.isArray(files)) {
+        return getLocalPathCompletions(partial)
+      }
+
+      // 缓存结果
+      pathCache = { key: cacheKey, results: files, timestamp: now }
+
+      return filterPathResults(files, prefix, dir)
+    } catch (e) {
+      console.warn('[Completion] 远程路径补全失败，回退本地:', e)
+      return getLocalPathCompletions(partial)
+    }
+  }
+
+  // 从文件列表中筛选匹配前缀的补全项
+  function filterPathResults(files, prefix, dirPrefix = '') {
+    return files
+      .filter(f => f.name.toLowerCase().startsWith(prefix.toLowerCase()))
+      .map(f => {
+        const fullPath = dirPrefix + f.name
+        return {
+          type: 'path',
+          value: fullPath + (f.isDir ? '/' : ''),
+          display: f.name + (f.isDir ? '/' : ''),
+          description: f.isDir ? '目录' : '文件'
+        }
+      })
+  }
+
+  // 本地静态路径补全（回退方案）
+  function getLocalPathCompletions(partial, cwd) {
     const paths = [...COMMON_PATHS]
 
-    // 如果有 cwd，添加相对路径
     if (cwd) {
       paths.unshift(cwd)
       paths.unshift('.')
@@ -756,6 +867,7 @@ export function useCommandCompletion() {
 
     // 方法
     getSuggestions,
+    getSuggestionsAsync,
     applyCompletion,
     selectNext,
     selectPrevious,

@@ -63,6 +63,7 @@
       @rename="renameFile"
       @duplicate="duplicateFile"
       @cut="cutFile"
+      @copy="copyFile"
       @chmod="chmodFile"
       @delete="deleteFile"
     />
@@ -373,6 +374,7 @@ const {
   duplicateFile: duplicateFileOp,
   compressFile: compressFileOp,
   cutFile: cutFileOp,
+  copyFile: copyFileOp,
   pasteFile: pasteFileOp,
   hasCutFile
 } = useFileOperations(currentConnId, currentPath, loadFiles)
@@ -943,6 +945,12 @@ const duplicateFile = async (file) => {
 const cutFile = (file) => {
   closeContextMenu()
   cutFileOp(file)
+}
+
+// 复制
+const copyFile = (file) => {
+  closeContextMenu()
+  copyFileOp(file)
 }
 
 // 粘贴
