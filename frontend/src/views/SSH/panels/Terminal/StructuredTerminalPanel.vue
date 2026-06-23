@@ -391,6 +391,22 @@ function onReconnected(e) {
   logConnectionEvent(connId, 'reconnect')
 }
 
+// 面板切换时自动聚焦终端，确保可以立即输入命令
+// 定义在 setup 作用域，确保 onUnmounted 能正确移除监听
+const onPanelActivated = (e) => {
+  if (e.detail?.panelId === dockviewPanelId) {
+    // 用 setTimeout 确保 Dockview 面板切换动画完成后再聚焦
+    setTimeout(() => {
+      if (disposed) return
+      if (view.value === 'classic' && xterm) {
+        xterm.focus()
+      } else {
+        inpRef.value?.focus()
+      }
+    }, 50)
+  }
+}
+
 // ========== 初始化 ==========
 onMounted(async () => {
   sm.createSession(sessionId, connId, { type: isAI ? SESSION_TYPE.AI : SESSION_TYPE.NORMAL })
@@ -437,17 +453,6 @@ onMounted(async () => {
   Events.On('ssh:connection-reconnected', onReconnected)
 
   // 面板切换时自动聚焦终端，确保可以立即输入命令
-  const onPanelActivated = (e) => {
-    if (e.detail?.panelId === dockviewPanelId) {
-      nextTick(() => {
-        if (viewMode.value === 'classic' && xterm) {
-          xterm.focus()
-        } else {
-          inpRef.value?.focus()
-        }
-      })
-    }
-  }
   document.addEventListener('dockview:panel-activated', onPanelActivated)
 
   // 全局键盘监听（Ctrl+F 搜索）

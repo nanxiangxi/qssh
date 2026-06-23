@@ -104,29 +104,37 @@ func main() {
 	app.RegisterService(application.NewService(cloudService))
 
 	// 使用必要的选项创建一个新窗口。
-	mainWindow := app.Window.NewWithOptions(application.WebviewWindowOptions{
+	// 在创建窗口前获取已保存的位置，直接在 WebviewWindowOptions 中设置初始位置
+	// 这样窗口创建时就出现在正确位置，避免先显示在默认位置再跳转
+	savedPos := windowManager.GetSavedMainWindowPosition()
+
+	windowOpts := application.WebviewWindowOptions{
 		Name:             "main",
 		Title:            fmt.Sprintf("启SSH - SSH工具 (v%s)", AppVersion),
 		URL:              "/",
 		DisableResize:    false,
 		Frameless:        true,
 		BackgroundColour: application.NewRGB(255, 255, 255),
-	})
+	}
 
-	// 设置默认尺寸居中（app.Run() 前只能设置默认值）
-	w, h := calculateWindowSize(app)
-	mainWindow.SetSize(w, h)
-	mainWindow.Center()
-	fmt.Printf("[Main] 主窗口默认大小: %dx%d\n", w, h)
+	if savedPos != nil {
+		// 使用保存的位置和大小
+		windowOpts.InitialPosition = application.WindowXY
+		windowOpts.X = savedPos.X
+		windowOpts.Y = savedPos.Y
+		windowOpts.Width = savedPos.Width
+		windowOpts.Height = savedPos.Height
+		fmt.Printf("[Main] 使用保存的窗口位置: (%d,%d %dx%d)\n", savedPos.X, savedPos.Y, savedPos.Width, savedPos.Height)
+	} else {
+		// 没有保存位置，使用默认大小居中
+		w, h := calculateWindowSize(app)
+		windowOpts.Width = w
+		windowOpts.Height = h
+		// InitialPosition 默认为 WindowCentered
+		fmt.Printf("[Main] 使用默认窗口大小: %dx%d\n", w, h)
+	}
 
-	// 在 app.Run() 启动后延迟恢复主窗口位置
-	// app.Run() 是阻塞的，所以用 goroutine 在其启动后恢复位置
-	go func() {
-		time.Sleep(800 * time.Millisecond) // 等待窗口完全初始化
-		if windowManager.RestoreMainWindowPosition(mainWindow) {
-			fmt.Println("[Main] ✓ 主窗口位置已恢复")
-		}
-	}()
+	mainWindow := app.Window.NewWithOptions(windowOpts)
 
 	// 设置分组关闭回调（所有 SSH 窗口关闭后自动显示主窗口）
 	windowManager.SetOnGroupClose(func(groupID string) {
