@@ -113,6 +113,9 @@ func main() {
 		BackgroundColour: application.NewRGB(255, 255, 255),
 	})
 
+	// 先显示窗口，再恢复位置（Wails v3 中 SetPosition/SetSize 在窗口未显示时可能不生效）
+	mainWindow.Show()
+
 	// 尝试恢复主窗口位置，否则使用默认尺寸居中
 	mainWindowRegistered := windowManager.RestoreMainWindowPosition(mainWindow)
 	if !mainWindowRegistered {

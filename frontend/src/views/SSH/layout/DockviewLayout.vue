@@ -296,6 +296,13 @@ export default defineComponent({
         emitChange()
       })
 
+      // 面板切换时通知对应面板（用于 AI 聊天滚动到底部、终端聚焦等）
+      dockviewApi.onDidActivePanelChange((event) => {
+        if (event) {
+          Events.Emit('dockview:panel-activated', { panelId: event.id })
+        }
+      })
+
       // 监听 AI 创建终端请求
       Events.On('ai:create-terminal', (event) => {
         if (!event?.data || event.data.connId !== props.connId) return

@@ -435,6 +435,19 @@ onMounted(async () => {
   Events.On('ssh:connection-disconnected', onDisconnected)
   Events.On('ssh:connection-reconnected', onReconnected)
 
+  // 面板切换时自动聚焦终端，确保可以立即输入命令
+  Events.On('dockview:panel-activated', (e) => {
+    if (e?.data?.panelId === sessionId) {
+      nextTick(() => {
+        if (viewMode.value === 'classic' && xterm) {
+          xterm.focus()
+        } else {
+          inpRef.value?.focus()
+        }
+      })
+    }
+  })
+
   // 全局键盘监听（Ctrl+F 搜索）
   document.addEventListener('keydown', onGlobalKey)
 
