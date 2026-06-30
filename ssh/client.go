@@ -1,16 +1,31 @@
 package ssh
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"net"
 	"os"
+	"path/filepath"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/pkg/sftp"
+	"github.com/skeema/knownhosts"
 	"golang.org/x/crypto/ssh"
+)
+
+// HostKeyCallback SSH 主机密钥校验策略
+//   - "strict": 拒绝未知主机（生产环境推荐）
+//   - "tofu":   首次连接自动信任并写入 known_hosts（最方便，向后兼容默认）
+//   - "off":    不校验（仅用于调试，强烈不推荐）
+type HostKeyCallback string
+
+const (
+	HostKeyCallbackStrict HostKeyCallback = "strict"
+	HostKeyCallbackTOFU   HostKeyCallback = "tofu"
+	HostKeyCallbackOff    HostKeyCallback = "off"
 )
 
 // SSHConfig SSH连接配置
@@ -23,6 +38,15 @@ type SSHConfig struct {
 	KeyPath    string `json:"keyPath,omitempty"`    // 密钥文件路径（兼容旧版）
 	PrivateKey string `json:"privateKey,omitempty"` // 密钥内容（直接输入）
 	Timeout    int    `json:"timeout,omitempty"`
+
+	// HostKeyPolicy 主机密钥校验策略
+	// 默认 "tofu"（向后兼容）：首次连接自动信任并写入 known_hosts
+	// 推荐生产环境设为 "strict"
+	HostKeyPolicy HostKeyCallback `json:"hostKeyPolicy,omitempty"`
+
+	// KnownHostsFile 自定义 known_hosts 文件路径
+	// 默认空 = 使用 ~/.ssh/known_hosts
+	KnownHostsFile string `json:"knownHostsFile,omitempty"`
 }
 
 // shellSession 单个 shell 会话
@@ -142,15 +166,21 @@ func (s *SSHClient) Connect() error {
 		return fmt.Errorf("未提供认证方式（密码或密钥）")
 	}
 
+	// 构造主机密钥校验回调（修复 MITM 漏洞）
+	hostKeyCallback, err := buildHostKeyCallback(s.config)
+	if err != nil {
+		return fmt.Errorf("构造主机密钥校验失败: %v", err)
+	}
+
 	sshConfig := &ssh.ClientConfig{
 		User:            s.config.Username,
 		Auth:            authMethods,
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(), // 生产环境应使用严格的主机密钥验证
+		HostKeyCallback: hostKeyCallback,
 		Timeout:         time.Duration(s.config.Timeout) * time.Second,
 	}
 
 	addr := fmt.Sprintf("%s:%d", s.config.Host, s.config.Port)
-	
+
 	start := time.Now()
 	client, err := ssh.Dial("tcp", addr, sshConfig)
 	if err != nil {
@@ -162,8 +192,106 @@ func (s *SSHClient) Connect() error {
 
 	s.client = client
 	s.isConnected = true
-	
+
 	return nil
+}
+
+// buildHostKeyCallback 根据策略构造 ssh.HostKeyCallback
+//
+// 安全修复：之前使用 ssh.InsecureIgnoreHostKey() 会让中间人攻击者
+// 轻易伪造服务器。此函数提供三种模式：
+//   - HostKeyCallbackOff:   不校验（仅用于调试，不推荐）
+//   - HostKeyCallbackTOFU:  首次信任 + 写入 known_hosts（默认，向后兼容）
+//   - HostKeyCallbackStrict: 拒绝任何未知主机（生产推荐）
+func buildHostKeyCallback(cfg *SSHConfig) (ssh.HostKeyCallback, error) {
+	// 1. 解析 known_hosts 文件路径
+	khPath := cfg.KnownHostsFile
+	if khPath == "" {
+		// 默认使用 ~/.ssh/known_hosts，多用户系统下用 home 目录更安全
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return nil, fmt.Errorf("获取用户主目录失败: %w", err)
+		}
+		khPath = filepath.Join(home, ".ssh", "known_hosts")
+	}
+
+	// 2. 如果文件不存在，提前创建好（knownhosts.New 不自动创建）
+	if _, err := os.Stat(khPath); os.IsNotExist(err) {
+		// 确保 ~/.ssh 目录存在
+		if err := os.MkdirAll(filepath.Dir(khPath), 0700); err != nil {
+			return nil, fmt.Errorf("创建 known_hosts 目录失败: %w", err)
+		}
+		// 创建空文件
+		f, err := os.OpenFile(khPath, os.O_CREATE|os.O_WRONLY, 0600)
+		if err != nil {
+			return nil, fmt.Errorf("创建 known_hosts 文件失败: %w", err)
+		}
+		f.Close()
+	}
+
+	// 3. 加载 known_hosts（可能为空文件，这是合法的）
+	kh, err := knownhosts.New(khPath)
+	if err != nil {
+		return nil, fmt.Errorf("加载 known_hosts 失败: %w", err)
+	}
+
+	// 4. 根据策略返回不同的 callback
+	policy := cfg.HostKeyPolicy
+	if policy == "" {
+		policy = HostKeyCallbackTOFU // 默认 ToFU，向后兼容老用户
+	}
+
+	switch policy {
+	case HostKeyCallbackOff:
+		// 显式 opt-in：不校验。仅用于开发调试。
+		// 给个清晰的警告日志，提醒用户这不是好主意。
+		fmt.Printf("[SSHClient] ⚠️ 警告：主机密钥校验已关闭，存在 MITM 攻击风险\n")
+		return ssh.InsecureIgnoreHostKey(), nil
+
+	case HostKeyCallbackStrict:
+		// 严格模式：未知主机直接拒绝
+		return kh, nil
+
+	case HostKeyCallbackTOFU:
+		// ToFU 模式：首次连接自动信任并写入 known_hosts
+		// 注意：knownhosts.New 返回的 callback 在遇到未知主机时会返回错误，
+		// 我们需要包装一下让它支持 ToFU（写入 + 通过）。
+		return wrapKnownHostsForTOFU(khPath, kh), nil
+
+	default:
+		return nil, fmt.Errorf("未知的主机密钥校验策略: %s", policy)
+	}
+}
+
+// wrapKnownHostsForTOFU 把 knownhosts 的"严格校验"包装成 ToFU 模式：
+//   - 已知主机 → 通过
+//   - 未知主机 → 写入 known_hosts 文件，然后通过
+//
+// 这样首次连接仍然能正常工作，但不会让用户面对一个无脑放行的 InsecureIgnore。
+func wrapKnownHostsForTOFU(khPath string, strict ssh.HostKeyCallback) ssh.HostKeyCallback {
+	return func(hostname string, remote net.Addr, key ssh.PublicKey) error {
+		// 先用严格模式校验
+		err := strict(hostname, remote, key)
+		if err == nil {
+			return nil // 已知主机，通过
+		}
+
+		// 严格校验失败 → 可能是未知主机，尝试作为 ToFU 处理
+		// knownhosts 的错误可能是 *knownhosts.KeyError，可提取实际 key
+		var keyErr *knownhosts.KeyError
+		if errors.As(err, &keyErr) && len(keyErr.Want) == 0 {
+			// Want 为空 = 完全没有这个主机的记录 = 全新主机 → 写入 known_hosts
+			if writeErr := knownhosts.WriteKnownHost(khPath, hostname, remote, key); writeErr != nil {
+				return fmt.Errorf("写入 known_hosts 失败（拒绝信任未知主机）: %w", writeErr)
+			}
+			fmt.Printf("[SSHClient] ✓ ToFU：已信任新主机 %s 并写入 known_hosts\n", hostname)
+			return nil
+		}
+
+		// 其他错误（如 knownhosts.KeyError.Want 不为空 = 主机 key 不匹配！）
+		// 这就是经典的 MITM 攻击信号，绝不能放行
+		return err
+	}
 }
 
 // Close 关闭SSH连接
