@@ -6,6 +6,21 @@ import (
 	"sync"
 )
 
+// shellQuote 用单引号包裹字符串以安全嵌入 shell 命令
+//
+// 安全修复：之前 AddIptablesRule / AddUfwRule / AddFirewalldRule 直接
+// 把 comment、source、port 等用户可控字段拼接到命令字符串里，
+// 攻击者可以通过输入 `'; rm -rf / #` 之类执行任意命令。
+//
+// 算法：标准 POSIX 单引号转义 —— 把内部所有单引号替换为 '\''
+//
+//	示例：foo'bar → 'foo'\''bar'
+//
+// 这是所有 shell quoting 工具（shlex、shellescape 等）的标准做法。
+func shellQuote(s string) string {
+	return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'"
+}
+
 // FirewallRule 防火墙规则
 type FirewallRule struct {
 	Index    int    `json:"index"`    // 规则序号
@@ -178,12 +193,14 @@ func (s *FirewallService) AddIptablesRule(connID, chain, target, protocol, port,
 		source = "0.0.0.0/0"
 	}
 
-	cmd := fmt.Sprintf("iptables -A %s -p %s -s %s -j %s", chain, protocol, source, target)
+	// 安全修复：所有用户可控字段都过 shellQuote，防止命令注入
+	cmd := fmt.Sprintf("iptables -A %s -p %s -s %s -j %s",
+		shellQuote(chain), shellQuote(protocol), shellQuote(source), shellQuote(target))
 	if port != "" {
-		cmd += fmt.Sprintf(" --dport %s", port)
+		cmd += fmt.Sprintf(" --dport %s", shellQuote(port))
 	}
 	if comment != "" {
-		cmd += fmt.Sprintf(" -m comment --comment '%s'", comment)
+		cmd += fmt.Sprintf(" -m comment --comment %s", shellQuote(comment))
 	}
 
 	_, err := s.runCmd(connID, cmd)
@@ -279,21 +296,24 @@ func (s *FirewallService) AddFirewalldRule(connID, zone, port, protocol string) 
 		protocol = "tcp"
 	}
 
-	// 判断是端口还是服务
+	// 安全修复：所有用户可控字段过 shellQuote
 	if strings.Contains(port, "/") || strings.Contains(port, ":") {
 		// 端口范围
-		cmd := fmt.Sprintf("firewall-cmd --zone=%s --add-port=%s/%s --permanent 2>/dev/null", zone, port, protocol)
+		cmd := fmt.Sprintf("firewall-cmd --zone=%s --add-port=%s/%s --permanent 2>/dev/null",
+			shellQuote(zone), shellQuote(port), shellQuote(protocol))
 		_, err := s.runCmd(connID, cmd)
 		if err != nil {
 			return fmt.Errorf("添加端口规则失败: %v", err)
 		}
 	} else {
 		// 尝试作为服务添加
-		cmd := fmt.Sprintf("firewall-cmd --zone=%s --add-service=%s --permanent 2>/dev/null", zone, port)
+		cmd := fmt.Sprintf("firewall-cmd --zone=%s --add-service=%s --permanent 2>/dev/null",
+			shellQuote(zone), shellQuote(port))
 		_, err := s.runCmd(connID, cmd)
 		if err != nil {
 			// 作为端口添加
-			cmd = fmt.Sprintf("firewall-cmd --zone=%s --add-port=%s/%s --permanent 2>/dev/null", zone, port, protocol)
+			cmd = fmt.Sprintf("firewall-cmd --zone=%s --add-port=%s/%s --permanent 2>/dev/null",
+				shellQuote(zone), shellQuote(port), shellQuote(protocol))
 			_, err = s.runCmd(connID, cmd)
 			if err != nil {
 				return fmt.Errorf("添加规则失败: %v", err)
@@ -393,15 +413,16 @@ func (s *FirewallService) AddUfwRule(connID, action, port, protocol, source stri
 	}
 	action = strings.ToLower(action)
 
-	cmd := fmt.Sprintf("ufw %s", action)
+	// 安全修复：所有用户可控字段过 shellQuote
+	cmd := fmt.Sprintf("ufw %s", shellQuote(action))
 	if port != "" {
-		cmd += " " + port
+		cmd += " " + shellQuote(port)
 		if protocol != "" && protocol != "all" {
-			cmd += "/" + protocol
+			cmd += "/" + shellQuote(protocol)
 		}
 	}
 	if source != "" && source != "anywhere" && source != "0.0.0.0/0" {
-		cmd += " from " + source
+		cmd += " from " + shellQuote(source)
 	}
 
 	_, err := s.runCmd(connID, cmd)
