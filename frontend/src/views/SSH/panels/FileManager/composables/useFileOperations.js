@@ -13,8 +13,8 @@ import { logFileOperation, logError, logSystemEvent } from '@/utils/logger'
 export function useFileOperations(currentConnId, currentPath, loadFiles) {
   const loading = ref(false)
   
-  // ✅ 使用 ref 追踪剪切状态，确保响应式更新
-  const hasCutFile = ref(sessionStorage.getItem('cutFile') !== null)
+  // ✅ 使用 ref 追踪剪切/复制状态，确保响应式更新
+  const hasCutFile = ref(sessionStorage.getItem('cutFile') !== null || sessionStorage.getItem('copyFile') !== null)
   
   // 上传文件
   const uploadFile = async (file) => {
@@ -304,6 +304,8 @@ export function useFileOperations(currentConnId, currentPath, loadFiles) {
 
   // 剪切文件
   const cutFile = (file) => {
+    // 清除复制状态（剪切和复制互斥）
+    sessionStorage.removeItem('copyFile')
     // 存储到 sessionStorage
     sessionStorage.setItem('cutFile', JSON.stringify({
       path: file.path,
@@ -311,37 +313,75 @@ export function useFileOperations(currentConnId, currentPath, loadFiles) {
       isDir: file.isDir,
       fromPath: currentPath.value
     }))
-      
+
     // ✅ 更新响应式状态
     hasCutFile.value = true
-      
-    showMessage(`已剪切: ${file.name}，导航到目标目录后点击“粘贴”`, 'info')
+
+    showMessage(`已剪切: ${file.name}，导航到目标目录后点击"粘贴"`, 'info')
   }
-  
+
+  // 复制文件
+  const copyFile = (file) => {
+    // 清除剪切状态（剪切和复制互斥）
+    sessionStorage.removeItem('cutFile')
+    // 存储到 sessionStorage
+    sessionStorage.setItem('copyFile', JSON.stringify({
+      path: file.path,
+      name: file.name,
+      isDir: file.isDir,
+      fromPath: currentPath.value
+    }))
+
+    // ✅ 更新响应式状态
+    hasCutFile.value = true
+
+    showMessage(`已复制: ${file.name}，导航到目标目录后点击"粘贴"`, 'info')
+  }
+
   // 粘贴文件
   const pasteFile = async () => {
     const cutData = sessionStorage.getItem('cutFile')
-    if (!cutData) {
+    const copyData = sessionStorage.getItem('copyFile')
+
+    if (!cutData && !copyData) {
       showMessage('没有要粘贴的文件', 'warning')
       return
     }
-      
+
     try {
-      const { path, name } = JSON.parse(cutData)
+      const isCut = !!cutData
+      const data = JSON.parse(cutData || copyData)
+      const { path, name, isDir } = data
       const destPath = joinPath(currentPath.value, name)
-        
-      // 使用 mv 命令移动文件（剪切）
-      const cmd = `mv "${path}" "${destPath}"`
+
+      // 源和目标相同则跳过
+      if (path === destPath) {
+        showMessage('源路径和目标路径相同', 'warning')
+        return
+      }
+
+      let cmd
+      if (isCut) {
+        // 剪切：使用 mv 命令移动
+        cmd = `mv "${path}" "${destPath}"`
+      } else {
+        // 复制：使用 cp 命令复制
+        cmd = isDir
+          ? `cp -r "${path}" "${destPath}"`
+          : `cp "${path}" "${destPath}"`
+      }
+
       await SSHService.ExecuteCommand(currentConnId.value, cmd)
-        
+
       // 清除剪贴板
       sessionStorage.removeItem('cutFile')
-        
+      sessionStorage.removeItem('copyFile')
+
       // ✅ 更新响应式状态
       hasCutFile.value = false
-        
+
       showMessage(`已粘贴: ${name}`, 'success')
-      logFileOperation(currentConnId.value, 'rename', destPath)
+      logFileOperation(currentConnId.value, isCut ? 'rename' : 'copy', destPath)
       loadFiles()
     } catch (error) {
       console.error('[FileManager] 粘贴失败:', error)
@@ -360,6 +400,7 @@ export function useFileOperations(currentConnId, currentPath, loadFiles) {
     duplicateFile,
     compressFile,
     cutFile,
+    copyFile,
     pasteFile,
     hasCutFile
   }

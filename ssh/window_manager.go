@@ -190,6 +190,35 @@ func (wm *WindowManager) RestoreMainWindowPosition(window *application.WebviewWi
 	return true
 }
 
+// GetSavedMainWindowPosition 获取已保存的主窗口位置（不执行恢复操作）
+// 用于在创建窗口时直接设置初始位置，避免窗口先显示在默认位置再跳转
+func (wm *WindowManager) GetSavedMainWindowPosition() *WindowPosition {
+	if !wm.isRememberPositionEnabled() {
+		return nil
+	}
+
+	wm.positionsMutex.RLock()
+	pos, exists := wm.positions["main"]
+	wm.positionsMutex.RUnlock()
+
+	if !exists || pos == nil {
+		return nil
+	}
+
+	// 验证位置是否在屏幕范围内
+	primary := wm.app.Screen.GetPrimary()
+	if primary != nil {
+		screenW := primary.Size.Width
+		screenH := primary.Size.Height
+		if pos.X < -100 || pos.Y < -100 || pos.X > screenW-50 || pos.Y > screenH-50 {
+			fmt.Printf("[WindowManager] 主窗口保存位置超出屏幕范围，不使用\n")
+			return nil
+		}
+	}
+
+	return pos
+}
+
 // saveWindowPositionIfChanged 仅在位置有变化时保存
 func (wm *WindowManager) saveWindowPositionIfChanged(windowID string, window *application.WebviewWindow) {
 	if !wm.isRememberPositionEnabled() {
@@ -292,6 +321,35 @@ func (wm *WindowManager) restoreWindowPosition(windowID string, window *applicat
 	fmt.Printf("[WindowManager] 已恢复窗口位置: %s (%d,%d %dx%d)\n", windowID, pos.X, pos.Y, pos.Width, pos.Height)
 }
 
+// GetSavedWindowPosition 获取已保存的窗口位置（不执行恢复操作）
+// 用于在创建窗口时直接设置初始位置，避免窗口先显示在默认位置再跳转
+func (wm *WindowManager) GetSavedWindowPosition(windowID string) *WindowPosition {
+	if !wm.isRememberPositionEnabled() {
+		return nil
+	}
+
+	wm.positionsMutex.RLock()
+	pos, exists := wm.positions[windowID]
+	wm.positionsMutex.RUnlock()
+
+	if !exists || pos == nil {
+		return nil
+	}
+
+	// 验证位置是否在屏幕范围内
+	primary := wm.app.Screen.GetPrimary()
+	if primary != nil {
+		screenW := primary.Size.Width
+		screenH := primary.Size.Height
+		if pos.X < -100 || pos.Y < -100 || pos.X > screenW-50 || pos.Y > screenH-50 {
+			fmt.Printf("[WindowManager] 窗口保存位置超出屏幕范围，不使用: %s\n", windowID)
+			return nil
+		}
+	}
+
+	return pos
+}
+
 // CreateSSHWindow 创建或聚焦SSH分组窗口
 func (wm *WindowManager) CreateSSHWindow(groupID string, groupName string, activeConnID string) error {
 	fmt.Printf("[WindowManager] CreateSSHWindow 被调用: groupID=%s, groupName=%s, activeConn=%s\n", groupID, groupName, activeConnID)
@@ -327,25 +385,35 @@ func (wm *WindowManager) CreateSSHWindow(groupID string, groupName string, activ
 	// 窗口名称格式：ssh-{groupID}，便于通过 GetByName 查找
 	windowName := "ssh-" + groupID
 
-	newWindow := wm.app.Window.NewWithOptions(application.WebviewWindowOptions{
+	// 在创建窗口前获取已保存的位置，直接在 WebviewWindowOptions 中设置初始位置
+	savedPos := wm.GetSavedWindowPosition(groupID)
+
+	windowOpts := application.WebviewWindowOptions{
 		Name:             windowName,
 		Title:            windowTitle,
 		URL:              url,
 		DisableResize:    false,
 		Frameless:        true,
 		BackgroundColour: application.NewRGB(30, 30, 30),
-	})
+	}
 
-	// 尝试恢复窗口位置，否则使用默认尺寸居中
-	wm.restoreWindowPosition(groupID, newWindow)
-
-	// 如果没有恢复到位置（没有保存过），使用默认尺寸居中
-	if !wm.isRememberPositionEnabled() || wm.positions[groupID] == nil {
+	if savedPos != nil {
+		// 使用保存的位置和大小
+		windowOpts.InitialPosition = application.WindowXY
+		windowOpts.X = savedPos.X
+		windowOpts.Y = savedPos.Y
+		windowOpts.Width = savedPos.Width
+		windowOpts.Height = savedPos.Height
+		fmt.Printf("[WindowManager] 使用保存的窗口位置: %s (%d,%d %dx%d)\n", groupID, savedPos.X, savedPos.Y, savedPos.Width, savedPos.Height)
+	} else {
+		// 没有保存位置，使用默认大小居中
 		w, h := wm.calculateWindowSize()
-		newWindow.SetSize(w, h)
-		newWindow.Center()
+		windowOpts.Width = w
+		windowOpts.Height = h
 		fmt.Printf("[WindowManager] 使用默认窗口大小: %dx%d\n", w, h)
 	}
+
+	newWindow := wm.app.Window.NewWithOptions(windowOpts)
 
 	// 保存窗口引用
 	wm.windowMutex.Lock()

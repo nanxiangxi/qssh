@@ -513,6 +513,17 @@ const onTerminalChange = () => {
   })
 }
 
+// 面板激活时自动滚动到最新消息并聚焦输入框
+// 定义在 setup 作用域，确保 onUnmounted 能正确移除监听
+const onPanelActivated = (e) => {
+  if (e.detail?.panelId === 'aiChat') {
+    scroll()
+    // 用 setTimeout 确保 Dockview 面板切换完成后再聚焦，
+    // nextTick 可能太早，textarea 还未完全可见
+    setTimeout(() => { inEl.value?.focus() }, 50)
+  }
+}
+
 onMounted(async () => {
   await loadCfg(); await loadHistory(); fetchModels()
   Events.On('ai:message', onMsg)
@@ -524,6 +535,8 @@ onMounted(async () => {
   Events.On('dockview:terminals-changed', (e) => {
     if (e?.data?.terminals) terminalList.value = e.data.terminals
   })
+  // 监听面板激活事件，切换到 AI 面板时自动滚动到最新消息并聚焦输入框
+  document.addEventListener('dockview:panel-activated', onPanelActivated)
   if(inEl.value) inEl.value.focus()
   // 代码块执行按钮事件委托
   msgsEl.value?.addEventListener('click', e => {
@@ -539,6 +552,7 @@ onUnmounted(() => {
   Events.Off('ai:tool-approval', onApproval)
   Events.Off('dockview:terminals-changed')
   Events.Off('ai:tool-result', onResult)
+  document.removeEventListener('dockview:panel-activated', onPanelActivated)
 })
 </script>
 

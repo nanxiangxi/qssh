@@ -153,7 +153,7 @@ export default defineComponent({
           id: panelId,
           component,
           title,
-          params: { connId: props.connId, sessionId, isAI }
+          params: { connId: props.connId, sessionId, isAI, panelId }
         }
         if (referencePanel && position) {
           // 分割模式：添加到指定面板旁边
@@ -294,6 +294,14 @@ export default defineComponent({
       dockviewApi.onDidRemovePanel((panel) => {
         sessionStore.closeSession(panel.id)
         emitChange()
+      })
+
+      // 面板切换时通知对应面板（用于 AI 聊天滚动到底部、终端聚焦等）
+      dockviewApi.onDidActivePanelChange((panel) => {
+        if (panel) {
+          // 使用 document 事件（同窗口内比 Wails Events 更可靠）
+          document.dispatchEvent(new CustomEvent('dockview:panel-activated', { detail: { panelId: panel.id } }))
+        }
       })
 
       // 监听 AI 创建终端请求

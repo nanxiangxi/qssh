@@ -17,13 +17,17 @@
     
     <div class="path-bar">
       <span v-if="!compact" class="path-label">路径:</span>
-      <input 
-        :value="currentPath" 
-        @input="$emit('navigate', $event.target.value)"
-        @keyup.enter="$emit('navigate', currentPath)"
+      <input
+        v-model="localPath"
+        @keyup.enter="confirmPath"
         class="path-input"
         placeholder="/"
       />
+      <button @click="confirmPath" class="path-go-btn" title="跳转">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </button>
     </div>
     
     <!-- 搜索框 -->
@@ -132,7 +136,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 
 const props = defineProps({
   currentPath: {
@@ -157,7 +161,36 @@ const props = defineProps({
   }
 })
 
-// 响应式宽度检测
+// 路径输入框：本地编辑，回车/点击→才跳转
+const localPath = ref(props.currentPath)
+
+// 当外部 currentPath 变化时（如终端 cd 同步），同步到输入框
+watch(() => props.currentPath, (newPath) => {
+  localPath.value = newPath
+})
+
+function confirmPath() {
+  const p = localPath.value.trim()
+  if (p) {
+    emit('navigate', p)
+  }
+}
+
+const emit = defineEmits([
+  'go-up',
+  'refresh',
+  'navigate',
+  'paste',
+  'new-folder',
+  'upload',
+  'upload-directory',
+  'search',
+  'search-enter',
+  'cancel-search',
+  'batch-download',
+  'batch-delete',
+  'batch-chmod'
+])
 const toolbarRef = ref(null)
 const compact = ref(false)
 let resizeObs = null
@@ -185,22 +218,6 @@ onMounted(() => {
 onUnmounted(() => {
   if (resizeObs) resizeObs.disconnect()
 })
-
-defineEmits([
-  'go-up',
-  'refresh',
-  'navigate',
-  'paste',
-  'new-folder',
-  'upload',
-  'upload-directory',
-  'search',
-  'search-enter',
-  'cancel-search',
-  'batch-download',
-  'batch-delete',
-  'batch-chmod'
-])
 </script>
 
 <style scoped>
@@ -268,6 +285,25 @@ defineEmits([
 .path-input:focus {
   outline: none;
   border-color: var(--accent-primary);
+}
+
+.path-go-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  background: var(--primary-bg);
+  border: 1px solid var(--border-accent);
+  border-radius: 0.375rem;
+  color: var(--primary-light);
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.path-go-btn:hover {
+  background: var(--primary-bg-hover);
 }
 
 .search-bar {

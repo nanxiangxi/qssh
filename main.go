@@ -26,7 +26,7 @@ var trayIcon []byte
 
 // 版本信息
 const (
-	AppVersion = "0.3.1"
+	AppVersion = "0.3.2"
 	AppName    = "启SSH"
 )
 
@@ -104,23 +104,37 @@ func main() {
 	app.RegisterService(application.NewService(cloudService))
 
 	// 使用必要的选项创建一个新窗口。
-	mainWindow := app.Window.NewWithOptions(application.WebviewWindowOptions{
+	// 在创建窗口前获取已保存的位置，直接在 WebviewWindowOptions 中设置初始位置
+	// 这样窗口创建时就出现在正确位置，避免先显示在默认位置再跳转
+	savedPos := windowManager.GetSavedMainWindowPosition()
+
+	windowOpts := application.WebviewWindowOptions{
 		Name:             "main",
 		Title:            fmt.Sprintf("启SSH - SSH工具 (v%s)", AppVersion),
 		URL:              "/",
 		DisableResize:    false,
 		Frameless:        true,
 		BackgroundColour: application.NewRGB(255, 255, 255),
-	})
-
-	// 尝试恢复主窗口位置，否则使用默认尺寸居中
-	mainWindowRegistered := windowManager.RestoreMainWindowPosition(mainWindow)
-	if !mainWindowRegistered {
-		w, h := calculateWindowSize(app)
-		mainWindow.SetSize(w, h)
-		mainWindow.Center()
-		fmt.Printf("[Main] 主窗口大小: %dx%d\n", w, h)
 	}
+
+	if savedPos != nil {
+		// 使用保存的位置和大小
+		windowOpts.InitialPosition = application.WindowXY
+		windowOpts.X = savedPos.X
+		windowOpts.Y = savedPos.Y
+		windowOpts.Width = savedPos.Width
+		windowOpts.Height = savedPos.Height
+		fmt.Printf("[Main] 使用保存的窗口位置: (%d,%d %dx%d)\n", savedPos.X, savedPos.Y, savedPos.Width, savedPos.Height)
+	} else {
+		// 没有保存位置，使用默认大小居中
+		w, h := calculateWindowSize(app)
+		windowOpts.Width = w
+		windowOpts.Height = h
+		// InitialPosition 默认为 WindowCentered
+		fmt.Printf("[Main] 使用默认窗口大小: %dx%d\n", w, h)
+	}
+
+	mainWindow := app.Window.NewWithOptions(windowOpts)
 
 	// 设置分组关闭回调（所有 SSH 窗口关闭后自动显示主窗口）
 	windowManager.SetOnGroupClose(func(groupID string) {
