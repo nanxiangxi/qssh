@@ -3,6 +3,7 @@ package ssh
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -104,7 +105,7 @@ type ProcessInfo struct {
 
 // GetSystemStats 获取系统资源统计（通过 SSH 在远程服务器执行命令）
 func (c *SSHClient) GetSystemStats(ctx context.Context) (*SystemStats, error) {
-	if !c.isConnected {
+	if c.isConnected.Load() == 0 {
 		return nil, fmt.Errorf("SSH 未连接")
 	}
 
@@ -262,12 +263,14 @@ func (c *SSHClient) GetSystemStats(ctx context.Context) (*SystemStats, error) {
 
 // GetProcessList 获取进程列表
 func (c *SSHClient) GetProcessList(ctx context.Context) ([]ProcessInfo, error) {
-	if !c.isConnected {
+	if c.isConnected.Load() == 0 {
 		return nil, fmt.Errorf("SSH 会话未建立")
 	}
 
-	// 通过 SSH 执行命令获取进程信息（包含运行时长）
-	cmd := "ps -eo pid,user,%cpu,%mem,rss,stat,start,etime,args --sort=-%cpu"
+	// 一次 SSH 调用执行两条 ps 命令，用分隔行区分输出
+	// 第一条：基础字段（pid user cpu mem rss stat etime comm）
+	// 第二条：pid + lstart + args（用 | 做 pid 和 lstart 的分隔）
+	cmd := `echo __PS_BASIC__ && ps -eo pid,user,%cpu,%mem,rss,stat,etime,comm --sort=-%cpu --no-headers && echo __PS_DETAIL__ && ps -eo pid,lstart,args --sort=-%cpu --no-headers`
 	result, err := c.ExecuteCommand(cmd)
 	if err != nil {
 		return nil, fmt.Errorf("执行 ps 命令失败: %v", err)
@@ -283,7 +286,7 @@ func (c *SSHClient) GetProcessList(ctx context.Context) ([]ProcessInfo, error) {
 
 // KillProcess 终止进程
 func (c *SSHClient) KillProcess(ctx context.Context, pid int32) error {
-	if !c.isConnected {
+	if c.isConnected.Load() == 0 {
 		return fmt.Errorf("SSH 未连接")
 	}
 
@@ -303,7 +306,7 @@ func (c *SSHClient) KillProcess(ctx context.Context, pid int32) error {
 
 // SendSignal 向进程发送信号
 func (c *SSHClient) SendSignal(ctx context.Context, pid int32, signal string) error {
-	if !c.isConnected {
+	if c.isConnected.Load() == 0 {
 		return fmt.Errorf("SSH 未连接")
 	}
 
@@ -323,7 +326,7 @@ func (c *SSHClient) SendSignal(ctx context.Context, pid int32, signal string) er
 
 // GetProcessDetail 获取进程详细信息
 func (c *SSHClient) GetProcessDetail(ctx context.Context, pid int32) (string, error) {
-	if !c.isConnected {
+	if c.isConnected.Load() == 0 {
 		return "", fmt.Errorf("SSH 未连接")
 	}
 
@@ -341,37 +344,93 @@ func (c *SSHClient) GetProcessDetail(ctx context.Context, pid int32) (string, er
 	return result.Stdout, nil
 }
 
-// parsePsOutput 解析 ps 命令输出
+// parsePsOutput 解析 ps 命令输出（双段格式）
+// 第一段 __PS_BASIC__：pid user cpu mem rss stat etime comm（空格分隔）
+// 第二段 __PS_DETAIL__：pid lstart args（lstart 含空格，args 从第7个字段开始）
 func parsePsOutput(output string) ([]ProcessInfo, error) {
-	lines := strings.Split(strings.TrimSpace(output), "\n")
-	if len(lines) < 2 {
-		return nil, fmt.Errorf("无效的 ps 输出")
+	// 按 __PS_BASIC__ 和 __PS_DETAIL__ 分割
+	basicSection := ""
+	detailSection := ""
+	if idx := strings.Index(output, "__PS_BASIC__"); idx >= 0 {
+		rest := output[idx+len("__PS_BASIC__"):]
+		rest = strings.TrimPrefix(rest, "\n")
+		if didx := strings.Index(rest, "__PS_DETAIL__"); didx >= 0 {
+			basicSection = rest[:didx]
+			detailSection = rest[didx+len("__PS_DETAIL__"):]
+			detailSection = strings.TrimPrefix(detailSection, "\n")
+		} else {
+			basicSection = rest
+		}
+	} else {
+		basicSection = output
 	}
 
-	var processes []ProcessInfo
-
-	// 跳过标题行
-	for _, line := range lines[1:] {
+	// 解析第二段：pid → (lstart, args) 映射
+	detailMap := make(map[string][2]string) // pid → [lstart, args]
+	for _, line := range strings.Split(detailSection, "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+		// 用 Fields 拆分，前6个字段是 pid + lstart(5字段)，剩余是 args
 		fields := strings.Fields(line)
-		if len(fields) < 9 {
+		if len(fields) < 6 {
+			continue
+		}
+		pidStr := fields[0]
+		startTime := strings.Join(fields[1:6], " ")
+		fullCmd := strings.Join(fields[6:], " ")
+		detailMap[pidStr] = [2]string{startTime, fullCmd}
+	}
+
+	// 解析第一段：基础字段
+	var processes []ProcessInfo
+	for _, line := range strings.Split(basicSection, "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+		fields := strings.Fields(line)
+		if len(fields) < 8 {
 			continue
 		}
 
-		pid := parseInt32(fields[0])
+		pidStr := fields[0]
+		pid := parseInt32(pidStr)
 		username := fields[1]
 		cpuPercent := parseFloat64(fields[2])
 		memPercent := parseFloat64(fields[3])
-		memRSS := parseUint64(fields[4]) * 1024 // KB 转 bytes
-		statusRaw := fields[5]     // STAT 列
-		startTime := fields[6]     // START 列
-		elapsedTime := fields[7]   // ELAPSED 列（运行时长）
-		cmdline := strings.Join(fields[8:], " ")
+		memRSS := parseUint64(fields[4]) * 1024
+		statusRaw := fields[5]
+		elapsedTime := fields[6]
+		name := fields[7]
 
-		// 转换状态为中文
+		// 从 detailMap 补充 lstart 和 args
+		var startTime, fullCmd string
+		if detail, ok := detailMap[pidStr]; ok {
+			startTime = detail[0]
+			fullCmd = detail[1]
+		}
+
+		// 用 args 修正进程名
+		if fullCmd != "" {
+			cmdParts := strings.Fields(fullCmd)
+			if len(cmdParts) > 0 {
+				binName := cmdParts[0]
+				if strings.HasPrefix(binName, "[") && strings.HasSuffix(binName, "]") {
+					name = binName[1 : len(binName)-1]
+				} else {
+					name = filepath.Base(binName)
+				}
+			}
+		}
+
+		// 过滤掉 ps 命令自身
+		if name == "ps" || strings.HasPrefix(name, "ps ") {
+			continue
+		}
+
 		status := convertProcessStatus(statusRaw)
-
-		// 提取进程名称（命令的第一部分）
-		name := extractProcessName(cmdline)
 
 		processes = append(processes, ProcessInfo{
 			PID:         pid,
@@ -380,15 +439,16 @@ func parsePsOutput(output string) ([]ProcessInfo, error) {
 			MemPercent:  memPercent,
 			MemRSS:      memRSS,
 			Status:      status,
-			StartTime:   startTime,
 			ElapsedTime: elapsedTime,
+			StartTime:   startTime,
 			Username:    username,
-			Cmdline:     cmdline,
+			Cmdline:     fullCmd,
 		})
 	}
 
 	return processes, nil
 }
+
 
 // convertProcessStatus 转换进程状态为中文
 func convertProcessStatus(status string) string {

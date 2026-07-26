@@ -12,6 +12,11 @@ export default defineConfig({
       "@bindings": path.resolve(__dirname, "bindings"),
     },
   },
+  server: {
+    host: '127.0.0.1',
+    port: 9245,
+    strictPort: true,
+  },
   optimizeDeps: {
     exclude: ['monaco-editor'] // 不预构建 monaco-editor
   },

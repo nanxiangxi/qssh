@@ -6,18 +6,20 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+
+	"changeme/ssh"
 )
 
-// AIConfig AI配置结构（OpenAI 兼容格式）
+// AIConfig AI 配置（OpenAI 兼容格式）
 type AIConfig struct {
-	APIEndpoint string  `json:"api_endpoint"`       // API端点，如: https://api.openai.com/v1/chat/completions
-	APIKey      string  `json:"api_key"`            // API密钥
-	Model       string  `json:"model"`              // 模型名称，如: gpt-3.5-turbo, gpt-4
-	Timeout     int     `json:"timeout"`            // 超时时间（秒）
-	Temperature float64 `json:"temperature"`        // 温度参数 (0.0-2.0)，控制随机性
-	MaxTokens   int     `json:"max_tokens"`         // 最大生成 token 数
-	TopP        float64 `json:"top_p,omitempty"`    // Top-p 采样参数 (0.0-1.0)
-	SystemPrompt string `json:"system_prompt"`      // 系统提示词
+	APIEndpoint  string  `json:"api_endpoint"`
+	APIKey       string  `json:"api_key"`
+	Model        string  `json:"model"`
+	Timeout      int     `json:"timeout"`
+	Temperature  float64 `json:"temperature"`
+	MaxTokens    int     `json:"max_tokens"`
+	TopP         float64 `json:"top_p,omitempty"`
+	SystemPrompt string  `json:"system_prompt"`
 }
 
 // ConfigManager 配置管理器
@@ -29,29 +31,19 @@ type ConfigManager struct {
 
 // NewConfigManager 创建配置管理器
 func NewConfigManager() *ConfigManager {
-	// 获取data目录路径
-	dataDir := getDataDir()
-	configPath := filepath.Join(dataDir, "ai_config.json")
-	fmt.Printf("[AI Config] 配置路径: %s\n", configPath)
+	configPath := filepath.Join(ssh.GetDataDir(), "ai_config.json")
 
 	cm := &ConfigManager{
 		config:   getDefaultConfig(),
 		dataPath: configPath,
 	}
 
-	// 加载已保存的配置
 	cm.loadConfig()
-	fmt.Printf("[AI Config] 端点: %s, 模型: %s\n", cm.config.APIEndpoint, cm.config.Model)
-
 	return cm
 }
 
-// getDefaultConfig 获取默认配置
 func getDefaultConfig() *AIConfig {
 	return &AIConfig{
-		APIEndpoint: "",
-		APIKey:      "",
-		Model:       "",
 		Timeout:     120,
 		Temperature: 1.0,
 		MaxTokens:   4096,
@@ -86,52 +78,17 @@ func getDefaultConfig() *AIConfig {
 - execute_command: 执行 shell 命令。参数: command（完整命令字符串）
 - get_server_info: 获取服务器基本信息
 - get_system_status: 获取服务器实时状态
-- open_terminal: 打开一个新的终端面板。可同时打开多个终端分别执行不同任务
-- close_terminal: 关闭 AI 自己创建的终端，释放资源。不影响用户的终端
+- open_terminal: 打开一个新的终端面板
+- close_terminal: 关闭 AI 自己创建的终端
 
 【终端管理规则】
 - execute_command 会自动复用已有的 AI 终端，不需要每次开新终端
 - 只有需要同时监控多个独立任务时，才用 open_terminal 开新终端
 - 任务完成后，必须调用 close_terminal 释放不需要的终端
-- 绝对不要关闭用户手动创建的终端
-- 示例：用户说"同时看 nginx 和 mysql 的日志"→ 开 2 个终端分别执行；用户说"看内存"→ 直接用 execute_command，不开新终端`,
+- 绝对不要关闭用户手动创建的终端`,
 	}
 }
 
-// getDataDir 获取数据目录路径
-func getDataDir() string {
-	// 优先使用当前工作目录（dev 模式下 os.Executable 指向临时目录）
-	cwd, err := os.Getwd()
-	if err == nil {
-		// 检查 bin/data 是否存在（项目结构）
-		binData := filepath.Join(cwd, "bin", "data")
-		if _, statErr := os.Stat(binData); statErr == nil {
-			return binData
-		}
-		// 检查 data 是否存在
-		data := filepath.Join(cwd, "data")
-		if _, statErr := os.Stat(data); statErr == nil {
-			return data
-		}
-	}
-
-	// 回退：可执行文件所在目录
-	exePath, err := os.Executable()
-	if err != nil {
-		exePath = "."
-	}
-	exeDir := filepath.Dir(exePath)
-	dataDir := filepath.Join(exeDir, "data")
-
-	// 确保data目录存在
-	if err := os.MkdirAll(dataDir, 0755); err != nil {
-		fmt.Printf("[AI Config] 创建data目录失败: %v\n", err)
-	}
-
-	return dataDir
-}
-
-// loadConfig 从文件加载配置
 func (cm *ConfigManager) loadConfig() error {
 	cm.mu.Lock()
 	defer cm.mu.Unlock()
@@ -139,7 +96,6 @@ func (cm *ConfigManager) loadConfig() error {
 	data, err := os.ReadFile(cm.dataPath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			fmt.Println("[AI Config] 配置文件不存在，使用默认配置")
 			return nil
 		}
 		return fmt.Errorf("读取配置文件失败: %v", err)
@@ -151,71 +107,58 @@ func (cm *ConfigManager) loadConfig() error {
 	}
 
 	cm.config = &config
-	fmt.Println("[AI Config] 配置加载成功")
 	return nil
 }
 
-// SaveConfig 保存配置到文件
 func (cm *ConfigManager) SaveConfig(config *AIConfig) error {
 	cm.mu.Lock()
 	defer cm.mu.Unlock()
 
-	// 验证配置
 	if err := validateConfig(config); err != nil {
 		return err
 	}
 
-	// 序列化配置
+	dir := filepath.Dir(cm.dataPath)
+	os.MkdirAll(dir, 0755)
+
 	data, err := json.MarshalIndent(config, "", "  ")
 	if err != nil {
 		return fmt.Errorf("序列化配置失败: %v", err)
 	}
 
-	// 写入文件
 	if err := os.WriteFile(cm.dataPath, data, 0644); err != nil {
 		return fmt.Errorf("写入配置文件失败: %v", err)
 	}
 
 	cm.config = config
-	fmt.Println("[AI Config] 配置保存成功")
 	return nil
 }
 
-// GetConfig 获取当前配置
 func (cm *ConfigManager) GetConfig() *AIConfig {
 	cm.mu.RLock()
 	defer cm.mu.RUnlock()
-
-	// 返回副本
-	configCopy := *cm.config
-	return &configCopy
+	cp := *cm.config
+	return &cp
 }
 
-// IsConfigured 检查是否已配置
 func (cm *ConfigManager) IsConfigured() bool {
 	cm.mu.RLock()
 	defer cm.mu.RUnlock()
-
 	return cm.config.APIEndpoint != "" && cm.config.APIKey != ""
 }
 
-// validateConfig 验证配置
 func validateConfig(config *AIConfig) error {
 	if config.APIEndpoint == "" {
 		return fmt.Errorf("API端点不能为空")
 	}
-
 	if config.APIKey == "" {
 		return fmt.Errorf("API密钥不能为空")
 	}
-
 	if config.Model == "" {
 		return fmt.Errorf("模型名称不能为空")
 	}
-
 	if config.Timeout <= 0 {
-		config.Timeout = 30 // 设置默认超时时间
+		config.Timeout = 30
 	}
-
 	return nil
 }

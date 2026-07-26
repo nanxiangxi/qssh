@@ -69,7 +69,7 @@
           <div class="disk-list">
             <div v-for="(partition, idx) in systemStats?.disk?.partitions?.slice(0, 3)" :key="idx" class="disk-item">
               <div class="disk-info">
-                <div class="disk-name">{{ partition.mountpoint }}</div>
+                <div class="disk-name" :title="partition.mountpoint">{{ partition.mountpoint }}</div>
                 <div class="disk-size">{{ formatBytes(partition.total) }}</div>
               </div>
               <div class="usage-bar small">
@@ -196,7 +196,7 @@
           </thead>
           <tbody>
             <tr v-for="proc in sortedProcesses" :key="proc.pid" class="process-row">
-              <td class="process-name" :title="proc.cmdline">{{ proc.name }}</td>
+              <td class="process-name" :title="proc.name">{{ proc.name }}</td>
               <td>{{ proc.pid }}</td>
               <td>
                 <span :class="getUsageClass(proc.cpuPercent)">
@@ -209,8 +209,8 @@
                 </span>
               </td>
               <td>{{ formatBytes(proc.memRss) }}</td>
-              <td>{{ proc.startTime }}</td>
-              <td>{{ proc.elapsedTime }}</td>
+              <td :title="proc.startTime">{{ formatStartTime(proc.startTime) }}</td>
+              <td :title="proc.elapsedTime">{{ formatElapsed(proc.elapsedTime) }}</td>
               <td>{{ proc.username }}</td>
               <td>{{ proc.status }}</td>
               <td>
@@ -526,6 +526,32 @@ const sortedProcesses = computed(() => {
 })
 
 // 格式化字节
+// 将 ps etime 格式转为中文：42-21:01:52 → 42天21小时
+const formatElapsed = (etime) => {
+  if (!etime) return ''
+  const m = etime.match(/^(?:(\d+)-)?(\d+):(\d+):(\d+)$/)
+  if (!m) return etime
+  const days = parseInt(m[1] || '0')
+  const hours = parseInt(m[2])
+  const mins = parseInt(m[3])
+  if (days > 0) return `${days}天${hours}小时`
+  if (hours > 0) return `${hours}小时${mins}分`
+  return `${mins}分钟`
+}
+
+// 将 ps lstart 格式转为中文：Fri Jun 12 13:59:10 2026 → 06-12 13:59
+const formatStartTime = (lstart) => {
+  if (!lstart) return ''
+  const months = { Jan: '01', Feb: '02', Mar: '03', Apr: '04', May: '05', Jun: '06',
+                   Jul: '07', Aug: '08', Sep: '09', Oct: '10', Nov: '11', Dec: '12' }
+  const parts = lstart.split(/\s+/)
+  if (parts.length < 5) return lstart
+  const mon = months[parts[1]] || parts[1]
+  const day = parts[2].padStart(2, '0')
+  const time = parts[3]
+  return `${mon}-${day} ${time}`
+}
+
 const formatBytes = (bytes) => {
   if (!bytes || bytes === 0) return '0 B'
   const k = 1024
@@ -801,6 +827,10 @@ onUnmounted(() => {
   color: var(--text-primary);
   font-size: 0.75rem;
   font-family: monospace;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .disk-size {

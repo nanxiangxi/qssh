@@ -6,12 +6,8 @@
 // @ts-ignore: Unused imports
 import { Create as $Create } from "@wailsio/runtime";
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore: Unused imports
-import * as time$0 from "../../time/models.js";
-
 /**
- * AIConfig AI配置结构（OpenAI 兼容格式）
+ * AIConfig AI 配置（OpenAI 兼容格式）
  */
 export class AIConfig {
     /**
@@ -21,7 +17,6 @@ export class AIConfig {
     constructor($$source = {}) {
         if (!("api_endpoint" in $$source)) {
             /**
-             * API端点，如: https://api.openai.com/v1/chat/completions
              * @member
              * @type {string}
              */
@@ -29,7 +24,6 @@ export class AIConfig {
         }
         if (!("api_key" in $$source)) {
             /**
-             * API密钥
              * @member
              * @type {string}
              */
@@ -37,7 +31,6 @@ export class AIConfig {
         }
         if (!("model" in $$source)) {
             /**
-             * 模型名称，如: gpt-3.5-turbo, gpt-4
              * @member
              * @type {string}
              */
@@ -45,7 +38,6 @@ export class AIConfig {
         }
         if (!("timeout" in $$source)) {
             /**
-             * 超时时间（秒）
              * @member
              * @type {number}
              */
@@ -53,7 +45,6 @@ export class AIConfig {
         }
         if (!("temperature" in $$source)) {
             /**
-             * 温度参数 (0.0-2.0)，控制随机性
              * @member
              * @type {number}
              */
@@ -61,7 +52,6 @@ export class AIConfig {
         }
         if (!("max_tokens" in $$source)) {
             /**
-             * 最大生成 token 数
              * @member
              * @type {number}
              */
@@ -69,7 +59,6 @@ export class AIConfig {
         }
         if (/** @type {any} */(false)) {
             /**
-             * Top-p 采样参数 (0.0-1.0)
              * @member
              * @type {number | undefined}
              */
@@ -77,7 +66,6 @@ export class AIConfig {
         }
         if (!("system_prompt" in $$source)) {
             /**
-             * 系统提示词
              * @member
              * @type {string}
              */
@@ -131,9 +119,9 @@ export class ChatMessage {
         if (!("timestamp" in $$source)) {
             /**
              * @member
-             * @type {time$0.Time}
+             * @type {string}
              */
-            this["timestamp"] = null;
+            this["timestamp"] = "0001-01-01T00:00:00.000Z";
         }
 
         Object.assign(this, $$source);

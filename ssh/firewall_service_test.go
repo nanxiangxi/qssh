@@ -53,7 +53,7 @@ func TestShellQuote(t *testing.T) {
 		{
 			name: "多个单引号",
 			in:   "''",
-			want: `'''\'''\'`,
+			want: `''\'''\'''`, // 每个 ' → '\''，两个 ' 得到 ''\'''\'''
 		},
 		{
 			name: "双引号",

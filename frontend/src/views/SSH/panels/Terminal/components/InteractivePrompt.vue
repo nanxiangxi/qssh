@@ -63,7 +63,6 @@ function moveXterm(toPopup) {
   if (toPopup && miniBodyRef.value) {
     // 移动到弹窗
     miniBodyRef.value.appendChild(el)
-    console.log('[MiniTerminal] xterm 已移动到弹窗')
     // 强制重新调整尺寸
     nextTick(() => {
       // 多次调整确保正确

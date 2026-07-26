@@ -124,11 +124,9 @@ const props = defineProps({
 
 // 调试日志 - 监控 props 变化
 watch(() => props.showChmodDialog, (newVal, oldVal) => {
-  console.log('[PermissionEditor] showChmodDialog 变化:', { old: oldVal, new: newVal })
 }, { immediate: true })
 
 watch(() => props.chmodTarget, (newVal) => {
-  console.log('[PermissionEditor] chmodTarget 变化:', newVal ? newVal.name : null)
 }, { immediate: true })
 
 const emit = defineEmits(['confirm', 'close', 'update:showChmodDialog', 'update:applyToSubdirs', 'update:permission'])

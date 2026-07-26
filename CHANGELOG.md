@@ -1,13 +1,50 @@
-#  项目更新记录 (CHANGELOG)
+# 项目更新记录 (CHANGELOG)
 
 > ️ **重要提示**：基于普遍认知，我们将 `v1.0.0` 定为首个正式版本。在此之前（Pre-1.0），我们的软件随时可能进行破坏性的更新，请谨慎用于生产环境。
 
 ---
+
+### [v0.3.3]
+
+修复BUG，完善功能，终端面板架构重构 合入分支：[#13 修复文本复制粘贴功能，优化部分功能](https://github.com/nanxiangxi/qssh/pull/13),[#14 fix(security): 修复三个 P0 安全漏洞
+）](https://github.com/nanxiangxi/qssh/pull/14)。
+
+#### 重构 (Refactor)
+
+- **终端面板架构重构**：`StructuredTerminalPanel.vue` 从 1729 行精简至 507 行，提取 5 个独立 composable。
+- **cd 路径同步**：采用后端 `ResolveCdPath`（独立 SSH session 解析真实 `$PWD`），零副作用，不向终端注入任何命令。
+- **复制粘贴统一**：新建 `useTerminalClipboard` composable，统一经典模式（xterm）和结构化模式（浏览器原生）的复制粘贴逻辑。
+- **右键菜单定位**：加入视口边界检测，靠近底部/右侧时自动调整位置，不再被遮挡。
+- **补全弹窗定位**：加入视口边界检测，靠近底部时自动向上展开。
+- **键盘处理去重**：`onKey`/`onKeyButton` 提取共享函数 `handleCommonKeys`，搜索逻辑提取 `doSearch`。
+- **清理死代码**：删除 12 个未使用的文件（~2800 行），包括未引用的 composable、组件和 utils。
+- **Go 后端清理**：删除 `storage.go` 中的 `encryptString`/`decryptString` 死代码，删除重复的 `secret_cipher_other.go`。
+- **调试日志清理**：批量删除 panels 目录中所有 `console.log` 调试日志。
+
+#### 新增功能 (Added)
+
+- **useCdSync composable**：cd 命令检测 + 后端路径解析，终端 cd 后文件管理器自动同步。
+- **useTerminalClipboard composable**：统一复制粘贴，支持 Clipboard API + execCommand fallback。
+- **ResolveCdPath 后端方法**：独立 SSH session 执行 `cd && pwd`，返回真实解析路径。
+
+#### 修复BUG (Fix)
+
+- **右键菜单**：修复右键菜单复制失效[#6 feat: 新功能优化建议（文件管理）](https://github.com/nanxiangxi/qssh/issues/6)。
+- **资源监控**：资源监控磁盘路径过长导致组件无法完全显示[#10 feat: 页面优化建议](https://github.com/nanxiangxi/qssh/issues/10)。
+- **DPAPI 依赖修复**：`go-winio/pkg/dpapi` 已从 go-winio v0.6.2 移除，改为直接调用 Win32 `CryptProtectData`/`CryptUnprotectData` API。
+- **knownhosts 类型修复**：修复 `knownhosts.HostKeyCallback` 与 `ssh.HostKeyCallback` 类型不匹配、`KeyError` 未定义、`WriteKnownHost` 参数类型错误。
+- **终端 cd 同步**：修复 `cd /usr` 后文件管理器不跟随的问题，后端解析确保路径准确。
+- **文件管理加载慢**：修复 `ListDirectory` 对每个文件单独调用 `stat` 的 N+1 问题，改为一次批量获取 owner/group[#6 feat: 路径输入补全失效](https://github.com/nanxiangxi/qssh/issues/6)。
+- **路径补全失效**：补全系统改为异步调用后端 `ListDirectory` 获取远程真实文件列表，不再依赖硬编码路径[#11 feat: 路径输入补全失效](https://github.com/nanxiangxi/qssh/issues/11)。
+- **磁盘路径过长**：资源监控磁盘挂载点加 `text-overflow: ellipsis`，长路径不再撑开布局[#9 feat: 资源监控磁盘路径太长](https://github.com/nanxiangxi/qssh/issues/9)。。
+- **进程名称显示为时间**：`ps` 输出中 `start` 列含空格（如 `Jun 12`）导致字段错位，进程名显示为时间。改为去掉 `start` 列，使用 `comm` 列直接获取进程名[#8 feat: 进程名称显示有问题](https://github.com/nanxiangxi/qssh/issues/8)。
+
 ### [v0.3.1] - 2026-06-13
 
 引入系统托盘、窗口记忆、配置补全等功能。
 
-####  新增功能 (Added)
+#### 新增功能 (Added)
+
 - **系统托盘**：新增系统托盘图标，支持左键切换显示/隐藏，右键菜单操作。
 - **隐藏全部窗口**：托盘菜单支持一键隐藏全部窗口（主窗口 + SSH 窗口）。
 - **显示全部窗口**：托盘菜单支持一键恢复所有隐藏的窗口。
@@ -21,6 +58,7 @@
 - **编译补充**：完善mac，linux的编译脚本（本次不测试，仅基础完善，为后续多平台适配做准备）
 
 #### 优化细节 (Optimize)
+
 - **配置系统**：重构配置加载逻辑，支持增量补全缺失字段。
 - **窗口管理**：SSH 窗口创建后自动显示并聚焦。
 - **托盘行为**：退出时先恢复所有窗口再退出，确保正常关闭[#2 UI方面建议](https://github.com/nanxiangxi/qssh/issues/2)。
@@ -30,11 +68,13 @@
 - **终端菜单** 经典终端增加小菜单。
 
 ---
+
 ### [v0.2.0] - 2026-06-09
 
 修复已知bug，引入全新的终端特性，配置系统，快捷键支持等。
 
-####  新增功能 (Added)
+#### 新增功能 (Added)
+
 - **结构化终端**：引入结构化终端，面向未来的终端设计，更加适配AI等特性。
 - **终端模式切换**：支持结构化模式和经典模式运行时切换，数据同源。
 - **命令补全**：100+ 内置命令，Tab 补全，支持命令、子命令、选项补全。
@@ -50,14 +90,17 @@
 - **终端搜索**：快捷搜索终端的历史执行。
 
 #### 优化细节 (Optimize)
+
 - **AI助手**：改为使用新版本的终端
 - **全局日志**：兼容新版本
 - **批量命令**：兼容新版本
 
 #### 移除功能 (Remove)
+
 - **底部最近命令**：移除底部最近命令，改用更加合理的终端历史会话
 
-####  修复BUG (Fix)
+#### 修复BUG (Fix)
+
 - **屏幕大小异常**：修复系统缩放导致的屏幕异常。
 - **连接丢失**：修复断开连接后永久记录被删除的问题。
 - **配置不生效**：修复配置文件实时写入问题。
@@ -68,7 +111,8 @@
 
 首个测试版本正式发布！本版本奠定了系统的核心基础架构，并推出了一站式 SSH 管理控制台，为您提供从终端操作到智能运维的全链路体验。
 
-####  新增功能 (Added)
+#### 新增功能 (Added)
+
 - **️核心 SSH 模块**：首个测试版本上线，提供稳定且安全的远程连接通道。
 - **️交互式终端**：支持多标签页 Web Terminal，提供流畅的命令行交互体验。
 - **可视化文件管理**：内置轻量级文件浏览器，支持文件的上传、下载、编辑及目录树预览。

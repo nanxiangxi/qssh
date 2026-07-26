@@ -24,6 +24,20 @@ tasks:
     cmds:
       - task: "{{OS}}:package"
 
+  package:all:
+    summary: Builds Windows portable executables (amd64 + arm64)
+    cmds:
+      - task: windows:package
+
+  package:cross:
+    summary: "Cross-compile for all platforms (requires Docker: wails3 task setup:docker)"
+    cmds:
+      - task: windows:package
+      - wails3 build GOOS=linux GOARCH=amd64
+      - wails3 build GOOS=linux GOARCH=arm64
+      - wails3 build GOOS=darwin GOARCH=amd64
+      - wails3 build GOOS=darwin GOARCH=arm64
+
   run:
     summary: Runs the application
     cmds:

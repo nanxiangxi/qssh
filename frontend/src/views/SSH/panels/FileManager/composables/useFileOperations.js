@@ -10,16 +10,18 @@ import { logFileOperation, logError, logSystemEvent } from '@/utils/logger'
  * @param {Ref} currentPath - 当前路径
  * @param {Function} loadFiles - 重新加载文件列表的函数
  */
+// shell 安全引号：单引号包裹，内部单引号转义
+const shellQuote = (s) => "'" + String(s).replace(/'/g, "'\\''") + "'"
+
 export function useFileOperations(currentConnId, currentPath, loadFiles) {
   const loading = ref(false)
   
-  // ✅ 使用 ref 追踪剪切状态，确保响应式更新
-  const hasCutFile = ref(sessionStorage.getItem('cutFile') !== null)
+  // ✅ 使用 ref 追踪剪切/复制状态，确保响应式更新
+  const hasCutFile = ref(sessionStorage.getItem('cutFile') !== null || sessionStorage.getItem('copyFile') !== null)
   
   // 上传文件
   const uploadFile = async (file) => {
     try {
-      console.log('[FileManager] 开始上传文件:', file.name)
       const reader = new FileReader()
       return new Promise((resolve, reject) => {
         reader.onload = async (e) => {
@@ -27,12 +29,6 @@ export function useFileOperations(currentConnId, currentPath, loadFiles) {
             const arrayBuffer = e.target.result
             const data = new Uint8Array(arrayBuffer)
             const remotePath = joinPath(currentPath.value, file.name)
-            
-            console.log('[FileManager] 上传参数:', {
-              connId: currentConnId.value,
-              remotePath: remotePath,
-              dataSize: data.length
-            })
             
             // 将 Uint8Array 转换为 base64 字符串
             const base64Data = arrayBufferToBase64(arrayBuffer)
@@ -84,7 +80,6 @@ export function useFileOperations(currentConnId, currentPath, loadFiles) {
   // 上传目录（递归）
   const uploadDirectory = async (directoryHandle, parentPath = '') => {
     try {
-      console.log('[FileManager] 开始上传目录:', directoryHandle.name)
       
       // 创建远程目录
       const remoteDirPath = parentPath ? joinPath(currentPath.value, parentPath, directoryHandle.name) : joinPath(currentPath.value, directoryHandle.name)
@@ -106,7 +101,6 @@ export function useFileOperations(currentConnId, currentPath, loadFiles) {
                 const remoteFilePath = joinPath(remoteDirPath, entry.name)
                 
                 await SSHService.UploadFile(currentConnId.value, remoteFilePath, base64Data)
-                console.log('[FileManager] 已上传:', entry.name)
                 resolve()
               } catch (error) {
                 console.error('[FileManager] 上传文件失败:', entry.name, error)
@@ -141,7 +135,6 @@ export function useFileOperations(currentConnId, currentPath, loadFiles) {
     
     try {
       const normalizedPath = normalizePath(file.path)
-      console.log('[FileManager] 下载文件:', { connId: currentConnId.value, path: normalizedPath })
       const base64Data = await SSHService.DownloadFile(currentConnId.value, normalizedPath)
       
       // 将 base64 转换为 Blob
@@ -217,7 +210,6 @@ export function useFileOperations(currentConnId, currentPath, loadFiles) {
   const deleteFile = async (file) => {
     try {
       const normalizedPath = normalizePath(file.path)
-      console.log('[FileManager] 删除文件:', { connId: currentConnId.value, path: normalizedPath })
       await SSHService.DeleteFile(currentConnId.value, normalizedPath)
       showMessage(`已删除: ${file.name}`, 'success')
       logFileOperation(currentConnId.value, 'delete', normalizedPath)
@@ -268,9 +260,14 @@ export function useFileOperations(currentConnId, currentPath, loadFiles) {
       
       const newPath = joinPath(currentPath.value, newName)
       
-      // 使用 cp 命令复制
-      const cmd = `cp -r "${file.path}" "${newPath}"`
-      await SSHService.ExecuteCommand(currentConnId.value, cmd)
+      // 使用 SFTP 复制（比 shell cp 更可靠，受 SFTP 权限控制）
+      if (file.isDir) {
+        // 目录用 shell cp（SFTP 不支持目录复制）
+        const cmd = `cp -r ${shellQuote(file.path)} ${shellQuote(newPath)}`
+        await SSHService.ExecuteCommand(currentConnId.value, cmd)
+      } else {
+        await SSHService.CopyFile(currentConnId.value, file.path, newPath)
+      }
       showMessage('创建副本成功', 'success')
       logFileOperation(currentConnId.value, 'create', newPath)
       loadFiles()
@@ -304,44 +301,82 @@ export function useFileOperations(currentConnId, currentPath, loadFiles) {
 
   // 剪切文件
   const cutFile = (file) => {
-    // 存储到 sessionStorage
+    // 清除复制状态（剪切和复制互斥）
+    sessionStorage.removeItem('copyFile')
     sessionStorage.setItem('cutFile', JSON.stringify({
       path: file.path,
       name: file.name,
       isDir: file.isDir,
       fromPath: currentPath.value
     }))
-      
+
     // ✅ 更新响应式状态
     hasCutFile.value = true
-      
-    showMessage(`已剪切: ${file.name}，导航到目标目录后点击“粘贴”`, 'info')
+
+    showMessage(`已剪切: ${file.name}，导航到目标目录后点击”粘贴”`, 'info')
   }
-  
+
+  // 复制文件
+  const copyFile = (file) => {
+    // 清除剪切状态（剪切和复制互斥）
+    sessionStorage.removeItem('cutFile')
+    sessionStorage.setItem('copyFile', JSON.stringify({
+      path: file.path,
+      name: file.name,
+      isDir: file.isDir,
+      fromPath: currentPath.value
+    }))
+
+    // ✅ 更新响应式状态
+    hasCutFile.value = true
+
+    showMessage(`已复制: ${file.name}，导航到目标目录后点击”粘贴”`, 'info')
+  }
+
   // 粘贴文件
   const pasteFile = async () => {
     const cutData = sessionStorage.getItem('cutFile')
-    if (!cutData) {
+    const copyData = sessionStorage.getItem('copyFile')
+
+    if (!cutData && !copyData) {
       showMessage('没有要粘贴的文件', 'warning')
       return
     }
-      
+
     try {
-      const { path, name } = JSON.parse(cutData)
+      const isCut = !!cutData
+      const data = JSON.parse(cutData || copyData)
+      const { path: rawPath, name, isDir } = data
+      // 去掉路径可能自带的引号，并规范化
+      const srcPath = normalizePath(rawPath.replace(/^[“']|[“']$/g, ''))
       const destPath = joinPath(currentPath.value, name)
-        
-      // 使用 mv 命令移动文件（剪切）
-      const cmd = `mv "${path}" "${destPath}"`
-      await SSHService.ExecuteCommand(currentConnId.value, cmd)
-        
+
+      if (srcPath === destPath) {
+        showMessage('源路径和目标路径相同', 'warning')
+        return
+      }
+
+      if (isCut) {
+        // 剪切：用 SFTP rename
+        await SSHService.RenameFile(currentConnId.value, srcPath, destPath)
+      } else if (isDir) {
+        // 目录复制：用 shell cp（SFTP 不支持目录复制）
+        const cmd = `cp -r ${shellQuote(srcPath)} ${shellQuote(destPath)}`
+        await SSHService.ExecuteCommand(currentConnId.value, cmd)
+      } else {
+        // 文件复制：用 SFTP（比 shell cp 更可靠）
+        await SSHService.CopyFile(currentConnId.value, srcPath, destPath)
+      }
+
       // 清除剪贴板
       sessionStorage.removeItem('cutFile')
-        
+      sessionStorage.removeItem('copyFile')
+
       // ✅ 更新响应式状态
       hasCutFile.value = false
-        
+
       showMessage(`已粘贴: ${name}`, 'success')
-      logFileOperation(currentConnId.value, 'rename', destPath)
+      logFileOperation(currentConnId.value, isCut ? 'rename' : 'copy', destPath)
       loadFiles()
     } catch (error) {
       console.error('[FileManager] 粘贴失败:', error)
@@ -360,6 +395,7 @@ export function useFileOperations(currentConnId, currentPath, loadFiles) {
     duplicateFile,
     compressFile,
     cutFile,
+    copyFile,
     pasteFile,
     hasCutFile
   }

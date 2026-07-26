@@ -107,7 +107,6 @@ export function useUploadTasks(currentConnId, currentPath, loadFiles) {
     const taskId = task.id
     try {
       updateTask(taskId, { status: UploadStatus.UPLOADING })
-      console.log('[Upload] 开始上传:', task.fileName)
 
       const reader = new FileReader()
 
@@ -144,7 +143,6 @@ export function useUploadTasks(currentConnId, currentPath, loadFiles) {
               endTime: Date.now()
             })
 
-            console.log('[Upload] 上传成功:', task.fileName)
             showMessage(`已上传: ${task.fileName}`, 'success')
             logFileOperation(currentConnId.value, 'upload', remotePath)
             resolve()
@@ -202,7 +200,6 @@ export function useUploadTasks(currentConnId, currentPath, loadFiles) {
       return
     }
     
-    console.log(`[Upload] 准备上传 ${filesArray.length} 个文件`)
     
     // 创建所有任务（支持自定义路径）
     const tasks = filesArray.map((file, index) => {
@@ -222,14 +219,12 @@ export function useUploadTasks(currentConnId, currentPath, loadFiles) {
       }
     }
     
-    console.log('[Upload] 批量上传完成')
     
     // 2秒后自动移除所有成功任务
     setTimeout(() => {
       const successCount = uploadTasks.value.filter(t => t.status === UploadStatus.SUCCESS).length
       uploadTasks.value = uploadTasks.value.filter(t => t.status !== UploadStatus.SUCCESS)
       if (successCount > 0) {
-        console.log(`[Upload] 已移除 ${successCount} 个成功任务`)
       }
       // 如果没有任务了，关闭面板
       if (uploadTasks.value.length === 0) {
@@ -275,14 +270,12 @@ export function useUploadTasks(currentConnId, currentPath, loadFiles) {
     uploadTasks.value = uploadTasks.value.filter(task => 
       task.status === UploadStatus.UPLOADING || task.status === UploadStatus.PENDING
     )
-    console.log('[Upload] 已清除已完成的任务')
   }
 
   // 清除所有任务
   const clearAll = () => {
     uploadTasks.value = []
     // ✅ 不再需要手动设置 showUploadPanel，watch 会自动处理
-    console.log('[Upload] 已清除所有任务')
   }
 
   // 格式化文件大小

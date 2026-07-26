@@ -50,11 +50,9 @@ export function useBlockManager() {
 
   // 开始新命令
   function startCommand(command) {
-    console.log('[BlockManager] startCommand:', command)
     // 结束上一个活跃的命令（保留原有状态：取消的块保持 CANCELLED）
     if (activeBlock.value) {
       const prev = activeBlock.value.status
-      console.log('[BlockManager] 结束上一个块:', activeBlock.value.command, '状态:', prev)
       endActiveBlock(prev === BLOCK_STATUS.CANCELLED ? BLOCK_STATUS.CANCELLED : BLOCK_STATUS.SUCCESS, prev === BLOCK_STATUS.CANCELLED ? null : 0)
     }
     const block = makeBlock(BLOCK_TYPE.COMMAND, {
@@ -65,7 +63,6 @@ export function useBlockManager() {
     })
     blocks.value.push(block)
     activeBlock.value = block
-    console.log('[BlockManager] 新块已创建，ID:', block.id)
     return block
   }
 
@@ -75,9 +72,7 @@ export function useBlockManager() {
 
     if (activeBlock.value) {
       activeBlock.value.content += text
-      console.log('[BlockManager] appendOutput:', text.length, '字节, 块:', activeBlock.value.command, '内容长度:', activeBlock.value.content.length)
     } else {
-      console.log('[BlockManager] appendOutput: 无活跃块，输出到 rawOutput')
     }
   }
 
@@ -119,7 +114,6 @@ export function useBlockManager() {
     if (endsWithPrompt(activeBlock.value.content)) {
       const prev = activeBlock.value.status
       const st = prev === BLOCK_STATUS.RUNNING ? BLOCK_STATUS.SUCCESS : prev
-      console.log('[BlockManager] endBlockIfPrompt: 检测到提示符，结束块:', activeBlock.value.command, '状态:', prev, '->', st)
       endActiveBlock(st, prev === BLOCK_STATUS.RUNNING ? 0 : null)
       return true
     }
@@ -129,7 +123,6 @@ export function useBlockManager() {
   // 结束活跃块
   function endActiveBlock(status, exitCode) {
     if (!activeBlock.value) return
-    console.log('[BlockManager] endActiveBlock:', activeBlock.value.command, '状态:', status)
 
     activeBlock.value.status = status
     activeBlock.value.exitCode = exitCode
@@ -158,7 +151,6 @@ export function useBlockManager() {
     }
 
     activeBlock.value.content = content
-    console.log('[BlockManager] 块已结束，内容长度:', content.length)
     activeBlock.value = null
   }
 
@@ -178,7 +170,6 @@ export function useBlockManager() {
     if (activeBlock.value && activeBlock.value.status === BLOCK_STATUS.RUNNING) {
       activeBlock.value.status = BLOCK_STATUS.CANCELLED
       const stack = new Error().stack
-      console.log('[BlockManager] cancelCommand:', activeBlock.value.command, '\n调用栈:', stack)
     }
   }
 

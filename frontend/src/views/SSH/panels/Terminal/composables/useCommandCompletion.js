@@ -3,6 +3,7 @@
  * 支持命令、子命令、选项、路径补全
  */
 import { ref, computed } from 'vue'
+import { SSHService } from '../../../../../../bindings/changeme/ssh/index.js'
 
 // 内置命令库
 const BUILTIN_COMMANDS = {
@@ -638,18 +639,14 @@ export function useCommandCompletion() {
     return results
   }
 
-  // 路径补全
+  // 路径补全（本地静态列表，作为 fallback）
   function getPathCompletions(partial, cwd) {
-    // 这里简化处理，实际应该调用后端 API
     const paths = [...COMMON_PATHS]
-
-    // 如果有 cwd，添加相对路径
     if (cwd) {
       paths.unshift(cwd)
       paths.unshift('.')
       paths.unshift('..')
     }
-
     return paths
       .filter(p => p.startsWith(partial))
       .map(p => ({
@@ -658,6 +655,60 @@ export function useCommandCompletion() {
         display: p,
         description: '路径'
       }))
+  }
+
+  // 远程路径补全缓存
+  let _pathCache = { key: '', results: [], ts: 0 }
+  const PATH_CACHE_TTL = 3000
+
+  // 异步路径补全（调后端 ListDirectory，解决 #11）
+  async function getSuggestionsAsync(input, connId) {
+    if (!input || !connId) return getSuggestions(input)
+    const syncResults = getSuggestions(input)
+    const parts = input.split(/\s+/)
+    if (parts.length < 2) return syncResults
+    const currentWord = parts[parts.length - 1]
+    if (!currentWord.startsWith('/') && !currentWord.startsWith('~') && !currentWord.startsWith('.')) {
+      return syncResults
+    }
+    try {
+      let dir, prefix
+      const lastSlash = currentWord.lastIndexOf('/')
+      if (lastSlash >= 0) {
+        dir = currentWord.substring(0, lastSlash + 1) || '/'
+        prefix = currentWord.substring(lastSlash + 1)
+      } else {
+        dir = './'
+        prefix = currentWord
+      }
+      const cacheKey = `${connId}:${dir}`
+      const now = Date.now()
+      let files
+      if (_pathCache.key === cacheKey && now - _pathCache.ts < PATH_CACHE_TTL) {
+        files = _pathCache.results
+      } else {
+        files = await SSHService.ListDirectory(connId, dir)
+        if (!files || !Array.isArray(files)) return syncResults
+        _pathCache = { key: cacheKey, results: files, ts: now }
+      }
+      const remoteMatches = files
+        .filter(f => f.name.toLowerCase().startsWith(prefix.toLowerCase()))
+        .map(f => ({
+          type: 'path',
+          value: dir + f.name + (f.isDir ? '/' : ''),
+          display: f.name + (f.isDir ? '/' : ''),
+          description: f.isDir ? '目录' : '文件'
+        }))
+      if (remoteMatches.length > 0) {
+        const nonPath = syncResults.filter(r => r.type !== 'path')
+        const final_ = [...nonPath, ...remoteMatches].slice(0, 20)
+        suggestions.value = final_
+        selectedIndex.value = final_.length > 0 ? 0 : -1
+        isVisible.value = final_.length > 0
+        return final_
+      }
+    } catch {}
+    return syncResults
   }
 
   // 应用补全
@@ -756,6 +807,7 @@ export function useCommandCompletion() {
 
     // 方法
     getSuggestions,
+    getSuggestionsAsync,
     applyCompletion,
     selectNext,
     selectPrevious,

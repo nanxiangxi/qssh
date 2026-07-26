@@ -6,13 +6,6 @@
 // @ts-ignore: Unused imports
 import { Create as $Create } from "@wailsio/runtime";
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore: Unused imports
-import * as time$0 from "../../time/models.js";
-
-/**
- * AIConfig AI 配置（预留）
- */
 export class AIConfig {
     /**
      * Creates a new AIConfig instance.
@@ -55,9 +48,6 @@ export class AIConfig {
     }
 }
 
-/**
- * AdvancedConfig 高级配置
- */
 export class AdvancedConfig {
     /**
      * Creates a new AdvancedConfig instance.
@@ -66,7 +56,6 @@ export class AdvancedConfig {
     constructor($$source = {}) {
         if (!("groupBehavior" in $$source)) {
             /**
-             * join_default | new_window | prompt
              * @member
              * @type {string}
              */
@@ -88,7 +77,7 @@ export class AdvancedConfig {
 }
 
 /**
- * AppConfig 应用配置（仅保留实际使用的字段）
+ * AppConfig 应用配置
  */
 export class AppConfig {
     /**
@@ -230,9 +219,6 @@ export class CPUStats {
     }
 }
 
-/**
- * CloudConfig 云端配置
- */
 export class CloudConfig {
     /**
      * Creates a new CloudConfig instance.
@@ -262,7 +248,6 @@ export class CloudConfig {
         }
         if (!("syncInterval" in $$source)) {
             /**
-             * 同步间隔（秒）
              * @member
              * @type {number}
              */
@@ -270,7 +255,6 @@ export class CloudConfig {
         }
         if (!("autoSyncTo" in $$source)) {
             /**
-             * 自动同步到云端
              * @member
              * @type {boolean}
              */
@@ -278,7 +262,6 @@ export class CloudConfig {
         }
         if (!("autoSyncFrom" in $$source)) {
             /**
-             * 自动从云端同步
              * @member
              * @type {boolean}
              */
@@ -352,7 +335,8 @@ export class CommandResult {
 }
 
 /**
- * ConnectionInfo SSH连接信息
+ * ConnectionInfo SSH 连接信息。
+ * 落盘时 Password / PrivateKey 始终以加密形式存储在对应 Cipher 字段中。
  */
 export class ConnectionInfo {
     /**
@@ -400,13 +384,6 @@ export class ConnectionInfo {
              * @member
              * @type {string | undefined}
              */
-            this["password"] = undefined;
-        }
-        if (/** @type {any} */(false)) {
-            /**
-             * @member
-             * @type {string | undefined}
-             */
             this["keyPath"] = undefined;
         }
         if (/** @type {any} */(false)) {
@@ -414,7 +391,21 @@ export class ConnectionInfo {
              * @member
              * @type {string | undefined}
              */
-            this["privateKey"] = undefined;
+            this["passwordCiphertext"] = undefined;
+        }
+        if (/** @type {any} */(false)) {
+            /**
+             * @member
+             * @type {string | undefined}
+             */
+            this["privateKeyCiphertext"] = undefined;
+        }
+        if (/** @type {any} */(false)) {
+            /**
+             * @member
+             * @type {string | undefined}
+             */
+            this["cipherKind"] = undefined;
         }
         if (!("status" in $$source)) {
             /**
@@ -676,9 +667,9 @@ export class FileInfo {
         if (!("modTime" in $$source)) {
             /**
              * @member
-             * @type {time$0.Time}
+             * @type {string}
              */
-            this["modTime"] = null;
+            this["modTime"] = "0001-01-01T00:00:00.000Z";
         }
         if (!("isDir" in $$source)) {
             /**
@@ -717,7 +708,7 @@ export class FileInfo {
 }
 
 /**
- * FileManagerConfig 文件管理配置（预留，供 Wails 绑定使用）
+ * 预留结构体（保持 Wails 绑定兼容）
  */
 export class FileManagerConfig {
     /**
@@ -1029,6 +1020,22 @@ export class GuardianProcess {
         return new GuardianProcess(/** @type {Partial<GuardianProcess>} */($$parsedSource));
     }
 }
+
+/**
+ * HostKeyCallback SSH 主机密钥校验策略
+ * @readonly
+ * @enum {string}
+ */
+export const HostKeyCallback = {
+    /**
+     * The Go zero value for the underlying type of the enum.
+     */
+    $zero: "",
+
+    HostKeyCallbackStrict: "strict",
+    HostKeyCallbackTOFU: "tofu",
+    HostKeyCallbackOff: "off",
+};
 
 /**
  * LoadAvg 平均负载
@@ -1532,7 +1539,7 @@ export class ProcessInfo {
 }
 
 /**
- * SSHClient SSH客户端结构体
+ * SSHClient SSH 客户端
  */
 export class SSHClient {
     /**
@@ -1556,7 +1563,7 @@ export class SSHClient {
 }
 
 /**
- * SSHConfig SSH连接配置
+ * SSHConfig SSH 连接配置
  */
 export class SSHConfig {
     /**
@@ -1601,7 +1608,6 @@ export class SSHConfig {
         }
         if (/** @type {any} */(false)) {
             /**
-             * 密钥文件路径（兼容旧版）
              * @member
              * @type {string | undefined}
              */
@@ -1609,7 +1615,6 @@ export class SSHConfig {
         }
         if (/** @type {any} */(false)) {
             /**
-             * 密钥内容（直接输入）
              * @member
              * @type {string | undefined}
              */
@@ -1621,6 +1626,20 @@ export class SSHConfig {
              * @type {number | undefined}
              */
             this["timeout"] = undefined;
+        }
+        if (/** @type {any} */(false)) {
+            /**
+             * @member
+             * @type {HostKeyCallback | undefined}
+             */
+            this["hostKeyPolicy"] = undefined;
+        }
+        if (/** @type {any} */(false)) {
+            /**
+             * @member
+             * @type {string | undefined}
+             */
+            this["knownHostsFile"] = undefined;
         }
 
         Object.assign(this, $$source);
@@ -1700,9 +1719,6 @@ export class SSHGroup {
     }
 }
 
-/**
- * SSHSettings SSH 设置（预留）
- */
 export class SSHSettings {
     /**
      * Creates a new SSHSettings instance.
@@ -1766,9 +1782,6 @@ export class SSHSettings {
     }
 }
 
-/**
- * ShortcutsConfig 快捷键配置
- */
 export class ShortcutsConfig {
     /**
      * Creates a new ShortcutsConfig instance.
@@ -1777,7 +1790,6 @@ export class ShortcutsConfig {
     constructor($$source = {}) {
         if (!("enabled" in $$source)) {
             /**
-             * 全局快捷键开关
              * @member
              * @type {boolean}
              */
@@ -1785,7 +1797,6 @@ export class ShortcutsConfig {
         }
         if (!("switchTab" in $$source)) {
             /**
-             * Ctrl+←/→ 切换标签
              * @member
              * @type {boolean}
              */
@@ -1793,7 +1804,6 @@ export class ShortcutsConfig {
         }
         if (!("saveGroup" in $$source)) {
             /**
-             * Ctrl+Shift+S 保存当前连接
              * @member
              * @type {boolean}
              */
@@ -1801,7 +1811,6 @@ export class ShortcutsConfig {
         }
         if (!("cloudUpload" in $$source)) {
             /**
-             * Ctrl+Shift+U 上传到云端
              * @member
              * @type {boolean}
              */
@@ -1809,7 +1818,6 @@ export class ShortcutsConfig {
         }
         if (!("cloudDownload" in $$source)) {
             /**
-             * Ctrl+Shift+D 从云端下载
              * @member
              * @type {boolean}
              */
@@ -1913,9 +1921,6 @@ export class SystemStats {
     }
 }
 
-/**
- * TerminalConfig 终端配置
- */
 export class TerminalConfig {
     /**
      * Creates a new TerminalConfig instance.
@@ -1924,7 +1929,6 @@ export class TerminalConfig {
     constructor($$source = {}) {
         if (!("defaultType" in $$source)) {
             /**
-             * structured, classic
              * @member
              * @type {string}
              */
@@ -1932,7 +1936,6 @@ export class TerminalConfig {
         }
         if (!("autoSwitchClassic" in $$source)) {
             /**
-             * 交互式操作自动切经典
              * @member
              * @type {boolean}
              */
@@ -1940,7 +1943,6 @@ export class TerminalConfig {
         }
         if (!("switchMode" in $$source)) {
             /**
-             * prompt | auto | inline
              * @member
              * @type {string}
              */
@@ -1948,7 +1950,6 @@ export class TerminalConfig {
         }
         if (!("fontSize" in $$source)) {
             /**
-             * 终端字体大小
              * @member
              * @type {number}
              */
@@ -1956,7 +1957,6 @@ export class TerminalConfig {
         }
         if (!("commandSendMode" in $$source)) {
             /**
-             * enter | button
              * @member
              * @type {string}
              */
@@ -1964,7 +1964,6 @@ export class TerminalConfig {
         }
         if (!("codeHighlight" in $$source)) {
             /**
-             * 经典终端代码高亮
              * @member
              * @type {boolean}
              */
@@ -1985,9 +1984,6 @@ export class TerminalConfig {
     }
 }
 
-/**
- * UIConfig 界面配置
- */
 export class UIConfig {
     /**
      * Creates a new UIConfig instance.
@@ -1996,7 +1992,6 @@ export class UIConfig {
     constructor($$source = {}) {
         if (!("autoTray" in $$source)) {
             /**
-             * SSH 连接成功后自动最小化到托盘
              * @member
              * @type {boolean}
              */
@@ -2004,7 +1999,6 @@ export class UIConfig {
         }
         if (!("rememberPosition" in $$source)) {
             /**
-             * 记忆窗口位置
              * @member
              * @type {boolean}
              */
@@ -2012,7 +2006,6 @@ export class UIConfig {
         }
         if (!("autoShowHome" in $$source)) {
             /**
-             * SSH 窗口全部关闭后自动显示首页
              * @member
              * @type {boolean}
              */
@@ -2020,7 +2013,6 @@ export class UIConfig {
         }
         if (!("theme" in $$source)) {
             /**
-             * 主题 dark/light
              * @member
              * @type {string}
              */

@@ -63,6 +63,8 @@
       @rename="renameFile"
       @duplicate="duplicateFile"
       @cut="cutFile"
+      @copy="copyFile"
+      @copy-path="copyFilePath"
       @chmod="chmodFile"
       @delete="deleteFile"
     />
@@ -201,10 +203,7 @@ const props = defineProps({})
 
 // 从父组件注入 connId
 const injectedConnId = inject('connId')
-console.log('[FileManager] ========== 初始化 ==========')
-console.log('[FileManager] injectedConnId:', injectedConnId)
 const currentConnId = ref(injectedConnId)
-console.log('[FileManager] currentConnId.value:', currentConnId.value)
 
 // 导入子组件
 import FileToolbar from './components/FileToolbar.vue'
@@ -311,9 +310,6 @@ const chmodPermissions = ref({
 
 // 加载文件列表
 async function loadFiles() {
-  console.log('[FileManager] loadFiles 被调用')
-  console.log('[FileManager] currentConnId.value:', currentConnId.value)
-  console.log('[FileManager] currentPath.value:', currentPath.value)
   
   if (!currentConnId.value || currentConnId.value === 'default-connection') {
     console.warn('[FileManager] ⚠️ connId 无效，跳过加载')
@@ -322,22 +318,7 @@ async function loadFiles() {
   
   loading.value = true
   try {
-    console.log('[FileManager] 调用 SSHService.ListFiles...')
     const fileList = await SSHService.ListFiles(currentConnId.value, currentPath.value)
-    console.log('[FileManager] 收到文件列表:', fileList?.length || 0, '个文件')
-    
-    // 打印每个文件的详细信息
-    if (fileList && fileList.length > 0) {
-      fileList.forEach((file, index) => {
-        console.log(`[FileManager] 文件[${index}]:`, {
-          name: file.name,
-          path: file.path,
-          isDir: file.isDir,
-          mode: file.mode,
-          size: file.size
-        })
-      })
-    }
     
     files.value = fileList || []
     
@@ -373,6 +354,7 @@ const {
   duplicateFile: duplicateFileOp,
   compressFile: compressFileOp,
   cutFile: cutFileOp,
+  copyFile: copyFileOp,
   pasteFile: pasteFileOp,
   hasCutFile
 } = useFileOperations(currentConnId, currentPath, loadFiles)
@@ -448,7 +430,6 @@ const handleSearch = (keyword) => {
 // 取消搜索
 const cancelSearch = async () => {
   if (isSearching.value && currentSearchID.value) {
-    console.log('[FileManager] 取消搜索:', currentSearchID.value)
     
     // 通知后端取消搜索
     try {
@@ -488,30 +469,23 @@ const executeRecursiveSearch = async () => {
   searchResults.value = []
   isSearching.value = true
   
-  console.log('[FileManager] ========== 开始流式搜索 ==========')
-  console.log('[FileManager] 搜索 ID:', searchID)
-  console.log('[FileManager] 关键词:', searchKeyword.value)
-  console.log('[FileManager] 路径:', currentPath.value)
   
   showMessage('正在全目录搜索...（点击 X 可取消，双击文件可停止）', 'info')
   
   // 设置事件监听器
   let resultCount = 0
   searchResultUnsubscribe = Events.On('search-result', (data) => {
-    console.log('[FileManager] 收到 search-result 事件, data:', data)
     
     // Wails v3 事件数据可能在 data.data 中
     const eventData = data.data || data
     
     // 只处理当前搜索的结果
     if (eventData.searchID !== searchID) {
-      console.log('[FileManager] 忽略非当前搜索结果:', eventData.searchID, '期望:', searchID)
       return
     }
     
     // 实时添加结果 - 使用新数组替换触发响应式更新
     resultCount++
-    console.log(`[FileManager] 收到搜索结果 #${resultCount}:`, eventData.file.name)
     
     // 为搜索结果添加相对路径显示
     const fileWithDisplay = {
@@ -522,22 +496,18 @@ const executeRecursiveSearch = async () => {
     
     // 创建新数组以触发 Vue 响应式更新
     searchResults.value = [...searchResults.value, fileWithDisplay]
-    console.log('[FileManager] 当前搜索结果数量:', searchResults.value.length)
   })
   
   searchCompleteUnsubscribe = Events.On('search-complete', (data) => {
-    console.log('[FileManager] 收到 search-complete 事件, data:', data)
     
     // Wails v3 事件数据可能在 data.data 中
     const eventData = data.data || data
     
     // 只处理当前搜索的完成事件
     if (eventData.searchID !== searchID) {
-      console.log('[FileManager] 忽略非当前搜索完成事件:', eventData.searchID, '期望:', searchID)
       return
     }
     
-    console.log('[FileManager] 搜索完成事件:', eventData)
     
     isSearching.value = false
     currentSearchID.value = ''
@@ -562,7 +532,6 @@ const executeRecursiveSearch = async () => {
   })
   
   try {
-    console.log('[FileManager] 调用后端 SearchFiles API...')
     // 启动后端搜索（异步，不等待返回）
     await SSHService.SearchFiles(
       currentConnId.value,
@@ -570,7 +539,6 @@ const executeRecursiveSearch = async () => {
       searchKeyword.value,
       searchID
     )
-    console.log('[FileManager] SearchFiles API 调用成功')
   } catch (error) {
     console.error('[FileManager] 启动搜索失败:', error)
     isSearching.value = false
@@ -860,15 +828,6 @@ const openFile = (file) => {
 // 删除文件
 const deleteFile = (file) => {
   closeContextMenu()
-  
-  console.log('[FileManager] 准备删除文件:', {
-    name: file.name,
-    path: file.path,
-    isDir: file.isDir,
-    mode: file.mode,
-    size: file.size
-  })
-  
   showConfirmDialog.value = true
   confirmTitle.value = '确认删除'
   confirmMessage.value = `确定要删除 ${file.isDir ? '目录' : '文件'} "${file.name}" 吗？此操作不可恢复！`
@@ -879,7 +838,6 @@ const deleteFile = (file) => {
       // 如果处于搜索状态，从搜索结果中移除该文件
       if (searchResults.value.length > 0) {
         searchResults.value = searchResults.value.filter(f => f.path !== file.path)
-        console.log('[FileManager] 已从搜索结果中移除:', file.path)
         
         // 如果搜索结果变为空，清除搜索状态
         if (searchResults.value.length === 0) {
@@ -943,6 +901,24 @@ const duplicateFile = async (file) => {
 const cutFile = (file) => {
   closeContextMenu()
   cutFileOp(file)
+}
+
+// 复制
+const copyFile = (file) => {
+  closeContextMenu()
+  copyFileOp(file)
+}
+
+// 复制路径
+const copyFilePath = (file) => {
+  closeContextMenu()
+  if (file && file.path) {
+    navigator.clipboard.writeText(file.path).then(() => {
+      showMessage(`已复制路径: ${file.path}`, 'success')
+    }).catch(() => {
+      showMessage('复制路径失败', 'error')
+    })
+  }
 }
 
 // 粘贴
@@ -1056,7 +1032,6 @@ const handleChmodConfirm = async () => {
               command = `chmod -R ${chmodValue.value} "${normalizedPath}"`
             }
             
-            console.log('[FileManager] 执行权限修改命令:', command)
             const result = await SSHService.ExecuteCommand(currentConnId.value, command)
             
             const success = result.Success || result.success || false
@@ -1094,14 +1069,10 @@ const handleChmodConfirm = async () => {
     // 如果勾选了应用到子目录
     if (applyToSubdirs.value && chmodTarget.value.isDir) {
       command = `chmod -R ${chmodValue.value} "${normalizedPath}"`
-      console.log('[FileManager] ✓ 递归修改权限（包括子目录）')
     } else {
-      console.log('[FileManager] 仅修改当前项权限')
     }
     
-    console.log('[FileManager] 执行权限修改命令:', command)
     const result = await SSHService.ExecuteCommand(currentConnId.value, command)
-    console.log('[FileManager] ExecuteCommand 返回结果:', result)
     
     // 检查返回结果
     if (result === null || result === undefined) {
@@ -1115,12 +1086,8 @@ const handleChmodConfirm = async () => {
     const stdout = result.Stdout || result.stdout || ''
     const stderr = result.Stderr || result.stderr || ''
     
-    console.log('[FileManager] success:', success)
-    console.log('[FileManager] stdout:', stdout)
-    console.log('[FileManager] stderr:', stderr)
     
     if (success) {
-      console.log('[FileManager] ✓ 权限修改成功，刷新文件列表...')
       
       // 如果有 stderr 输出，显示警告
       if (stderr && stderr.trim()) {
@@ -1132,7 +1099,6 @@ const handleChmodConfirm = async () => {
       
       // 强制刷新文件列表
       await loadFiles()
-      console.log('[FileManager] 文件列表已刷新')
       isBatchChmod.value = false // 重置标志
       showChmodDialog.value = false
     } else {
@@ -1167,7 +1133,6 @@ const handleFileUpload = async (event) => {
   // 将 FileList 转换为数组
   const filesArray = Array.from(files)
   
-  console.log('[FileManager] 选择文件:', filesArray.length, '个')
   
   try {
     // 检查是否为压缩包（单个 zip/tar.gz/tar 文件）
@@ -1178,7 +1143,6 @@ const handleFileUpload = async (event) => {
       if (fileName.endsWith('.zip') || fileName.endsWith('.tar.gz') || 
           fileName.endsWith('.tgz') || fileName.endsWith('.tar')) {
         // 压缩包上传，自动解压
-        console.log('[FileManager] 检测到压缩包:', fileName)
         showMessage('正在上传压缩包...', 'info')
         
         // 1. 先上传压缩包
@@ -1256,7 +1220,6 @@ const handleResize = () => {
   }
   
   resizeTimeout = setTimeout(async () => {
-    console.log('[FileManager] 📐 窗口 resize，强制刷新布局')
     await nextTick()
     // 触发一个自定义事件让 FileTable 重新计算高度
     window.dispatchEvent(new CustomEvent('filemanager-resize'))
@@ -1265,17 +1228,14 @@ const handleResize = () => {
 }
 
 onMounted(() => {
-  console.log('[FileManager] 🎬 组件挂载, connId:', currentConnId.value)
   loadFiles()
   
   // 注册 resize 监听器
   window.addEventListener('resize', handleResize)
-  console.log('[FileManager] 👂 已注册 resize 监听器')
   
   // 注册目录上传进度事件监听器
   Events.On('directory-upload-progress', (event) => {
     const data = event.data || event
-    console.log('[FileManager] 收到目录上传进度:', data)
     
     // 如果有正在进行的目录上传任务，更新它
     if (directoryUploadTask && directoryUploadTask.status === 'uploading') {
@@ -1288,19 +1248,29 @@ onMounted(() => {
       }
     }
   })
+
+  // 监听终端 cd 命令，自动同步目录
+  Events.On('terminal:cd', (event) => {
+    const data = event.data || event
+    if (!data || data.connId !== currentConnId.value) return
+    const newPath = data.path
+    if (newPath && newPath !== currentPath.value) {
+      currentPath.value = newPath
+      navigateToPath()
+    }
+  })
 })
 
 onUnmounted(() => {
-  console.log('[FileManager] 🔇 组件卸载')
-  
+
   // 清理 resize 监听器
   if (resizeTimeout) {
     clearTimeout(resizeTimeout)
   }
   window.removeEventListener('resize', handleResize)
-  
+
   document.removeEventListener('click', closeContextMenu)
-  
+
   // 清理搜索事件监听器
   if (searchResultUnsubscribe) {
     searchResultUnsubscribe()
@@ -1310,6 +1280,9 @@ onUnmounted(() => {
     searchCompleteUnsubscribe()
     searchCompleteUnsubscribe = null
   }
+
+  // 清理终端 cd 事件监听器
+  Events.Off('terminal:cd')
 })
 
 // 切换文件选择状态
@@ -1339,7 +1312,6 @@ let directoryUploadTask = null // 当前目录上传任务
 
 const triggerDirectoryUpload = async () => {
   try {
-    console.log('[FileManager] 开始目录上传')
     
     // 创建一个虚拟任务来显示进度
     const taskId = `dir_upload_${Date.now()}`
@@ -1384,7 +1356,6 @@ const triggerDirectoryUpload = async () => {
     
   } catch (error) {
     if (error && error.message && error.message.includes('取消')) {
-      console.log('[FileManager] 用户取消选择')
       // 移除任务
       const taskIndex = uploadTasks.value.findIndex(t => t.id === directoryUploadTask?.id)
       if (taskIndex !== -1) {
@@ -1434,8 +1405,6 @@ const batchDownload = async () => {
     // 收集所有文件路径
     const filePaths = selectedFileList.map(f => f.path)
     
-    console.log('[FileManager] 开始批量下载，文件数:', filePaths.length)
-    console.log('[FileManager] 文件列表:', filePaths)
     
     showMessage(`正在创建压缩包 (${filePaths.length} 个文件)...`, 'info')
     
@@ -1446,7 +1415,6 @@ const batchDownload = async () => {
       throw new Error('创建压缩包失败')
     }
     
-    console.log('[FileManager] 压缩包创建成功:', tempArchivePath)
     showMessage('正在下载压缩包...', 'info')
     
     // 2. 下载压缩包
@@ -1469,11 +1437,9 @@ const batchDownload = async () => {
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
     
-    console.log('[FileManager] 下载完成')
     showMessage('下载成功', 'success')
     
     // 4. 删除临时文件
-    console.log('[FileManager] 删除临时文件:', tempArchivePath)
     await SSHService.DeleteTempFile(currentConnId.value, tempArchivePath)
     
     // 记录批量下载日志

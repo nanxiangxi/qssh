@@ -217,7 +217,8 @@ func (s *FirewallService) DeleteIptablesRule(connID, chain string, index int) er
 	if chain == "" {
 		chain = "INPUT"
 	}
-	cmd := fmt.Sprintf("iptables -D %s %d", chain, index)
+	// 安全修复：chain 参数过 shellQuote 防止命令注入
+	cmd := fmt.Sprintf("iptables -D %s %d", shellQuote(chain), index)
 	_, err := s.runCmd(connID, cmd)
 	if err != nil {
 		return fmt.Errorf("删除规则失败: %v", err)

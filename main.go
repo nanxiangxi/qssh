@@ -26,7 +26,7 @@ var trayIcon []byte
 
 // 版本信息
 const (
-	AppVersion = "0.3.1"
+	AppVersion = "0.3.3"
 	AppName    = "启SSH"
 )
 

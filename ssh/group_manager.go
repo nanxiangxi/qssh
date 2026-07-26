@@ -57,7 +57,7 @@ func (gm *GroupManager) CreateGroupWithName(groupID, name string) *SSHGroup {
 	
 	// 检查是否已存在
 	if _, exists := gm.groups[groupID]; exists {
-		fmt.Printf("[GroupManager] 分组 %s 已存在，无需重新创建\n", groupID)
+		log.Info("分组已存在，无需重新创建", "id", groupID)
 		return gm.groups[groupID]
 	}
 	
@@ -75,7 +75,7 @@ func (gm *GroupManager) createGroupInternal(groupID, name string, isDefault bool
 	}
 	
 	gm.groups[groupID] = group
-	fmt.Printf("[GroupManager] 创建分组: %s, 名称: %s, 默认: %v\n", groupID, name, isDefault)
+	log.Info("创建分组", "id", groupID, "name", name, "default", isDefault)
 	
 	// 更新nextID（如果是自动生成的ID）
 	if !isDefault && len(groupID) > 6 {
@@ -122,7 +122,7 @@ func (gm *GroupManager) AddConnectionToGroup(groupID, connID string) error {
 	}
 	
 	group.ConnIDs = append(group.ConnIDs, connID)
-	fmt.Printf("[GroupManager] 添加连接到分组: group=%s, conn=%s\n", groupID, connID)
+	log.Info("添加连接到分组", "group", groupID, "conn", connID)
 	
 	return nil
 }
@@ -145,13 +145,12 @@ func (gm *GroupManager) RemoveConnectionFromGroup(groupID, connID string) error 
 		}
 	}
 	
-	fmt.Printf("[GroupManager] 从分组移除连接: group=%s, conn=%s, 剩余连接数: %d\n", 
-		groupID, connID, len(group.ConnIDs))
+	log.Info("从分组移除连接", "group", groupID, "conn", connID, "remaining", len(group.ConnIDs))
 	
 	// 如果没有连接了，删除分组（包括默认分组）
 	if len(group.ConnIDs) == 0 {
 		delete(gm.groups, groupID)
-		fmt.Printf("[GroupManager] 删除空分组: %s\n", groupID)
+		log.Info("删除空分组", "id", groupID)
 	}
 	
 	return nil
@@ -185,13 +184,13 @@ func (gm *GroupManager) ClearGroup(groupID string) {
 	
 	group, exists := gm.groups[groupID]
 	if !exists {
-		fmt.Printf("[GroupManager] ⚠️ 分组不存在，无法清空: %s\n", groupID)
+		log.Warn("分组不存在，无法清空", "id", groupID)
 		return
 	}
 	
 	count := len(group.ConnIDs)
 	group.ConnIDs = make([]string, 0)
-	fmt.Printf("[GroupManager] 🧹 已清空分组: %s (移除 %d 个连接)\n", groupID, count)
+	log.Info("已清空分组", "id", groupID, "removed", count)
 }
 
 // DeleteGroup 删除分组（包括所有连接）
@@ -206,13 +205,13 @@ func (gm *GroupManager) DeleteGroup(groupID string) error {
 	
 	// 不允许删除默认分组
 	if group.IsDefault {
-		fmt.Printf("[GroupManager] ⚠️ 尝试删除默认分组，改为清空连接\n")
+		log.Warn("尝试删除默认分组，改为清空连接")
 		group.ConnIDs = make([]string, 0)
 		return nil
 	}
 	
 	delete(gm.groups, groupID)
-	fmt.Printf("[GroupManager] 🗑️ 已删除分组: %s (连接数: %d)\n", groupID, len(group.ConnIDs))
+	log.Info("已删除分组", "id", groupID, "connCount", len(group.ConnIDs))
 	
 	return nil
 }

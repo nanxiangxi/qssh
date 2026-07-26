@@ -13,7 +13,6 @@ export function usePermissions(loadFiles) {
   const chmodTarget = ref(null)
   const applyToSubdirs = ref(false)
 
-  console.log('[usePermissions] 初始化, showChmodDialog:', showChmodDialog.value)
 
   // 权限复选框状态
   const chmodPermissions = ref({
@@ -76,14 +75,12 @@ export function usePermissions(loadFiles) {
    * @param {Object} file - 目标文件
    */
   const openChmodDialog = (file) => {
-    console.log('[usePermissions] openChmodDialog 被调用, file:', file?.name)
     chmodTarget.value = file
     const numericMode = getNumericMode(file.mode)
     chmodValue.value = numericMode
     parsePermissions(numericMode)
     applyToSubdirs.value = false
     showChmodDialog.value = true
-    console.log('[usePermissions] showChmodDialog 设置为:', showChmodDialog.value)
   }
 
   /**

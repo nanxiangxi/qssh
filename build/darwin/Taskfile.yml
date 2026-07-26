@@ -81,17 +81,15 @@ tasks:
       # Handles both relative (=> ../) and absolute (=> /) paths
       REPLACE_MOUNTS:
         sh: |
-          grep -E '^replace .* => ' go.mod 2>/dev/null | while read -r line; do
-            path=$(echo "$line" | sed -E 's/^replace .* => //' | tr -d '\r')
-            # Convert relative paths to absolute
+          grep -E '^replace .* => ' go.mod 2>/dev/null | while IFS= read -r line; do
+            path=$(echo "$line" | sed -E 's/^replace .* => //' | sed 's/\r//')
             if [ "${path#/}" = "$path" ]; then
               path="$(cd "$(dirname "$path")" 2>/dev/null && pwd)/$(basename "$path")"
             fi
-            # Only mount if directory exists
             if [ -d "$path" ]; then
-              echo "-v $path:$path:ro"
+              printf -- "-v %s:%s:ro " "$path" "$path"
             fi
-          done | tr '\n' ' '
+          done
 
   build:universal:
     summary: Builds darwin universal binary (arm64 + amd64)

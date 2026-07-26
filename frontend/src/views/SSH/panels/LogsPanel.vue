@@ -212,7 +212,6 @@ const loadLogs = async () => {
     allLogs.value = merged
     lastUpdateTime.value = new Date()
     applyFilters()
-    console.log('[LogsPanel] ✅ 加载日志:', entries.length, '条系统 +', aiEntries.length, '条AI')
   } catch (error) {
     console.error('[LogsPanel] 加载日志失败:', error)
     showMessage('加载日志失败', 'error')
@@ -289,7 +288,6 @@ const exportLogs = async () => {
     
     const logs = getLogs(currentConnId.value)
     showMessage(`已导出 ${logs.length} 条日志`, 'success')
-    console.log('[LogsPanel] ✅ 日志已导出为 JSON 格式 (.log)')
   } catch (error) {
     console.error('[LogsPanel] 导出日志失败:', error)
     showMessage('导出日志失败', 'error')

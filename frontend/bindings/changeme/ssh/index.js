@@ -35,6 +35,7 @@ export {
     FirewallInfo,
     FirewallRule,
     GuardianProcess,
+    HostKeyCallback,
     LoadAvg,
     MemoryStats,
     NetInterface,

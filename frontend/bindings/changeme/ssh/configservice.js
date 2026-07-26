@@ -38,7 +38,6 @@ export function Get(category, key) {
 }
 
 /**
- * GetAIConfig 获取 AI 配置（预留，供 Wails 绑定）
  * @returns {$CancellablePromise<$models.AIConfig>}
  */
 export function GetAIConfig() {
@@ -48,7 +47,6 @@ export function GetAIConfig() {
 }
 
 /**
- * GetConfig 获取完整配置
  * @returns {$CancellablePromise<$models.AppConfig | null>}
  */
 export function GetConfig() {
@@ -58,7 +56,6 @@ export function GetConfig() {
 }
 
 /**
- * GetFileManagerConfig 获取文件管理配置（预留，供 Wails 绑定）
  * @returns {$CancellablePromise<$models.FileManagerConfig>}
  */
 export function GetFileManagerConfig() {
@@ -68,7 +65,6 @@ export function GetFileManagerConfig() {
 }
 
 /**
- * GetSSHSettings 获取 SSH 设置（预留，供 Wails 绑定）
  * @returns {$CancellablePromise<$models.SSHSettings>}
  */
 export function GetSSHSettings() {
@@ -78,7 +74,6 @@ export function GetSSHSettings() {
 }
 
 /**
- * GetTerminalConfig 获取终端配置
  * @returns {$CancellablePromise<$models.TerminalConfig>}
  */
 export function GetTerminalConfig() {
@@ -88,7 +83,6 @@ export function GetTerminalConfig() {
 }
 
 /**
- * GetUIConfig 获取界面配置
  * @returns {$CancellablePromise<$models.UIConfig>}
  */
 export function GetUIConfig() {
@@ -135,7 +129,6 @@ export function Set(category, key, value) {
 }
 
 /**
- * SetAIConfig 设置 AI 配置（预留）
  * @param {$models.AIConfig} config
  * @returns {$CancellablePromise<void>}
  */
@@ -144,7 +137,6 @@ export function SetAIConfig(config) {
 }
 
 /**
- * SetApp 设置应用实例
  * @param {application$0.App | null} app
  * @returns {$CancellablePromise<void>}
  */
@@ -153,7 +145,6 @@ export function SetApp(app) {
 }
 
 /**
- * SetConfig 设置完整配置
  * @param {$models.AppConfig | null} config
  * @returns {$CancellablePromise<void>}
  */
@@ -162,7 +153,6 @@ export function SetConfig(config) {
 }
 
 /**
- * SetFileManagerConfig 设置文件管理配置（预留）
  * @param {$models.FileManagerConfig} config
  * @returns {$CancellablePromise<void>}
  */
@@ -171,7 +161,6 @@ export function SetFileManagerConfig(config) {
 }
 
 /**
- * SetSSHSettings 设置 SSH 设置（预留）
  * @param {$models.SSHSettings} settings
  * @returns {$CancellablePromise<void>}
  */
@@ -180,7 +169,6 @@ export function SetSSHSettings(settings) {
 }
 
 /**
- * SetTerminalConfig 设置终端配置
  * @param {$models.TerminalConfig} config
  * @returns {$CancellablePromise<void>}
  */
@@ -189,7 +177,6 @@ export function SetTerminalConfig(config) {
 }
 
 /**
- * SetUIConfig 设置界面配置（预留）
  * @param {$models.UIConfig} config
  * @returns {$CancellablePromise<void>}
  */

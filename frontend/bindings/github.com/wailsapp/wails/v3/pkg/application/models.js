@@ -8,6 +8,9 @@ import { Create as $Create } from "@wailsio/runtime";
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
+import * as updater$0 from "../updater/models.js";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore: Unused imports
 import * as slog$0 from "../../../../../../log/slog/models.js";
 
 export class App {
@@ -94,6 +97,27 @@ export class App {
              */
             this["SystemTray"] = null;
         }
+        if (!("Autostart" in $$source)) {
+            /**
+             * @member
+             * @type {AutostartManager | null}
+             */
+            this["Autostart"] = null;
+        }
+        if (!("GlobalShortcut" in $$source)) {
+            /**
+             * @member
+             * @type {GlobalShortcutManager | null}
+             */
+            this["GlobalShortcut"] = null;
+        }
+        if (!("Updater" in $$source)) {
+            /**
+             * @member
+             * @type {updater$0.Updater | null}
+             */
+            this["Updater"] = null;
+        }
         if (!("Logger" in $$source)) {
             /**
              * @member
@@ -123,6 +147,9 @@ export class App {
         const $$createField9_0 = $$createType19;
         const $$createField10_0 = $$createType21;
         const $$createField11_0 = $$createType23;
+        const $$createField12_0 = $$createType25;
+        const $$createField13_0 = $$createType27;
+        const $$createField14_0 = $$createType29;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Window" in $$parsedSource) {
             $$parsedSource["Window"] = $$createField0_0($$parsedSource["Window"]);
@@ -157,10 +184,58 @@ export class App {
         if ("SystemTray" in $$parsedSource) {
             $$parsedSource["SystemTray"] = $$createField10_0($$parsedSource["SystemTray"]);
         }
+        if ("Autostart" in $$parsedSource) {
+            $$parsedSource["Autostart"] = $$createField11_0($$parsedSource["Autostart"]);
+        }
+        if ("GlobalShortcut" in $$parsedSource) {
+            $$parsedSource["GlobalShortcut"] = $$createField12_0($$parsedSource["GlobalShortcut"]);
+        }
+        if ("Updater" in $$parsedSource) {
+            $$parsedSource["Updater"] = $$createField13_0($$parsedSource["Updater"]);
+        }
         if ("Logger" in $$parsedSource) {
-            $$parsedSource["Logger"] = $$createField11_0($$parsedSource["Logger"]);
+            $$parsedSource["Logger"] = $$createField14_0($$parsedSource["Logger"]);
         }
         return new App(/** @type {Partial<App>} */($$parsedSource));
+    }
+}
+
+/**
+ * AutostartManager provides cross-platform control over whether the
+ * application launches when the user logs in.
+ * 
+ * Registration takes effect on the next login, not immediately.
+ * 
+ * Platform behaviour:
+ * 
+ *   - macOS 13+ (bundled .app):  SMAppService.mainAppService — works for
+ *     sandboxed and Mac-App-Store apps, no TCC automation prompt.
+ *   - macOS (older or unbundled): a LaunchAgent plist is written to
+ *     ~/Library/LaunchAgents/.
+ *   - Windows: a value is added under
+ *     HKCU\Software\Microsoft\Windows\CurrentVersion\Run.
+ *   - Linux: an .desktop file is written to $XDG_CONFIG_HOME/autostart/
+ *     (defaulting to ~/.config/autostart/).
+ *   - Android / iOS / server builds: ErrAutostartNotSupported.
+ */
+export class AutostartManager {
+    /**
+     * Creates a new AutostartManager instance.
+     * @param {Partial<AutostartManager>} [$$source = {}] - The source object to create the AutostartManager.
+     */
+    constructor($$source = {}) {
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new AutostartManager instance from a string or object.
+     * @param {any} [$$source = {}]
+     * @returns {AutostartManager}
+     */
+    static createFrom($$source = {}) {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new AutostartManager(/** @type {Partial<AutostartManager>} */($$parsedSource));
     }
 }
 
@@ -309,6 +384,42 @@ export class EventManager {
 }
 
 /**
+ * GlobalShortcutManager manages application-wide (global) keyboard shortcuts.
+ * 
+ * Unlike menu accelerators or [KeyBindingManager] - which only fire while a
+ * Wails window has focus - a global shortcut fires regardless of which
+ * application is currently focused, as long as the Wails application is
+ * running.
+ * 
+ * Global shortcuts are owned by the application, not by an individual window.
+ * Registering the same accelerator twice within the same application is
+ * reported as an error and the original binding is preserved; see [Register].
+ * 
+ * Shortcuts may be registered before [App.Run] is called: the binding with the
+ * operating system is then deferred until the application starts.
+ */
+export class GlobalShortcutManager {
+    /**
+     * Creates a new GlobalShortcutManager instance.
+     * @param {Partial<GlobalShortcutManager>} [$$source = {}] - The source object to create the GlobalShortcutManager.
+     */
+    constructor($$source = {}) {
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new GlobalShortcutManager instance from a string or object.
+     * @param {any} [$$source = {}]
+     * @returns {GlobalShortcutManager}
+     */
+    static createFrom($$source = {}) {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new GlobalShortcutManager(/** @type {Partial<GlobalShortcutManager>} */($$parsedSource));
+    }
+}
+
+/**
  * KeyBindingManager manages all key binding operations
  */
 export class KeyBindingManager {
@@ -448,5 +559,11 @@ const $$createType18 = ClipboardManager.createFrom;
 const $$createType19 = $Create.Nullable($$createType18);
 const $$createType20 = SystemTrayManager.createFrom;
 const $$createType21 = $Create.Nullable($$createType20);
-const $$createType22 = slog$0.Logger.createFrom;
+const $$createType22 = AutostartManager.createFrom;
 const $$createType23 = $Create.Nullable($$createType22);
+const $$createType24 = GlobalShortcutManager.createFrom;
+const $$createType25 = $Create.Nullable($$createType24);
+const $$createType26 = updater$0.Updater.createFrom;
+const $$createType27 = $Create.Nullable($$createType26);
+const $$createType28 = slog$0.Logger.createFrom;
+const $$createType29 = $Create.Nullable($$createType28);

@@ -11,6 +11,8 @@ import (
 	"sync"
 	"time"
 
+	"changeme/ssh"
+
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
@@ -82,7 +84,7 @@ type ChatResponse struct {
 // --- 初始化 ---
 
 func NewAIService() *AIService {
-	dataDir := getDataDir()
+	dataDir := ssh.GetDataDir()
 
 	store, err := NewChatStore(dataDir)
 	if err != nil {
@@ -690,7 +692,7 @@ func (s *AIService) callAPIStream(cfg *AIConfig, body map[string]interface{}, co
 	}
 	fmt.Printf("[AI] 流式请求: %s, 模型: %v\n", endpoint, body["model"])
 
-	client := &http.Client{} // 无超时，由用户手动取消
+	client := &http.Client{Timeout: 300 * time.Second} // 5 分钟超时，长任务由用户手动取消
 
 	for attempt := 1; attempt <= 3; attempt++ {
 		req, err := http.NewRequest("POST", endpoint, bytes.NewBuffer(jsonData))

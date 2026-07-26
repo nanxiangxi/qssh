@@ -3,6 +3,7 @@ package ssh
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 )
 
@@ -105,13 +106,16 @@ func TestMasterKeyPersistence(t *testing.T) {
 		t.Fatalf("首次加密失败: %v", err)
 	}
 
-	// 检查 master key 文件存在且权限正确（0600）
+	// 检查 master key 文件是否存在
 	info, err := os.Stat(masterKeyPath)
 	if err != nil {
 		t.Fatalf("master key 文件未生成: %v", err)
 	}
-	if perm := info.Mode().Perm(); perm != 0600 {
-		t.Errorf("master key 文件权限应该是 0600，实际是 %o", perm)
+	// Unix 下检查权限为 0600，Windows 不适用 Unix 权限模型
+	if runtime.GOOS != "windows" {
+		if perm := info.Mode().Perm(); perm != 0600 {
+			t.Errorf("master key 文件权限应该是 0600，实际是 %o", perm)
+		}
 	}
 
 	// 第二次启动：重新构造 cipher，应该能解密之前的数据

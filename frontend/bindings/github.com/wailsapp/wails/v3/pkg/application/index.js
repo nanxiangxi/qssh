@@ -4,12 +4,14 @@
 
 export {
     App,
+    AutostartManager,
     BrowserManager,
     ClipboardManager,
     ContextMenuManager,
     DialogManager,
     EnvironmentManager,
     EventManager,
+    GlobalShortcutManager,
     KeyBindingManager,
     MenuManager,
     ScreenManager,
