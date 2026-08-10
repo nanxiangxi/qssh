@@ -30,6 +30,10 @@
 </template>
 
 <script setup>
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
+
 const props = defineProps({
   activePanels: {
     type: Array,
@@ -39,11 +43,10 @@ const props = defineProps({
 
 const emit = defineEmits(['toggle-panel'])
 
-// AI工具列表（映射到面板类型）
 const aiTools = [
-  { id: 'ai', panelType: 'aiChat', title: 'AI 助手' },
-  { id: 'batchCmd', panelType: 'batchCmd', title: '批量命令' },
-  { id: 'logs', panelType: 'logs', title: '操作日志' }
+  { id: 'ai', panelType: 'aiChat', title: t('tabs.ai') },
+  { id: 'batchCmd', panelType: 'batchCmd', title: t('tabs.batchCmd') },
+  { id: 'logs', panelType: 'logs', title: t('tabs.logs') }
 ]
 
 // 检查面板是否激活

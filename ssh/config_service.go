@@ -13,6 +13,7 @@ import (
 
 // AppConfig 应用配置
 type AppConfig struct {
+	Locale    string          `json:"locale"`
 	Terminal  TerminalConfig  `json:"terminal"`
 	UI        UIConfig        `json:"ui"`
 	Cloud     CloudConfig     `json:"cloud"`
@@ -257,6 +258,7 @@ type configAccessor struct {
 // buildAccessors 构建 category.key → accessor 映射
 func (s *ConfigService) buildAccessors() map[string]configAccessor {
 	return map[string]configAccessor{
+		"locale.value":               {get: func(c *AppConfig) interface{} { return c.Locale }, set: func(c *AppConfig, v interface{}) error { s, ok := v.(string); if ok { c.Locale = s }; return typeErr(ok) }},
 		"terminal.defaultType":       {get: func(c *AppConfig) interface{} { return c.Terminal.DefaultType }, set: func(c *AppConfig, v interface{}) error { s, ok := v.(string); if ok { c.Terminal.DefaultType = s }; return typeErr(ok) }},
 		"terminal.autoSwitchClassic": {get: func(c *AppConfig) interface{} { return c.Terminal.AutoSwitchClassic }, set: func(c *AppConfig, v interface{}) error { s, ok := v.(bool); if ok { c.Terminal.AutoSwitchClassic = s }; return typeErr(ok) }},
 		"terminal.switchMode":        {get: func(c *AppConfig) interface{} { return c.Terminal.SwitchMode }, set: func(c *AppConfig, v interface{}) error { s, ok := v.(string); if ok { c.Terminal.SwitchMode = s }; return typeErr(ok) }},

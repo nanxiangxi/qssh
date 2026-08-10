@@ -333,7 +333,18 @@ func (wm *WindowManager) CreateSSHWindow(groupID string, groupName string, activ
 		URL:              url,
 		DisableResize:    false,
 		Frameless:        true,
+		EnableFileDrop:   true,
 		BackgroundColour: application.NewRGB(30, 30, 30),
+	})
+
+	// 文件拖放处理
+	newWindow.OnWindowEvent(events.Common.WindowFilesDropped, func(event *application.WindowEvent) {
+		files := event.Context().DroppedFiles()
+		if len(files) > 0 {
+			wm.app.Event.Emit("file-manager:files-dropped", map[string]interface{}{
+				"files": files,
+			})
+		}
 	})
 
 	// 尝试恢复窗口位置，否则使用默认尺寸居中

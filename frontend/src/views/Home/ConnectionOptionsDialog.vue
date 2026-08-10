@@ -1,15 +1,15 @@
 <template>
   <div v-if="visible" class="dialog-overlay" @click.self="handleCancel">
     <div class="dialog-container">
-      <h3 class="dialog-title">选择连接方式</h3>
+      <h3 class="dialog-title">{{ t('connection.selectConnectionMethod') }}</h3>
       
       <div class="options-list">
         <!-- 选项A：打开新窗口 -->
         <div class="option-item" @click="handleSelect('new-window')">
           <div class="option-icon">🪟</div>
           <div class="option-content">
-            <div class="option-name">打开新窗口</div>
-            <div class="option-desc">为此连接创建独立的窗口和分组</div>
+            <div class="option-name">{{ t('connection.openNewWindow') }}</div>
+            <div class="option-desc">{{ t('connection.openNewWindowDesc') }}</div>
           </div>
         </div>
         
@@ -17,8 +17,8 @@
         <div class="option-item" @click="handleSelect('default-group')">
           <div class="option-icon">📑</div>
           <div class="option-content">
-            <div class="option-name">加入默认分组</div>
-            <div class="option-desc">将连接添加到现有标签页中</div>
+            <div class="option-name">{{ t('connection.joinDefaultGroup') }}</div>
+            <div class="option-desc">{{ t('connection.joinDefaultGroupDesc') }}</div>
           </div>
         </div>
         
@@ -26,8 +26,8 @@
         <div class="option-item cancel" @click="handleCancel">
           <div class="option-icon">❌</div>
           <div class="option-content">
-            <div class="option-name">取消</div>
-            <div class="option-desc">不进行SSH连接</div>
+            <div class="option-name">{{ t('connection.cancelConnect') }}</div>
+            <div class="option-desc">{{ t('connection.cancelConnectDesc') }}</div>
           </div>
         </div>
       </div>
@@ -36,6 +36,10 @@
 </template>
 
 <script setup>
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
+
 const props = defineProps({
   visible: {
     type: Boolean,

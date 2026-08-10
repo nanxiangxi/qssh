@@ -12,6 +12,8 @@ export const PANEL_TYPES = {
   FIREWALL: 'firewall',           // 防火墙
   GUARDIAN: 'guardian',           // 进程守护
   BATCH_CMD: 'batchCmd',         // 批量命令
+  DATABASE: 'database',          // 数据库管理
+  ENVIRONMENT: 'environment',    // 系统环境
 }
 
 // 面板配置
@@ -60,6 +62,16 @@ export const PANEL_CONFIG = {
     title: '批量命令',
     icon: 'batch-cmd',
     component: 'BatchCommandPanel',
+  },
+  [PANEL_TYPES.DATABASE]: {
+    title: '数据库',
+    icon: 'database',
+    component: 'DatabasePanel',
+  },
+  [PANEL_TYPES.ENVIRONMENT]: {
+    title: '系统环境',
+    icon: 'server',
+    component: 'EnvironmentPanel',
   },
 }
 

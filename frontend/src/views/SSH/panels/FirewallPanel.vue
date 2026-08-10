@@ -4,22 +4,22 @@
     <div class="fw-toolbar">
       <div class="fw-toolbar-left">
         <svg class="icon-warning" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-        <span class="fw-title">防火墙</span>
+        <span class="fw-title">{{ t('firewall.title') }}</span>
         <span v-if="fwInfo.type !== 'unknown'" class="fw-badge" :class="'fw-badge-' + fwInfo.status">
-          {{ fwTypeName }} · {{ fwInfo.status === 'active' ? '运行中' : '已关闭' }}
+          {{ fwTypeName }} · {{ fwInfo.status === 'active' ? t('firewall.running') : t('firewall.stopped') }}
         </span>
       </div>
       <div class="fw-toolbar-right">
         <button v-if="fwInfo.type !== 'unknown'" class="fw-btn" :class="fwInfo.status === 'active' ? 'fw-btn-warn' : 'fw-btn-success'" @click="toggleFirewall">
-          {{ fwInfo.status === 'active' ? '关闭防火墙' : '开启防火墙' }}
+          {{ fwInfo.status === 'active' ? t('firewall.disableFirewall') : t('firewall.enableFirewall') }}
         </button>
         <button class="fw-btn" @click="showAdd = true" :disabled="fwInfo.type === 'unknown'">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          <span class="fw-btn-text">添加规则</span>
+          <span class="fw-btn-text">{{ t('firewall.addRule') }}</span>
         </button>
         <button class="fw-btn" @click="loadInfo" :disabled="loading">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-          <span class="fw-btn-text">刷新</span>
+          <span class="fw-btn-text">{{ t('common.refresh') }}</span>
         </button>
       </div>
     </div>
@@ -29,32 +29,32 @@
       <!-- 加载中 -->
       <div v-if="loading && !fwInfo.type" class="fw-loading">
         <div class="fw-spinner"></div>
-        <p>正在检测防火墙...</p>
+        <p>{{ t('common.loading') }}...</p>
       </div>
 
       <!-- 未知防火墙 -->
       <div v-else-if="fwInfo.type === 'unknown'" class="fw-empty">
         <svg class="icon-disabled" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-        <p>未检测到支持的防火墙</p>
-        <p class="fw-hint">支持 iptables / firewalld / ufw</p>
+        <p>{{ t('firewall.notDetected') }}</p>
+        <p class="fw-hint">{{ t('firewall.supportedTypes') }}</p>
       </div>
 
       <!-- 规则表格 -->
       <div v-else class="fw-body">
         <div v-if="fwInfo.rules.length === 0" class="fw-empty-rules">
-          <p>暂无规则</p>
+          <p>{{ t('firewall.noRules') }}</p>
         </div>
         <div v-else class="fw-table-wrap">
           <table class="fw-table">
             <thead>
               <tr>
                 <th>#</th>
-                <th>{{ fwInfo.type === 'firewalld' ? '区域' : '方向' }}</th>
-                <th>动作</th>
-                <th>协议</th>
-                <th>端口/服务</th>
-                <th>来源</th>
-                <th>操作</th>
+                <th>{{ fwInfo.type === 'firewalld' ? t('firewall.zone') : t('firewall.direction') }}</th>
+                <th>{{ t('firewall.action') }}</th>
+                <th>{{ t('firewall.protocol') }}</th>
+                <th>{{ t('firewall.portService') }}</th>
+                <th>{{ t('firewall.source') }}</th>
+                <th>{{ t('common.actions') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -70,7 +70,7 @@
                 <td class="fw-mono">{{ rule.port || '-' }}</td>
                 <td class="fw-mono">{{ rule.source || '-' }}</td>
                 <td>
-                  <button class="fw-btn fw-btn-sm fw-btn-danger" @click="deleteRule(rule)" title="删除此规则">
+                  <button class="fw-btn fw-btn-sm fw-btn-danger" @click="deleteRule(rule)" :title="t('firewall.deleteRule')">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                   </button>
                 </td>
@@ -81,24 +81,24 @@
 
         <!-- 原始输出 -->
         <details class="fw-raw-section">
-          <summary class="fw-raw-toggle">查看原始输出</summary>
-          <pre class="fw-raw">{{ fwInfo.rawOutput || '无' }}</pre>
+          <summary class="fw-raw-toggle">{{ t('firewall.viewRawOutput') }}</summary>
+          <pre class="fw-raw">{{ fwInfo.rawOutput || t('firewall.none') }}</pre>
         </details>
       </div>
     </div>
 
     <!-- 自定义命令 -->
     <div class="fw-cmd-bar">
-      <input v-model="customCmd" @keyup.enter="runCustom" class="fw-cmd-input" placeholder="输入自定义防火墙命令..." :disabled="fwInfo.type === 'unknown'" />
+      <input v-model="customCmd" @keyup.enter="runCustom" class="fw-cmd-input" :placeholder="t('firewall.cmdPlaceholder')" :disabled="fwInfo.type === 'unknown'" />
       <button class="fw-btn fw-btn-sm" @click="runCustom" :disabled="!customCmd.trim() || running">
-        {{ running ? '执行中...' : '执行' }}
+        {{ running ? t('firewall.executing') : t('firewall.execute') }}
       </button>
     </div>
 
     <!-- 底部 -->
     <div class="fw-footer">
       <span v-if="cmdResult" class="fw-cmd-result" :class="cmdError ? 'fw-cmd-error' : ''">{{ cmdResult }}</span>
-      <span v-else class="fw-footer-info">{{ fwInfo.type !== 'unknown' ? fwInfo.rules.length + ' 条规则' : '' }}</span>
+      <span v-else class="fw-footer-info">{{ fwInfo.type !== 'unknown' ? t('firewall.rulesCount', { count: fwInfo.rules.length }) : '' }}</span>
     </div>
 
     <!-- 添加规则弹窗 -->
@@ -106,26 +106,26 @@
       <div v-if="showAdd" class="fw-modal-mask" @click.self="showAdd = false">
         <div class="fw-modal">
           <div class="fw-modal-head">
-            <h3>添加防火墙规则</h3>
+            <h3>{{ t('firewall.addRule') }}</h3>
             <button @click="showAdd = false">&times;</button>
           </div>
           <div class="fw-modal-body">
             <!-- iptables 字段 -->
             <template v-if="fwInfo.type === 'iptables'">
               <div class="fw-field">
-                <label>方向</label>
+                <label>{{ t('firewall.direction') }}</label>
                 <select v-model="addForm.chain" class="fw-input">
-                  <option value="INPUT">入站 (INPUT)</option>
-                  <option value="OUTPUT">出站 (OUTPUT)</option>
-                  <option value="FORWARD">转发 (FORWARD)</option>
+                  <option value="INPUT">{{ t('firewall.input') }} (INPUT)</option>
+                  <option value="OUTPUT">{{ t('firewall.output') }} (OUTPUT)</option>
+                  <option value="FORWARD">{{ t('firewall.forward') }} (FORWARD)</option>
                 </select>
               </div>
               <div class="fw-field">
-                <label>动作</label>
+                <label>{{ t('firewall.action') }}</label>
                 <select v-model="addForm.target" class="fw-input">
-                  <option value="ACCEPT">允许</option>
-                  <option value="DROP">拒绝（静默丢弃）</option>
-                  <option value="REJECT">拒绝（返回错误）</option>
+                  <option value="ACCEPT">{{ t('firewall.accept') }}</option>
+                  <option value="DROP">{{ t('firewall.drop') }}</option>
+                  <option value="REJECT">{{ t('firewall.reject') }}</option>
                 </select>
               </div>
             </template>
@@ -133,10 +133,10 @@
             <!-- ufw 字段 -->
             <template v-if="fwInfo.type === 'ufw'">
               <div class="fw-field">
-                <label>动作</label>
+                <label>{{ t('firewall.action') }}</label>
                 <select v-model="addForm.target" class="fw-input">
-                  <option value="allow">允许</option>
-                  <option value="deny">拒绝</option>
+                  <option value="allow">{{ t('firewall.allow') }}</option>
+                  <option value="deny">{{ t('firewall.deny') }}</option>
                 </select>
               </div>
             </template>
@@ -144,7 +144,7 @@
             <!-- firewalld 字段 -->
             <template v-if="fwInfo.type === 'firewalld'">
               <div class="fw-field">
-                <label>区域</label>
+                <label>{{ t('firewall.zone') }}</label>
                 <select v-model="addForm.chain" class="fw-input">
                   <option v-for="z in fwInfo.chains" :key="z" :value="z">{{ zoneLabel(z) }}</option>
                 </select>
@@ -153,7 +153,7 @@
 
             <!-- 通用字段 -->
             <div class="fw-field">
-              <label>协议</label>
+              <label>{{ t('firewall.protocol') }}</label>
               <select v-model="addForm.protocol" class="fw-input">
                 <option value="tcp">TCP</option>
                 <option value="udp">UDP</option>
@@ -161,23 +161,23 @@
               </select>
             </div>
             <div class="fw-field">
-              <label>端口</label>
-              <input v-model="addForm.port" class="fw-input" placeholder="如 80、443、8000-9000" />
+              <label>{{ t('firewall.port') }}</label>
+              <input v-model="addForm.port" class="fw-input" :placeholder="t('firewall.portPlaceholder')" />
             </div>
             <div class="fw-field">
-              <label>来源地址</label>
-              <input v-model="addForm.source" class="fw-input" placeholder="留空表示允许所有来源" />
+              <label>{{ t('firewall.sourceAddr') }}</label>
+              <input v-model="addForm.source" class="fw-input" :placeholder="t('firewall.sourcePlaceholder')" />
             </div>
             <div v-if="fwInfo.type === 'iptables'" class="fw-field">
-              <label>备注</label>
-              <input v-model="addForm.comment" class="fw-input" placeholder="可选，便于识别规则用途" />
+              <label>{{ t('firewall.comment') }}</label>
+              <input v-model="addForm.comment" class="fw-input" :placeholder="t('firewall.commentPlaceholder')" />
             </div>
             <div v-if="addError" class="fw-error">{{ addError }}</div>
           </div>
           <div class="fw-modal-foot">
-            <button class="fw-btn" @click="showAdd = false">取消</button>
+            <button class="fw-btn" @click="showAdd = false">{{ t('common.cancel') }}</button>
             <button class="fw-btn fw-btn-primary" @click="addRule" :disabled="addSubmitting">
-              {{ addSubmitting ? '添加中...' : '添加' }}
+              {{ addSubmitting ? t('firewall.adding') : t('common.add') }}
             </button>
           </div>
         </div>
@@ -188,11 +188,13 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted, inject } from 'vue'
+import { useI18n } from 'vue-i18n'
 import * as FirewallService from '../../../../bindings/changeme/ssh/firewallservice.js'
 import { showMessage } from '../../../utils/message'
 import { useConfirm } from '../../../utils/confirm'
 import { addLog, LogType, LogLevel } from '../../../utils/logger'
 
+const { t } = useI18n()
 const { confirm } = useConfirm()
 
 const connId = inject('connId')
@@ -222,23 +224,23 @@ const fwTypeName = computed(() => {
   return map[fwInfo.value.type] || fwInfo.value.type
 })
 
-const targetLabel = (t) => {
-  const map = { ACCEPT: '允许', allow: '允许', DROP: '拒绝', deny: '拒绝', REJECT: '拒绝(响应)' }
-  return map[t] || t
+const targetLabel = (val) => {
+  const map = { ACCEPT: t('firewall.targetLabels.ACCEPT'), allow: t('firewall.allow'), DROP: t('firewall.targetLabels.DROP'), deny: t('firewall.deny'), REJECT: t('firewall.targetLabels.REJECT') }
+  return map[val] || val
 }
 
 const chainLabel = (c) => {
-  const map = { INPUT: '入站', OUTPUT: '出站', FORWARD: '转发', IN: '入站', OUT: '出站', public: '公共', trusted: '信任', drop: '丢弃', block: '阻塞', dmz: '隔离' }
+  const map = { INPUT: t('firewall.chainLabels.INPUT'), OUTPUT: t('firewall.chainLabels.OUTPUT'), FORWARD: t('firewall.chainLabels.FORWARD'), IN: t('firewall.chainLabels.IN'), OUT: t('firewall.chainLabels.OUT'), public: t('firewall.chainLabels.public'), trusted: t('firewall.chainLabels.trusted'), drop: t('firewall.chainLabels.drop'), block: t('firewall.chainLabels.block'), dmz: t('firewall.chainLabels.dmz') }
   return map[c] || c
 }
 
 const protocolLabel = (p) => {
-  const map = { tcp: 'TCP', udp: 'UDP', icmp: 'ICMP', all: '全部', service: '服务' }
+  const map = { tcp: 'TCP', udp: 'UDP', icmp: 'ICMP', all: t('firewall.protocolLabels.all'), service: t('firewall.protocolLabels.service') }
   return map[p] || (p || '-')
 }
 
 const zoneLabel = (z) => {
-  const map = { public: '公共', trusted: '信任', drop: '丢弃', block: '阻塞', dmz: '隔离', home: '家庭', work: '工作', internal: '内部', external: '外部' }
+  const map = { public: t('firewall.zoneLabels.public'), trusted: t('firewall.zoneLabels.trusted'), drop: t('firewall.zoneLabels.drop'), block: t('firewall.zoneLabels.block'), dmz: t('firewall.zoneLabels.dmz'), home: t('firewall.zoneLabels.home'), work: t('firewall.zoneLabels.work'), internal: t('firewall.zoneLabels.internal'), external: t('firewall.zoneLabels.external') }
   return map[z] ? `${map[z]} (${z})` : z
 }
 
@@ -261,7 +263,7 @@ const loadInfo = async () => {
 
 const addRule = async () => {
   if (!addForm.port.trim()) {
-    addError.value = '请填写端口'
+    addError.value = t('firewall.pleaseFillPort')
     return
   }
   addSubmitting.value = true
@@ -270,7 +272,7 @@ const addRule = async () => {
     await FirewallService.AddRule(connId, addForm.chain, addForm.target, addForm.protocol, addForm.port, addForm.source, addForm.comment)
     addLog(connId, 'firewall', LogLevel.SUCCESS,
       `添加防火墙规则: ${addForm.chain} ${addForm.target} ${addForm.protocol} ${addForm.port}`)
-    showMessage('规则已添加', 'success')
+    showMessage(t('firewall.ruleAdded'), 'success')
     showAdd.value = false
     addForm.port = ''
     addForm.source = ''
@@ -278,7 +280,7 @@ const addRule = async () => {
     await loadInfo()
   } catch (e) {
     addError.value = String(e?.message || e)
-    addLog(connId, 'firewall', LogLevel.ERROR, '添加防火墙规则失败: ' + (e?.message || e))
+    addLog(connId, 'firewall', LogLevel.ERROR, t('firewall.addFailed') + ': ' + (e?.message || e))
   } finally {
     addSubmitting.value = false
   }
@@ -286,39 +288,40 @@ const addRule = async () => {
 
 const deleteRule = async (rule) => {
   const ok = await confirm({
-    title: '删除规则',
-    message: `确定删除第 ${rule.index} 条规则？\n${chainLabel(rule.chain)} · ${targetLabel(rule.target)} · ${rule.port || '-'}`,
+    title: t('firewall.deleteRule'),
+    message: t('firewall.deleteConfirm', { index: rule.index, info: `${chainLabel(rule.chain)} · ${targetLabel(rule.target)} · ${rule.port || '-'}` }),
     danger: true,
   })
   if (!ok) return
   try {
     await FirewallService.DeleteRule(connId, rule.chain, rule.index, rule.port, rule.protocol)
     addLog(connId, 'firewall', LogLevel.INFO, `删除防火墙规则: #${rule.index} ${chainLabel(rule.chain)} ${rule.port || ''}`)
-    showMessage('规则已删除', 'success')
+    showMessage(t('firewall.ruleDeleted'), 'success')
     await loadInfo()
   } catch (e) {
     addLog(connId, 'firewall', LogLevel.ERROR, '删除防火墙规则失败: ' + (e?.message || e))
-    showMessage('删除失败: ' + (e?.message || e), 'error')
+    showMessage(t('firewall.deleteFailed') + ': ' + (e?.message || e), 'error')
   }
 }
 
 const toggleFirewall = async () => {
   const enable = fwInfo.value.status !== 'active'
-  const action = enable ? '开启' : '关闭'
   const ok = await confirm({
-    title: `${action}防火墙`,
-    message: enable ? '开启后将按规则过滤网络流量' : '关闭后所有网络流量将不受限制',
+    title: enable ? t('firewall.enableFirewall') : t('firewall.disableFirewall'),
+    message: enable ? t('firewall.enableConfirm') : t('firewall.disableConfirm'),
     danger: !enable,
   })
   if (!ok) return
   try {
     await FirewallService.ToggleFirewall(connId, enable)
-    addLog(connId, 'firewall', enable ? LogLevel.SUCCESS : LogLevel.WARNING, `防火墙已${action}`)
-    showMessage(`防火墙已${action}`, 'success')
+    const msg = enable ? t('firewall.enabled') : t('firewall.disabled')
+    addLog(connId, 'firewall', enable ? LogLevel.SUCCESS : LogLevel.WARNING, msg)
+    showMessage(msg, 'success')
     await loadInfo()
   } catch (e) {
-    addLog(connId, 'firewall', LogLevel.ERROR, `防火墙${action}失败: ` + (e?.message || e))
-    showMessage(`${action}失败: ` + (e?.message || e), 'error')
+    const failMsg = enable ? t('firewall.enableFailed') : t('firewall.disableFailed')
+    addLog(connId, 'firewall', LogLevel.ERROR, failMsg + ': ' + (e?.message || e))
+    showMessage(failMsg + ': ' + (e?.message || e), 'error')
   }
 }
 
@@ -329,16 +332,16 @@ const runCustom = async () => {
   cmdError.value = false
   try {
     const result = await FirewallService.RunCustomCommand(connId, customCmd.value)
-    cmdResult.value = result || '执行成功（无输出）'
+    cmdResult.value = result || t('firewall.cmdResultEmpty')
     addLog(connId, 'firewall', LogLevel.INFO, `执行防火墙命令: ${customCmd.value}`, { output: result })
     customCmd.value = ''
-    showMessage('命令执行成功', 'success')
+    showMessage(t('firewall.cmdSuccess'), 'success')
     await loadInfo()
   } catch (e) {
     cmdResult.value = String(e?.message || e)
     cmdError.value = true
     addLog(connId, 'firewall', LogLevel.ERROR, `防火墙命令失败: ${customCmd.value}`, { error: String(e?.message || e) })
-    showMessage('命令执行失败', 'error')
+    showMessage(t('firewall.cmdFailed'), 'error')
   } finally {
     running.value = false
   }

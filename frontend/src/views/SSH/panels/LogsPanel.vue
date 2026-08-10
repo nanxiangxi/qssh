@@ -4,26 +4,26 @@
     <div class="logs-toolbar">
       <div class="toolbar-left">
         <svg class="icon-primary" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-        <h3>操作日志</h3>
+        <h3>{{ t('tabs.logs') }}</h3>
         <span class="connection-badge" v-if="currentConnId">
           {{ getConnectionName() }}
         </span>
       </div>
       <div class="toolbar-right">
-        <button class="tool-btn" @click="exportLogs" title="导出日志">
+        <button class="tool-btn" @click="exportLogs" :title="t('common.export')">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
             <polyline points="7 10 12 15 17 10"></polyline>
             <line x1="12" y1="15" x2="12" y2="3"></line>
           </svg>
         </button>
-        <button class="tool-btn" @click="toggleAutoRefresh" :class="{ active: autoRefresh }" title="自动刷新">
+        <button class="tool-btn" @click="toggleAutoRefresh" :class="{ active: autoRefresh }" :title="t('logs.autoRefresh')">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polyline points="23 4 23 10 17 10"></polyline>
             <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
           </svg>
         </button>
-        <button class="tool-btn" @click="loadLogs" title="手动刷新">
+        <button class="tool-btn" @click="loadLogs" :title="t('common.refresh')">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polyline points="23 4 23 10 17 10"></polyline>
             <polyline points="1 4 1 10 7 10"></polyline>
@@ -44,32 +44,32 @@
           v-model="searchKeyword" 
           @input="handleSearch"
           type="text" 
-          placeholder="搜索..."
+          :placeholder="t('common.search') + '...'"
           class="search-input"
         />
       </div>
       
       <div class="filter-buttons">
         <select v-model="filterType" @change="applyFilters" class="filter-select">
-          <option value="all">全部类型</option>
-          <option value="terminal">终端命令</option>
-          <option value="fileManager">文件管理</option>
-          <option value="connection">连接事件</option>
-          <option value="system">系统事件</option>
-          <option value="error">错误信息</option>
-          <option value="security">安全相关</option>
-          <option value="ai">AI 工具</option>
-          <option value="portForward">端口转发</option>
-          <option value="firewall">防火墙</option>
-          <option value="guardian">进程守护</option>
+          <option value="all">{{ t('common.all') }}</option>
+          <option value="terminal">{{ t('tabs.terminal') }}</option>
+          <option value="fileManager">{{ t('tabs.fileManager') }}</option>
+          <option value="connection">{{ t('connection.title') }}</option>
+          <option value="system">{{ t('monitor.systemInfo') }}</option>
+          <option value="error">{{ t('common.error') }}</option>
+          <option value="security">{{ t('firewall.title') }}</option>
+          <option value="ai">{{ t('ai.title') }}</option>
+          <option value="portForward">{{ t('portForward.title') }}</option>
+          <option value="firewall">{{ t('firewall.title') }}</option>
+          <option value="guardian">{{ t('tabs.guardian') }}</option>
         </select>
 
         <select v-model="filterLevel" @change="applyFilters" class="filter-select">
-          <option value="all">全部级别</option>
-          <option value="info">信息</option>
-          <option value="success">成功</option>
-          <option value="warning">警告</option>
-          <option value="error">错误</option>
+          <option value="all">{{ t('common.all') }}</option>
+          <option value="info">{{ t('common.loading') }}</option>
+          <option value="success">{{ t('common.success') }}</option>
+          <option value="warning">{{ t('common.warning') }}</option>
+          <option value="error">{{ t('common.error') }}</option>
         </select>
       </div>
     </div>
@@ -79,11 +79,11 @@
       <div v-if="filteredLogs.length === 0" class="empty-state">
         <svg class="empty-icon icon-muted" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         <p v-if="searchKeyword || filterType !== 'all' || filterLevel !== 'all'">
-          没有找到匹配的日志
+          {{ t('logs.noMatch') }}
         </p>
-        <p v-else>暂无日志记录</p>
+        <p v-else>{{ t('logs.noRecords') }}</p>
         <button v-if="!autoRefresh" @click="loadLogs" class="retry-btn">
-          重新加载
+          {{ t('common.refresh') }}
         </button>
       </div>
       
@@ -121,7 +121,7 @@
           </div>
           
           <div v-if="log.details && expandedLogs[index]" class="log-details">
-            <div class="details-label">详细信息:</div>
+            <div class="details-label">{{ t('logs.detailsLabel') }}:</div>
             <pre class="details-content">{{ log.details }}</pre>
           </div>
         </div>
@@ -133,11 +133,11 @@
       <div class="footer-left">
         <label class="auto-refresh-toggle">
           <input type="checkbox" v-model="autoRefresh" @change="toggleAutoRefresh" />
-          <span>自动刷新 ({{ refreshInterval / 1000 }}s)</span>
+          <span>{{ t('logs.autoRefresh') }} ({{ refreshInterval / 1000 }}s)</span>
         </label>
       </div>
       <div class="footer-right">
-        <span class="last-update">最后更新: {{ formatTime(lastUpdateTime) }}</span>
+        <span class="last-update">{{ t('logs.lastUpdate') }}: {{ formatTime(lastUpdateTime) }}</span>
       </div>
     </div>
   </div>
@@ -145,6 +145,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useSSHLayoutStore } from '../../../stores/sshLayout'
 import { useSSHTabsStore } from '../../../stores/sshTabs'
 import { SSHService } from '../../../../bindings/changeme/ssh/index.js'
@@ -152,6 +153,7 @@ import { showMessage } from '../../../utils/message'
 import { getLogs, exportLogs as exportLogsUtil } from '../../../utils/logger'
 import { useAIToolLogStore } from '../../../stores/aiToolLog'
 
+const { t } = useI18n()
 const sshLayoutStore = useSSHLayoutStore()
 const sshTabsStore = useSSHTabsStore()
 const aiToolLog = useAIToolLogStore()
@@ -178,7 +180,7 @@ const currentConnId = computed(() => sshLayoutStore.currentConnectionId)
 const getConnectionName = () => {
   const tabs = sshTabsStore.tabs || []
   const currentTab = tabs.find(tab => tab.id === currentConnId.value)
-  return currentTab ? currentTab.name : '未知连接'
+  return currentTab ? currentTab.name : t('logs.unknownConnection')
 }
 
 // 加载日志 - 合并统一日志服务 + AI 工具日志
@@ -214,7 +216,7 @@ const loadLogs = async () => {
     applyFilters()
   } catch (error) {
     console.error('[LogsPanel] 加载日志失败:', error)
-    showMessage('加载日志失败', 'error')
+    showMessage(t('logs.loadFailed'), 'error')
   }
 }
 
@@ -262,7 +264,7 @@ const toggleLogDetail = (index) => {
 // 导出日志 - 🎯 使用统一日志服务
 const exportLogs = async () => {
   if (!currentConnId.value) {
-    showMessage('没有可导出的日志', 'warning')
+    showMessage(t('logs.noExportLogs'), 'warning')
     return
   }
 
@@ -271,7 +273,7 @@ const exportLogs = async () => {
     const jsonContent = exportLogsUtil(currentConnId.value)
     
     if (!jsonContent) {
-      showMessage('没有可导出的日志', 'warning')
+      showMessage(t('logs.noExportLogs'), 'warning')
       return
     }
     
@@ -287,10 +289,10 @@ const exportLogs = async () => {
     URL.revokeObjectURL(url)
     
     const logs = getLogs(currentConnId.value)
-    showMessage(`已导出 ${logs.length} 条日志`, 'success')
+    showMessage(t('logs.exportSuccess', { count: logs.length }), 'success')
   } catch (error) {
     console.error('[LogsPanel] 导出日志失败:', error)
-    showMessage('导出日志失败', 'error')
+    showMessage(t('logs.exportFailed'), 'error')
   }
 }
 
@@ -333,16 +335,16 @@ const formatTime = (timestamp) => {
 // 获取类型标签
 const getTypeLabel = (type) => {
   const labels = {
-    terminal: '终端',
-    fileManager: '文件',
-    connection: '连接',
-    system: '系统',
-    error: '错误',
-    security: '安全',
+    terminal: t('tabs.terminal'),
+    fileManager: t('tabs.fileManager'),
+    connection: t('connection.title'),
+    system: t('common.type'),
+    error: t('common.error'),
+    security: t('logs.typeLabels.security'),
     ai: 'AI',
-    portForward: '端口转发',
-    firewall: '防火墙',
-    guardian: '进程守护'
+    portForward: t('tabs.portForward'),
+    firewall: t('tabs.firewall'),
+    guardian: t('tabs.guardian')
   }
   return labels[type] || type
 }
@@ -350,10 +352,10 @@ const getTypeLabel = (type) => {
 // 获取级别标签
 const getLevelLabel = (level) => {
   const labels = {
-    info: '信息',
-    success: '成功',
-    warning: '警告',
-    error: '错误'
+    info: t('common.status'),
+    success: t('common.success'),
+    warning: t('common.warning'),
+    error: t('common.error')
   }
   return labels[level] || level
 }

@@ -26,25 +26,83 @@ var trayIcon []byte
 
 // 版本信息
 const (
-	AppVersion = "0.3.3"
+	AppVersion = "0.4.0"
 	AppName    = "启SSH"
+	AppNameEN  = "Qssh"
 )
 
-func init() {
-	// 注册一个自定义事件，其关联的数据类型为 string。
-	// 这不是必需的，但绑定生成器会拾取注册的事件，
-	// 并为它们提供强类型的 JS/TS API。
-	application.RegisterEvent[string]("time")
-	// ssh:connections-updated 和 ssh:group-updated 不注册具体类型，使用 map[string]interface{}
+// getAppName 根据语言设置返回应用名称
+func getAppName(locale string) string {
+	if locale == "en-US" {
+		return AppNameEN
+	}
+	return AppName
 }
+
+func init() {
+	application.RegisterEvent[string]("time")
+}
+
+// appServices 应用服务集合
+type appServices struct {
+	sshService    *ssh.SSHService
+	configService *ssh.ConfigService
+	windowManager *ssh.WindowManager
+	services      []application.Service
+}
+
+// initServices 初始化所有服务并处理依赖注入
+func initServices(app *application.App) *appServices {
+	// 核心服务
+	sshService := ssh.NewSSHService()
+	aiService := ai.NewAIService()
+	configService := ssh.NewConfigService()
+
+	// 配置依赖
+	configService.SetApp(app)
+	sshService.SetApp(app)
+	aiService.SetApp(app)
+
+	// 窗口管理器
+	windowManager := ssh.NewWindowManager(app, nil)
+	windowManager.SetConfigService(configService)
+	sshService.SetWindowManager(windowManager)
+
+	// AI 依赖注入
+	ai.InitDeps(aiService, sshService, sshService)
+
+	// 启动健康检查
+	sshService.StartHealthCheck()
+
+	// 依赖 sshService 的服务
+	portForwardService := ssh.NewPortForwardService(sshService)
+	firewallService := ssh.NewFirewallService(sshService)
+	guardianService := ssh.NewProcessGuardianService(sshService)
+	databaseService := ssh.NewDatabaseService(sshService)
+
+	// 依赖 configService 的服务
+	cloudService := ssh.NewCloudService(configService)
+	cloudService.SetApp(app)
+
+	return &appServices{
+		sshService:    sshService,
+		configService: configService,
+		windowManager: windowManager,
+		services: []application.Service{
+			application.NewService(ssh.NewGreetService(AppVersion)),
+			application.NewService(sshService),
+			application.NewService(aiService),
+			application.NewService(configService),
+			application.NewService(portForwardService),
+			application.NewService(firewallService),
+			application.NewService(guardianService),
+			application.NewService(databaseService),
+			application.NewService(cloudService),
+		},
+	}
+}
+
 func main() {
-
-	// 通过提供必要的选项创建一个新的 Wails 应用程序。
-	// 'Name' 和 'Description' 是应用程序元数据。
-	// 'Assets' 配置资产服务器，'FS' 变量指向前端文件。
-	// 'Services' 是 Go 结构体实例列表。前端可以访问这些实例的方法。
-	// 'Mac' 选项在 macOS 上运行时定制应用程序。
-
 	// 创建应用实例
 	app := application.New(application.Options{
 		Name:        AppName,
@@ -53,64 +111,44 @@ func main() {
 			Handler: application.AssetFileServerFS(assets),
 		},
 		Mac: application.MacOptions{
-			ApplicationShouldTerminateAfterLastWindowClosed: false, // 托盘应用：关闭窗口不退出
+			ApplicationShouldTerminateAfterLastWindowClosed: false,
 		},
 	})
 
-	// 创建SSH服务并设置窗口管理器和app实例
-	sshService := ssh.NewSSHService()
+	// 初始化所有服务（处理依赖注入）
+	as := initServices(app)
+	sshService := as.sshService
+	configService := as.configService
+	windowManager := as.windowManager
 
-	// 创建AI服务
-	aiService := ai.NewAIService()
+	// 注册服务
+	for _, svc := range as.services {
+		app.RegisterService(svc)
+	}
 
-	// 创建配置服务
-	configService := ssh.NewConfigService()
-	configService.SetApp(app)
-
-	// 创建窗口管理器（分组关闭回调稍后设置）
-	windowManager := ssh.NewWindowManager(app, nil)
-	windowManager.SetConfigService(configService)
-	sshService.SetWindowManager(windowManager)
-	sshService.SetApp(app)
-
-	// 设置AI服务
-	aiService.SetApp(app)
-	ai.InitDeps(aiService, sshService, sshService)
-
-	// 启动健康检查
-	sshService.StartHealthCheck()
-
-	// 创建端口转发服务
-	portForwardService := ssh.NewPortForwardService(sshService)
-
-	// 创建防火墙服务
-	firewallService := ssh.NewFirewallService(sshService)
-
-	// 创建进程守护服务
-	guardianService := ssh.NewProcessGuardianService(sshService)
-
-	// 创建云端服务
-	cloudService := ssh.NewCloudService(configService)
-	cloudService.SetApp(app)
-
-	// 注册服务到应用
-	app.RegisterService(application.NewService(ssh.NewGreetService(AppVersion)))
-	app.RegisterService(application.NewService(sshService))
-	app.RegisterService(application.NewService(aiService))
-	app.RegisterService(application.NewService(configService))
-	app.RegisterService(application.NewService(portForwardService))
-	app.RegisterService(application.NewService(firewallService))
-	app.RegisterService(application.NewService(guardianService))
-	app.RegisterService(application.NewService(cloudService))
+	// 根据语言设置确定应用名称
+	locale := configService.GetConfig().Locale
+	appDisplayName := getAppName(locale)
 
 	// 使用必要的选项创建一个新窗口。
 	mainWindow := app.Window.NewWithOptions(application.WebviewWindowOptions{
 		Name:             "main",
-		Title:            fmt.Sprintf("启SSH - SSH工具 (v%s)", AppVersion),
+		Title:            fmt.Sprintf("%s - SSH工具 (v%s)", appDisplayName, AppVersion),
 		URL:              "/",
 		DisableResize:    false,
 		Frameless:        true,
+		EnableFileDrop:   true,
 		BackgroundColour: application.NewRGB(255, 255, 255),
+	})
+
+	// 文件拖放处理
+	mainWindow.OnWindowEvent(events.Common.WindowFilesDropped, func(event *application.WindowEvent) {
+		files := event.Context().DroppedFiles()
+		if len(files) > 0 {
+			app.Event.Emit("file-manager:files-dropped", map[string]interface{}{
+				"files": files,
+			})
+		}
 	})
 
 	// 尝试恢复主窗口位置，否则使用默认尺寸居中
@@ -152,46 +190,53 @@ func main() {
 		windowManager.SaveMainWindowPosition(mainWindow)
 	})
 
-	// ========== 系统托盘 ==========
-	systray := app.SystemTray.New()
-	systray.SetIcon(trayIcon)
-	systray.SetLabel(AppName)
+	// ========== 系统托盘（延迟初始化，避免 GetCursorPos 崩溃） ==========
+	go func() {
+		// 等待 WebView2 环境就绪
+		time.Sleep(2 * time.Second)
 
-	// 托盘菜单
-	trayMenu := app.NewMenu()
-	trayMenu.Add("显示主窗口").OnClick(func(ctx *application.Context) {
-		mainWindow.Show()
-		mainWindow.Focus()
-	})
-	trayMenu.Add("显示全部窗口").OnClick(func(ctx *application.Context) {
-		mainWindow.Show()
-		mainWindow.Focus()
-		windowManager.ShowAllWindows()
-	})
-	trayMenu.AddSeparator()
-	trayMenu.Add("隐藏全部窗口").OnClick(func(ctx *application.Context) {
-		windowManager.HideAllWindows()
-		windowManager.SaveMainWindowPosition(mainWindow)
-		mainWindow.Hide()
-	})
-	trayMenu.AddSeparator()
-	trayMenu.Add("退出").OnClick(func(ctx *application.Context) {
-		mainWindow.Show() // 退出前显示窗口，确保正常关闭
-		windowManager.ShowAllWindows()
-		app.Quit()
-	})
-	systray.SetMenu(trayMenu)
+		systray := app.SystemTray.New()
+		systray.SetIcon(trayIcon)
+		systray.SetLabel(AppName)
 
-	// 左键点击托盘图标切换主窗口显示/隐藏
-	systray.OnClick(func() {
-		if mainWindow.IsVisible() {
-			windowManager.SaveMainWindowPosition(mainWindow)
-			mainWindow.Hide()
-		} else {
+		// 托盘菜单
+		trayMenu := app.NewMenu()
+		trayMenu.Add("显示主窗口").OnClick(func(ctx *application.Context) {
 			mainWindow.Show()
 			mainWindow.Focus()
-		}
-	})
+		})
+		trayMenu.Add("显示全部窗口").OnClick(func(ctx *application.Context) {
+			mainWindow.Show()
+			mainWindow.Focus()
+			windowManager.ShowAllWindows()
+		})
+		trayMenu.AddSeparator()
+		trayMenu.Add("隐藏全部窗口").OnClick(func(ctx *application.Context) {
+			windowManager.HideAllWindows()
+			windowManager.SaveMainWindowPosition(mainWindow)
+			mainWindow.Hide()
+		})
+		trayMenu.AddSeparator()
+		trayMenu.Add("退出").OnClick(func(ctx *application.Context) {
+			mainWindow.Show() // 退出前显示窗口，确保正常关闭
+			windowManager.ShowAllWindows()
+			app.Quit()
+		})
+		systray.SetMenu(trayMenu)
+
+		// 左键点击托盘图标切换主窗口显示/隐藏
+		systray.OnClick(func() {
+			if mainWindow.IsVisible() {
+				windowManager.SaveMainWindowPosition(mainWindow)
+				mainWindow.Hide()
+			} else {
+				mainWindow.Show()
+				mainWindow.Focus()
+			}
+		})
+
+		fmt.Println("[Main] 系统托盘已初始化")
+	}()
 
 	// 监听前端请求隐藏主窗口的事件（SSH连接成功后自动隐藏主窗口，不影响SSH窗口）
 	app.Event.On("ssh:tray-hide", func(event *application.CustomEvent) {
@@ -199,8 +244,6 @@ func main() {
 		windowManager.SaveMainWindowPosition(mainWindow)
 		mainWindow.Hide()
 	})
-
-	fmt.Println("[Main] 系统托盘已初始化")
 
 	// 创建一个 goroutine，每秒发射一个包含当前时间的事件。
 	// 前端可以监听此事件并相应地更新 UI。

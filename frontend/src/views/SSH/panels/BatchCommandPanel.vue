@@ -7,12 +7,12 @@
           <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
           <line x1="12" y1="5" x2="20" y2="5"/>
         </svg>
-        <span class="bc-title">批量命令</span>
+        <span class="bc-title">{{ t('tabs.batchCmd') }}</span>
       </div>
       <div class="bc-toolbar-right">
         <button class="bc-btn" @click="refreshAll" :disabled="refreshing">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-          刷新
+          {{ t('common.refresh') }}
         </button>
       </div>
     </div>
@@ -20,15 +20,15 @@
     <!-- 目标列表 -->
     <div class="bc-targets">
       <div class="bc-targets-header">
-        <span class="bc-targets-title">目标连接</span>
+        <span class="bc-targets-title">{{ t('batch.targetConnections') }}</span>
         <div class="bc-targets-actions">
-          <button class="bc-link-btn" @click="selectAll">全选</button>
-          <button class="bc-link-btn" @click="selectNone">取消</button>
+          <button class="bc-link-btn" @click="selectAll">{{ t('common.selectAll') }}</button>
+          <button class="bc-link-btn" @click="selectNone">{{ t('common.cancel') }}</button>
         </div>
       </div>
 
       <div v-if="connections.length === 0" class="bc-empty-hint">
-        当前组没有已连接的服务器
+        {{ t('batch.noConnections') }}
       </div>
 
       <div v-else class="bc-conn-grid">
@@ -50,19 +50,19 @@
             />
             <span class="bc-conn-name">{{ conn.name }}</span>
             <span class="bc-conn-badge" :class="conn.status === 'connected' ? 'bc-on' : 'bc-off'">
-              {{ conn.status === 'connected' ? '在线' : '离线' }}
+              {{ conn.status === 'connected' ? t('common.connected') : t('common.disconnected') }}
             </span>
           </div>
           <!-- 终端选择 -->
           <div v-if="isSelected(conn.id) && conn.status === 'connected'" class="bc-term-select" @click.stop>
-            <label class="bc-term-label">目标终端:</label>
+            <label class="bc-term-label">{{ t('batch.targetTerminal') }}:</label>
             <select
               :value="getSelectedTerminal(conn.id)"
               @change="setSelectedTerminal(conn.id, $event.target.value)"
               @click.stop
               class="bc-term-dropdown"
             >
-              <option value="auto">自动选择</option>
+              <option value="auto">{{ t('batch.autoSelect') }}</option>
               <option v-for="t in getConnTerminals(conn.id)" :key="t.sessionId" :value="t.sessionId">
                 {{ getTerminalTitle(t) }}
               </option>
@@ -77,7 +77,7 @@
       <textarea
         v-model="command"
         class="bc-input"
-        placeholder="输入要批量执行的命令..."
+        :placeholder="t('batch.inputPlaceholder')"
         rows="2"
       ></textarea>
       <button
@@ -85,15 +85,15 @@
         @click="executeCommand"
         :disabled="!command.trim() || selectedIds.size === 0 || executing"
       >
-        {{ executing ? '发送中...' : `发送 (${selectedIds.size})` }}
+        {{ executing ? t('common.loading') + '...' : t('common.send') + ' (' + selectedIds.size + ')' }}
       </button>
     </div>
 
     <!-- 执行结果 -->
     <div v-if="results.length > 0" class="bc-results">
       <div class="bc-results-header">
-        <span>执行结果</span>
-        <button class="bc-link-btn" @click="results = []">清空</button>
+        <span>{{ t('batch.results') }}</span>
+        <button class="bc-link-btn" @click="results = []">{{ t('common.clear') }}</button>
       </div>
       <div class="bc-result-scroll">
         <div v-for="(r, i) in results" :key="i" class="bc-result-row">
@@ -102,20 +102,21 @@
             <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-danger"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
           </span>
           <span class="bc-result-name">{{ r.name }}</span>
-          <span class="bc-result-msg">{{ r.success ? '已发送' : r.error }}</span>
+          <span class="bc-result-msg">{{ r.success ? t('common.success') : r.error }}</span>
         </div>
       </div>
     </div>
 
     <!-- 底部 -->
     <div class="bc-footer">
-      <span>{{ connections.filter(c => c.status === 'connected').length }}/{{ connections.length }} 在线</span>
+      <span>{{ connections.filter(c => c.status === 'connected').length }}/{{ connections.length }} {{ t('common.connected') }}</span>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, inject } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useSSHTabsStore } from '../../../stores/sshTabs'
 import { useTerminalSessionStore } from '../../../stores/terminalSessions'
 import { Events } from '@wailsio/runtime'
@@ -123,6 +124,7 @@ import * as SSHService from '../../../../bindings/changeme/ssh/sshservice.js'
 import { showMessage } from '../../../utils/message'
 import { addLog, LogLevel } from '../../../utils/logger'
 
+const { t } = useI18n()
 const connId = inject('connId')
 const tabsStore = useSSHTabsStore()
 const sessionStore = useTerminalSessionStore()
@@ -210,14 +212,14 @@ const executeCommand = async () => {
       if (!sid || sid === 'auto') {
         const ready = getReadyTerminals(conn.id)
         if (ready.length === 0) {
-          return { name: conn.name, success: false, error: '无就绪终端' }
+          return { name: conn.name, success: false, error: t('batch.noReadyTerminal') }
         }
         sid = ready[0].sessionId
       } else {
         // 检查指定终端是否就绪
         const ready = getReadyTerminals(conn.id)
         if (!ready.find(t => t.sessionId === sid)) {
-          return { name: conn.name, success: false, error: '终端未就绪' }
+          return { name: conn.name, success: false, error: t('batch.terminalNotReady') }
         }
       }
       // 通知终端创建结构化块
@@ -233,7 +235,7 @@ const executeCommand = async () => {
   executing.value = false
 
   const ok = results.value.filter(r => r.success).length
-  showMessage(`命令已发送到 ${ok}/${targets.length} 个连接`, ok > 0 ? 'success' : 'error')
+  showMessage(t('batch.commandsSent', { ok, total: targets.length }), ok > 0 ? 'success' : 'error')
 }
 
 onMounted(() => {

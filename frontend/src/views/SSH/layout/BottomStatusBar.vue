@@ -2,19 +2,19 @@
   <footer class="bottom-bar">
     <div class="bottom-section left">
       <span class="info-item" :class="connectionStatus">
-        {{ connectionStatus === 'connected' ? '🟢 已连接' : '⚪ 未连接' }}
+        {{ connectionStatus === 'connected' ? '🟢 ' + t('ssh.connected') : '⚪ ' + t('ssh.notConnected') }}
       </span>
-      <span v-if="latency > 0" class="info-item">延迟: {{ latency }}ms</span>
+      <span v-if="latency > 0" class="info-item">{{ t('ssh.latency') }}: {{ latency }}ms</span>
     </div>
     <div class="bottom-section right">
-      <button class="action-btn" title="保存连接" @click="saveConnection">
+      <button class="action-btn" :title="t('ssh.saveConnection')" @click="saveConnection">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
           <polyline points="17 21 17 13 7 13 7 21"/>
           <polyline points="7 3 7 8 15 8"/>
         </svg>
       </button>
-      <button class="action-btn" title="断开连接" @click="disconnect">
+      <button class="action-btn" :title="t('ssh.disconnectConnection')" @click="disconnect">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
           <polyline points="16 17 21 12 16 7"/>
@@ -27,11 +27,13 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useSSHLayoutStore } from '../../../stores/sshLayout'
 import { showMessage } from '../../../utils/message'
 import { useConfirm } from '../../../utils/confirm'
 import { SSHService } from '../../../../bindings/changeme/ssh/index.js'
 
+const { t } = useI18n()
 const { confirm } = useConfirm()
 const sshLayoutStore = useSSHLayoutStore()
 
@@ -68,55 +70,55 @@ const updateConnectionStatus = async () => {
 // 保存连接（仅保存当前标签的连接配置）
 const saveConnection = async () => {
   if (!currentConnId.value || currentConnId.value === 'default-connection') {
-    showMessage('没有可保存的连接', 'warning')
+    showMessage(t('ssh.noConnectionToSave'), 'warning')
     return
   }
 
   try {
     const connInfo = await SSHService.GetConnection(currentConnId.value)
     if (!connInfo) {
-      showMessage('连接不存在', 'error')
+      showMessage(t('ssh.connectionNotFound'), 'error')
       return
     }
 
-    const authType = connInfo.privateKey ? '密钥认证' : '密码认证'
+    const authType = connInfo.privateKey ? t('ssh.keyAuth') : t('ssh.passwordAuth')
     const ok = await confirm({
-      title: '保存连接',
-      message: `保存当前连接到本地？\n\n名称: ${connInfo.name}\n地址: ${connInfo.host}:${connInfo.port}\n用户: ${connInfo.username}\n认证: ${authType}`
+      title: t('ssh.saveConnection'),
+      message: t('ssh.saveConnectionConfirm', { name: connInfo.name, host: connInfo.host, port: connInfo.port, username: connInfo.username, authType })
     })
     if (!ok) return
 
     await SSHService.SaveConnection(currentConnId.value)
-    showMessage('连接已保存', 'success')
+    showMessage(t('ssh.connectionSaved'), 'success')
   } catch (error) {
     console.error('[BottomStatusBar] 保存连接失败:', error)
-    showMessage('保存连接失败: ' + error.message, 'error')
+    showMessage(t('ssh.saveFailed', { message: error.message }), 'error')
   }
 }
 
 // 断开连接
 const disconnect = async () => {
   if (!currentConnId.value || currentConnId.value === 'default-connection') {
-    showMessage('没有可断开的连接', 'warning')
+    showMessage(t('ssh.noConnectionToDisconnect'), 'warning')
     return
   }
 
   const ok = await confirm({
-    title: '断开连接',
-    message: '确定断开当前 SSH 连接？',
+    title: t('ssh.disconnectConnection'),
+    message: t('ssh.disconnectConfirm'),
     danger: true
   })
   if (!ok) return
 
   try {
     await SSHService.Disconnect(currentConnId.value)
-    showMessage('连接已断开', 'success')
+    showMessage(t('ssh.disconnected'), 'success')
 
     connectionStatus.value = 'disconnected'
     latency.value = 0
   } catch (error) {
     console.error('[BottomStatusBar] 断开连接失败:', error)
-    showMessage('断开连接失败: ' + error.message, 'error')
+    showMessage(t('ssh.disconnectFailed', { message: error.message }), 'error')
   }
 }
 

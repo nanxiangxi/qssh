@@ -38,7 +38,7 @@ export function AddToGroup(groupID, connID) {
 }
 
 /**
- * AutoReconnect 自动重连
+ * AutoReconnect 自动重连（指数退避，最多重试 10 次，约 3 分钟）
  * @param {string} connID
  * @returns {$CancellablePromise<void>}
  */
@@ -196,6 +196,15 @@ export function DeleteFile(connID, remotePath) {
 }
 
 /**
+ * DeleteSSHKey 删除密钥
+ * @param {string} keyName
+ * @returns {$CancellablePromise<void>}
+ */
+export function DeleteSSHKey(keyName) {
+    return $Call.ByID(2428585411, keyName);
+}
+
+/**
  * DeleteTempFile 删除临时文件
  * @param {string} connID
  * @param {string} filePath
@@ -203,6 +212,16 @@ export function DeleteFile(connID, remotePath) {
  */
 export function DeleteTempFile(connID, filePath) {
     return $Call.ByID(2125132178, connID, filePath);
+}
+
+/**
+ * DeploySSHPublicKey 部署公钥到远程服务器
+ * @param {string} keyName
+ * @param {string} connID
+ * @returns {$CancellablePromise<void>}
+ */
+export function DeploySSHPublicKey(keyName, connID) {
+    return $Call.ByID(1277799496, keyName, connID);
 }
 
 /**
@@ -227,15 +246,62 @@ export function DownloadFile(connID, remotePath) {
 }
 
 /**
- * ExecuteCommand 执行远程命令
+ * DownloadFileRange 下载文件指定范围（用于断点续传）
+ * @param {string} connID
+ * @param {string} remotePath
+ * @param {number} offset
+ * @param {number} limit
+ * @returns {$CancellablePromise<string>}
+ */
+export function DownloadFileRange(connID, remotePath, offset, limit) {
+    return $Call.ByID(355154848, connID, remotePath, offset, limit).then(/** @type {($result: any) => any} */(($result) => {
+        return $Create.ByteSlice($result);
+    }));
+}
+
+/**
+ * ExecuteBatch 批量执行命令
+ * @param {$models.BatchCommand[]} commands
+ * @returns {$CancellablePromise<$models.BatchResult[]>}
+ */
+export function ExecuteBatch(commands) {
+    return $Call.ByID(2359922380, commands).then(/** @type {($result: any) => any} */(($result) => {
+        return $$createType2($result);
+    }));
+}
+
+/**
+ * ExecuteCommand 执行远程命令（自动记录审计日志）
  * @param {string} connID
  * @param {string} command
  * @returns {$CancellablePromise<$models.CommandResult | null>}
  */
 export function ExecuteCommand(connID, command) {
     return $Call.ByID(4187821901, connID, command).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType2($result);
+        return $$createType4($result);
     }));
+}
+
+/**
+ * ExecuteCommandWithSudo 执行远程命令（权限不足时自动用 SSH 密码 sudo 提权）
+ * @param {string} connID
+ * @param {string} command
+ * @returns {$CancellablePromise<$models.CommandResult | null>}
+ */
+export function ExecuteCommandWithSudo(connID, command) {
+    return $Call.ByID(2455216648, connID, command).then(/** @type {($result: any) => any} */(($result) => {
+        return $$createType4($result);
+    }));
+}
+
+/**
+ * ExportAuditLogs 导出审计日志
+ * @param {string} startDate
+ * @param {string} endDate
+ * @returns {$CancellablePromise<string>}
+ */
+export function ExportAuditLogs(startDate, endDate) {
+    return $Call.ByID(1157312549, startDate, endDate);
 }
 
 /**
@@ -250,12 +316,24 @@ export function ExtractArchive(connID, archivePath, targetDir) {
 }
 
 /**
+ * GenerateSSHKey 生成新密钥
+ * @param {string} name
+ * @param {string} keyType
+ * @param {string} comment
+ * @param {number} bits
+ * @returns {$CancellablePromise<void>}
+ */
+export function GenerateSSHKey(name, keyType, comment, bits) {
+    return $Call.ByID(2780705595, name, keyType, comment, bits);
+}
+
+/**
  * GetAllConnections 获取所有连接（含分组 ID 和真实在线状态）
  * @returns {$CancellablePromise<($models.ConnectionInfo | null)[]>}
  */
 export function GetAllConnections() {
     return $Call.ByID(1008967299).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType5($result);
+        return $$createType7($result);
     }));
 }
 
@@ -264,7 +342,7 @@ export function GetAllConnections() {
  */
 export function GetAllGroups() {
     return $Call.ByID(3250721886).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType8($result);
+        return $$createType10($result);
     }));
 }
 
@@ -274,6 +352,39 @@ export function GetAllGroups() {
  */
 export function GetApp() {
     return $Call.ByID(3921265510).then(/** @type {($result: any) => any} */(($result) => {
+        return $$createType12($result);
+    }));
+}
+
+/**
+ * GetAuditLogs 获取审计日志（最近 N 条）
+ * @param {number} limit
+ * @returns {$CancellablePromise<$models.AuditEntry[]>}
+ */
+export function GetAuditLogs(limit) {
+    return $Call.ByID(2129963129, limit).then(/** @type {($result: any) => any} */(($result) => {
+        return $$createType14($result);
+    }));
+}
+
+/**
+ * GetAuditLogsByDate 按日期获取审计日志
+ * @param {string} date
+ * @returns {$CancellablePromise<$models.AuditEntry[]>}
+ */
+export function GetAuditLogsByDate(date) {
+    return $Call.ByID(2628788412, date).then(/** @type {($result: any) => any} */(($result) => {
+        return $$createType14($result);
+    }));
+}
+
+/**
+ * GetChildGroups 获取子分组
+ * @param {string} parentID
+ * @returns {$CancellablePromise<($models.SSHGroup | null)[]>}
+ */
+export function GetChildGroups(parentID) {
+    return $Call.ByID(3276789795, parentID).then(/** @type {($result: any) => any} */(($result) => {
         return $$createType10($result);
     }));
 }
@@ -285,7 +396,7 @@ export function GetApp() {
  */
 export function GetClient(connID) {
     return $Call.ByID(3989033924, connID).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType12($result);
+        return $$createType16($result);
     }));
 }
 
@@ -295,7 +406,7 @@ export function GetClient(connID) {
  */
 export function GetConnection(id) {
     return $Call.ByID(1767912643, id).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType4($result);
+        return $$createType6($result);
     }));
 }
 
@@ -305,7 +416,7 @@ export function GetConnection(id) {
  */
 export function GetConnectionList() {
     return $Call.ByID(605773803).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType13($result);
+        return $$createType17($result);
     }));
 }
 
@@ -325,7 +436,7 @@ export function GetDefaultGroupID() {
  */
 export function GetFileOwners(connID, dir, filenames) {
     return $Call.ByID(1023025517, connID, dir, filenames).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType14($result);
+        return $$createType18($result);
     }));
 }
 
@@ -335,7 +446,7 @@ export function GetFileOwners(connID, dir, filenames) {
  */
 export function GetGroupByConnID(connID) {
     return $Call.ByID(567752624, connID).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType7($result);
+        return $$createType9($result);
     }));
 }
 
@@ -345,7 +456,7 @@ export function GetGroupByConnID(connID) {
  */
 export function GetGroupConnectionInfos(groupID) {
     return $Call.ByID(1049785831, groupID).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType5($result);
+        return $$createType7($result);
     }));
 }
 
@@ -355,7 +466,7 @@ export function GetGroupConnectionInfos(groupID) {
  */
 export function GetGroupConnections(groupID) {
     return $Call.ByID(1893665799, groupID).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType13($result);
+        return $$createType17($result);
     }));
 }
 
@@ -365,6 +476,30 @@ export function GetGroupConnections(groupID) {
  */
 export function GetLatency(connID) {
     return $Call.ByID(1796303915, connID);
+}
+
+/**
+ * GetMonitorHistory 获取监控历史数据
+ * @param {string} connID
+ * @param {number} count
+ * @returns {$CancellablePromise<$models.MonitorSnapshot[]>}
+ */
+export function GetMonitorHistory(connID, count) {
+    return $Call.ByID(1354059021, connID, count).then(/** @type {($result: any) => any} */(($result) => {
+        return $$createType20($result);
+    }));
+}
+
+/**
+ * GetMonitorHistorySince 获取指定时间以来的监控历史
+ * @param {string} connID
+ * @param {number} since
+ * @returns {$CancellablePromise<$models.MonitorSnapshot[]>}
+ */
+export function GetMonitorHistorySince(connID, since) {
+    return $Call.ByID(1689517781, connID, since).then(/** @type {($result: any) => any} */(($result) => {
+        return $$createType20($result);
+    }));
 }
 
 /**
@@ -382,8 +517,27 @@ export function GetProcessDetail(connID, pid) {
  */
 export function GetProcessList(connID) {
     return $Call.ByID(2679255376, connID).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType16($result);
+        return $$createType22($result);
     }));
+}
+
+/**
+ * GetRemoteFileSize 获取远程文件大小（用于前端判断是否需要续传）
+ * @param {string} connID
+ * @param {string} remotePath
+ * @returns {$CancellablePromise<number>}
+ */
+export function GetRemoteFileSize(connID, remotePath) {
+    return $Call.ByID(3116097878, connID, remotePath);
+}
+
+/**
+ * GetSSHPublicKey 获取公钥内容
+ * @param {string} keyName
+ * @returns {$CancellablePromise<string>}
+ */
+export function GetSSHPublicKey(keyName) {
+    return $Call.ByID(3485856197, keyName);
 }
 
 /**
@@ -401,7 +555,17 @@ export function GetServerKey(connID) {
  */
 export function GetSessionIDs(connID) {
     return $Call.ByID(3656916833, connID).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType13($result);
+        return $$createType17($result);
+    }));
+}
+
+/**
+ * @param {string} connID
+ * @returns {$CancellablePromise<$models.EnvInfo[]>}
+ */
+export function GetSystemEnvironments(connID) {
+    return $Call.ByID(844593692, connID).then(/** @type {($result: any) => any} */(($result) => {
+        return $$createType24($result);
     }));
 }
 
@@ -411,7 +575,17 @@ export function GetSessionIDs(connID) {
  */
 export function GetSystemStats(connID) {
     return $Call.ByID(453794585, connID).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType18($result);
+        return $$createType26($result);
+    }));
+}
+
+/**
+ * ImportSSHConfig 解析 ~/.ssh/config 文件，返回可用的连接列表
+ * @returns {$CancellablePromise<$models.SSHConfig[]>}
+ */
+export function ImportSSHConfig() {
+    return $Call.ByID(2757675524).then(/** @type {($result: any) => any} */(($result) => {
+        return $$createType28($result);
     }));
 }
 
@@ -430,6 +604,15 @@ export function IsConnected(connID) {
  */
 export function IsDirectoryUploadCancelled() {
     return $Call.ByID(2946716868);
+}
+
+/**
+ * IsLocalDirectory 检查本地路径是否是目录
+ * @param {string} filePath
+ * @returns {$CancellablePromise<boolean>}
+ */
+export function IsLocalDirectory(filePath) {
+    return $Call.ByID(3668141263, filePath);
 }
 
 /**
@@ -466,7 +649,7 @@ export function KillProcess(connID, pid) {
  */
 export function ListDirectory(connID, remotePath) {
     return $Call.ByID(2186396432, connID, remotePath).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType20($result);
+        return $$createType30($result);
     }));
 }
 
@@ -477,7 +660,17 @@ export function ListDirectory(connID, remotePath) {
  */
 export function ListFiles(connID, path) {
     return $Call.ByID(4019260680, connID, path).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType20($result);
+        return $$createType30($result);
+    }));
+}
+
+/**
+ * ListSSHKeys 列出所有 SSH 密钥
+ * @returns {$CancellablePromise<$models.SSHKeyInfo[]>}
+ */
+export function ListSSHKeys() {
+    return $Call.ByID(4074167193).then(/** @type {($result: any) => any} */(($result) => {
+        return $$createType32($result);
     }));
 }
 
@@ -489,6 +682,16 @@ export function ListFiles(connID, path) {
  */
 export function OpenSSHWindow(groupID, groupName, activeConnID) {
     return $Call.ByID(2969027497, groupID, groupName, activeConnID);
+}
+
+/**
+ * ReadFileForUpload 读取本地文件并返回 base64 编码（用于拖放上传）
+ * @param {string} connID
+ * @param {string} filePath
+ * @returns {$CancellablePromise<string>}
+ */
+export function ReadFileForUpload(connID, filePath) {
+    return $Call.ByID(1147306791, connID, filePath);
 }
 
 /**
@@ -537,6 +740,15 @@ export function RemoveFromGroup(groupID, connID) {
  */
 export function RenameFile(connID, oldPath, newPath) {
     return $Call.ByID(926601649, connID, oldPath, newPath);
+}
+
+/**
+ * ReorderGroups 更新分组排序
+ * @param {string[]} groupIDs
+ * @returns {$CancellablePromise<void>}
+ */
+export function ReorderGroups(groupIDs) {
+    return $Call.ByID(2324903188, groupIDs);
 }
 
 /**
@@ -705,6 +917,18 @@ export function UpdateConnection(conn) {
 }
 
 /**
+ * UpdateGroup 更新分组属性（名称、颜色、父分组）
+ * @param {string} groupID
+ * @param {string} name
+ * @param {string} color
+ * @param {string} parentID
+ * @returns {$CancellablePromise<void>}
+ */
+export function UpdateGroup(groupID, name, color, parentID) {
+    return $Call.ByID(2327389571, groupID, name, color, parentID);
+}
+
+/**
  * UploadDirectory 上传目录
  * @param {string} connID
  * @param {string} localPath
@@ -747,23 +971,35 @@ export function WriteToTerminalByID(connID, sessionID, data) {
 
 // Private type creation functions
 const $$createType0 = $Create.Map($Create.Any, $Create.Any);
-const $$createType1 = $models.CommandResult.createFrom;
-const $$createType2 = $Create.Nullable($$createType1);
-const $$createType3 = $models.ConnectionInfo.createFrom;
+const $$createType1 = $models.BatchResult.createFrom;
+const $$createType2 = $Create.Array($$createType1);
+const $$createType3 = $models.CommandResult.createFrom;
 const $$createType4 = $Create.Nullable($$createType3);
-const $$createType5 = $Create.Array($$createType4);
-const $$createType6 = $models.SSHGroup.createFrom;
-const $$createType7 = $Create.Nullable($$createType6);
-const $$createType8 = $Create.Array($$createType7);
-const $$createType9 = application$0.App.createFrom;
-const $$createType10 = $Create.Nullable($$createType9);
-const $$createType11 = $models.SSHClient.createFrom;
+const $$createType5 = $models.ConnectionInfo.createFrom;
+const $$createType6 = $Create.Nullable($$createType5);
+const $$createType7 = $Create.Array($$createType6);
+const $$createType8 = $models.SSHGroup.createFrom;
+const $$createType9 = $Create.Nullable($$createType8);
+const $$createType10 = $Create.Array($$createType9);
+const $$createType11 = application$0.App.createFrom;
 const $$createType12 = $Create.Nullable($$createType11);
-const $$createType13 = $Create.Array($Create.Any);
-const $$createType14 = $Create.Map($Create.Any, $Create.Any);
-const $$createType15 = $models.ProcessInfo.createFrom;
-const $$createType16 = $Create.Array($$createType15);
-const $$createType17 = $models.SystemStats.createFrom;
-const $$createType18 = $Create.Nullable($$createType17);
-const $$createType19 = $models.FileInfo.createFrom;
+const $$createType13 = $models.AuditEntry.createFrom;
+const $$createType14 = $Create.Array($$createType13);
+const $$createType15 = $models.SSHClient.createFrom;
+const $$createType16 = $Create.Nullable($$createType15);
+const $$createType17 = $Create.Array($Create.Any);
+const $$createType18 = $Create.Map($Create.Any, $Create.Any);
+const $$createType19 = $models.MonitorSnapshot.createFrom;
 const $$createType20 = $Create.Array($$createType19);
+const $$createType21 = $models.ProcessInfo.createFrom;
+const $$createType22 = $Create.Array($$createType21);
+const $$createType23 = $models.EnvInfo.createFrom;
+const $$createType24 = $Create.Array($$createType23);
+const $$createType25 = $models.SystemStats.createFrom;
+const $$createType26 = $Create.Nullable($$createType25);
+const $$createType27 = $models.SSHConfig.createFrom;
+const $$createType28 = $Create.Array($$createType27);
+const $$createType29 = $models.FileInfo.createFrom;
+const $$createType30 = $Create.Array($$createType29);
+const $$createType31 = $models.SSHKeyInfo.createFrom;
+const $$createType32 = $Create.Array($$createType31);

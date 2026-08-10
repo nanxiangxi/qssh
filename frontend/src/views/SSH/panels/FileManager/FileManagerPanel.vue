@@ -1,5 +1,5 @@
 <template>
-  <div class="file-manager">
+  <div class="file-manager" data-file-drop-target>
     <!-- 工具栏 -->
     <FileToolbar
       :current-path="currentPath"
@@ -28,10 +28,10 @@
       <div v-if="operationLocks.batchDelete || operationLocks.batchDownload" class="operation-overlay">
         <div class="loading-spinner"></div>
         <div class="loading-text">
-          {{ operationLocks.batchDelete ? '正在删除...' : '正在下载...' }}
+          {{ operationLocks.batchDelete ? t('common.deleting') + '...' : t('common.download') + '...' }}
         </div>
       </div>
-      
+
       <FileTable
         :files="filteredFiles"
         :loading="loading"
@@ -48,8 +48,8 @@
 
     <!-- 状态栏 -->
     <div class="status-bar">
-      <span>{{ files.length }} 个项目</span>
-      <span v-if="selectedFile">| 已选择: {{ selectedFile.name }}</span>
+      <span>{{ files.length }} {{ t('fileManager.items', { count: files.length }) }}</span>
+      <span v-if="selectedFile">| {{ t('common.selected') }}: {{ selectedFile.name }}</span>
     </div>
 
     <!-- 三点操作菜单 -->
@@ -98,6 +98,7 @@
     <Modal
       v-model:visible="showConfirmDialog"
       :title="confirmTitle"
+      :cancel-text="t('common.cancel')"
       @confirm="handleConfirm"
       @close="showConfirmDialog = false"
       @cancel="showConfirmDialog = false"
@@ -109,6 +110,7 @@
     <Modal
       v-model:visible="showInputDialog"
       :title="inputTitle"
+      :cancel-text="t('common.cancel')"
       @confirm="handleInputConfirm"
       @close="showInputDialog = false"
       @cancel="showInputDialog = false"
@@ -131,10 +133,10 @@
     <!-- 上传任务面板 -->
     <div v-if="showUploadPanel" class="upload-panel">
       <div class="upload-panel-header">
-        <h3>上传任务 ({{ activeUploads.length }}/{{ uploadTasks.length }})</h3>
+        <h3>{{ t('fileManager.uploadTask', { active: activeUploads.length, total: uploadTasks.length }) }}</h3>
         <div class="upload-panel-actions">
-          <button v-if="completedUploads.length > 0" @click="clearCompleted" class="btn-clear">清除已完成</button>
-          <button @click="clearAll" class="btn-close">关闭</button>
+          <button v-if="completedUploads.length > 0" @click="clearCompleted" class="btn-clear">{{ t('fileManager.clearCompleted') }}</button>
+          <button @click="clearAll" class="btn-close">{{ t('common.close') }}</button>
         </div>
       </div>
       
@@ -157,33 +159,33 @@
           </div>
           
           <div class="task-status">
-            <span v-if="task.status === 'pending'" class="status-pending">等待中...</span>
-            <span v-else-if="task.status === 'uploading'" class="status-uploading">上传中...</span>
-            <span v-else-if="task.status === 'success'" class="status-success">✓ 成功</span>
+            <span v-if="task.status === 'pending'" class="status-pending">{{ t('fileManager.statusPending') }}</span>
+            <span v-else-if="task.status === 'uploading'" class="status-uploading">{{ t('fileManager.uploading') }}</span>
+            <span v-else-if="task.status === 'success'" class="status-success">✓ {{ t('fileManager.statusSuccess') }}</span>
             <span v-else-if="task.status === 'failed'" class="status-failed">✗ {{ task.errorMessage }}</span>
-            <span v-else-if="task.status === 'cancelled'" class="status-cancelled">已取消</span>
+            <span v-else-if="task.status === 'cancelled'" class="status-cancelled">{{ t('fileManager.statusCancelled') }}</span>
             
             <div class="task-actions">
-              <button 
-                v-if="task.status === 'uploading'" 
-                @click="cancelTask(task.id)" 
+              <button
+                v-if="task.status === 'uploading'"
+                @click="cancelTask(task.id)"
                 class="btn-cancel"
               >
-                取消
+                {{ t('common.cancel') }}
               </button>
-              <button 
-                v-if="task.status === 'failed'" 
-                @click="retryTask(task.id)" 
+              <button
+                v-if="task.status === 'failed'"
+                @click="retryTask(task.id)"
                 class="btn-retry"
               >
-                重试
+                {{ t('common.retry') }}
               </button>
             </div>
           </div>
         </div>
         
         <div v-if="uploadTasks.length === 0" class="empty-tasks">
-          暂无上传任务
+          {{ t('fileManager.noUploadTasks') }}
         </div>
       </div>
     </div>
@@ -192,6 +194,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch, inject, nextTick } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { SSHService } from '@bindings/changeme/ssh/index.js'
 import { Events } from '@wailsio/runtime'
 import { showMessage } from '@/utils/message'
@@ -211,6 +214,8 @@ import FileTable from './components/FileTable.vue'
 import ActionMenu from './components/ActionMenu.vue'
 import FilePreview from './components/FilePreview.vue'
 import PermissionEditor from './components/PermissionEditor.vue'
+
+const { t } = useI18n()
 
 // 导入 composables
 import { useFileOperations } from './composables/useFileOperations'
@@ -326,7 +331,7 @@ async function loadFiles() {
     logFileOperation(currentConnId.value, 'browse', currentPath.value)
   } catch (error) {
     console.error('[FileManager] 加载文件列表失败:', error)
-    showMessage('加载文件列表失败', 'error')
+    showMessage(t('fileManager.loadFailed'), 'error')
     logError(currentConnId.value, '加载文件列表失败', error)
   } finally {
     loading.value = false
@@ -452,7 +457,7 @@ const cancelSearch = async () => {
       searchCompleteUnsubscribe = null
     }
     
-    showMessage('已取消搜索', 'info')
+    showMessage(t('fileManager.searchCancelled'), 'info')
   }
 }
 
@@ -470,7 +475,7 @@ const executeRecursiveSearch = async () => {
   isSearching.value = true
   
   
-  showMessage('正在全目录搜索...（点击 X 可取消，双击文件可停止）', 'info')
+  showMessage(t('fileManager.searching'), 'info')
   
   // 设置事件监听器
   let resultCount = 0
@@ -523,11 +528,11 @@ const executeRecursiveSearch = async () => {
     }
     
     if (eventData.error) {
-      showMessage('搜索失败', 'error')
+      showMessage(t('fileManager.searchFailed'), 'error')
     } else if (eventData.totalFound > 0) {
-      showMessage(`找到 ${eventData.totalFound} 个匹配的文件`, 'success')
+      showMessage(t('fileManager.searchFound', { count: eventData.totalFound }), 'success')
     } else {
-      showMessage('未找到匹配的文件', 'warning')
+      showMessage(t('fileManager.searchNoResults'), 'warning')
     }
   })
   
@@ -554,7 +559,7 @@ const executeRecursiveSearch = async () => {
       searchCompleteUnsubscribe = null
     }
     
-    showMessage('搜索启动失败', 'error')
+    showMessage(t('fileManager.searchStartFailed'), 'error')
   }
 }
 
@@ -611,12 +616,12 @@ const previewFile = async (file) => {
   
   // 检查是否正在操作
   if (operationLocks.value.preview) {
-    showMessage('正在加载中，请稍候...', 'warning')
+    showMessage(t('fileManager.loadingWait'), 'warning')
     return
   }
   
   if (file.isDir) {
-    showMessage('无法预览目录', 'warning')
+    showMessage(t('fileManager.cannotPreviewDir'), 'warning')
     return
   }
   
@@ -652,17 +657,17 @@ const previewFile = async (file) => {
   
   if (imageExts.includes(ext)) {
     previewType.value = 'image'
-    previewTitle.value = `图片预览: ${file.name}`
+    previewTitle.value = t('fileManager.imagePreview', { name: file.name })
     previewEditable.value = false
     
     // ✅ 检查文件大小，超过 10MB 提示用户
     const fileSizeMB = file.size / (1024 * 1024)
     if (fileSizeMB > 10) {
-      showMessage(`图片文件较大 (${fileSizeMB.toFixed(1)} MB)，加载可能需要一些时间`, 'warning')
+      showMessage(t('fileManager.largeImage', { size: fileSizeMB.toFixed(1) }), 'warning')
     }
     
     operationLocks.value.preview = true
-    showMessage('正在加载图片...', 'info')
+    showMessage(t('fileManager.loadingImage'), 'info')
     
     try {
       const base64Data = await SSHService.DownloadFile(currentConnId.value, file.path)
@@ -677,24 +682,24 @@ const previewFile = async (file) => {
       showPreviewDialog.value = true
     } catch (error) {
       console.error('[FileManager] 加载图片失败:', error)
-      showMessage('加载图片失败', 'error')
+      showMessage(t('fileManager.loadImageFailed'), 'error')
     } finally {
       operationLocks.value.preview = false
     }
   } else if (videoExts.includes(ext)) {
     previewType.value = 'video'
-    previewTitle.value = `视频预览: ${file.name}`
+    previewTitle.value = t('fileManager.videoPreview', { name: file.name })
     previewEditable.value = false
     
     // ✅ 检查文件大小，超过 50MB 提示用户
     const fileSizeMB = file.size / (1024 * 1024)
     if (fileSizeMB > 50) {
-      showMessage(`视频文件较大 (${fileSizeMB.toFixed(1)} MB)，建议下载到本地观看`, 'warning')
+      showMessage(t('fileManager.largeVideo', { size: fileSizeMB.toFixed(1) }), 'warning')
       return
     }
     
     operationLocks.value.preview = true
-    showMessage('正在加载视频...', 'info')
+    showMessage(t('fileManager.loadingVideo'), 'info')
     
     try {
       const base64Data = await SSHService.DownloadFile(currentConnId.value, file.path)
@@ -709,24 +714,24 @@ const previewFile = async (file) => {
       showPreviewDialog.value = true
     } catch (error) {
       console.error('[FileManager] 加载视频失败:', error)
-      showMessage('加载视频失败', 'error')
+      showMessage(t('fileManager.loadVideoFailed'), 'error')
     } finally {
       operationLocks.value.preview = false
     }
   } else if (audioExts.includes(ext)) {
     previewType.value = 'audio'
-    previewTitle.value = `音频预览: ${file.name}`
+    previewTitle.value = t('fileManager.audioPreview', { name: file.name })
     previewEditable.value = false
     
     // ✅ 检查文件大小，超过 20MB 提示用户
     const fileSizeMB = file.size / (1024 * 1024)
     if (fileSizeMB > 20) {
-      showMessage(`音频文件较大 (${fileSizeMB.toFixed(1)} MB)，建议下载到本地收听`, 'warning')
+      showMessage(t('fileManager.largeAudio', { size: fileSizeMB.toFixed(1) }), 'warning')
       return
     }
     
     operationLocks.value.preview = true
-    showMessage('正在加载音频...', 'info')
+    showMessage(t('fileManager.loadingAudio'), 'info')
     
     try {
       const base64Data = await SSHService.DownloadFile(currentConnId.value, file.path)
@@ -741,17 +746,17 @@ const previewFile = async (file) => {
       showPreviewDialog.value = true
     } catch (error) {
       console.error('[FileManager] 加载音频失败:', error)
-      showMessage('加载音频失败', 'error')
+      showMessage(t('fileManager.loadAudioFailed'), 'error')
     } finally {
       operationLocks.value.preview = false
     }
   } else if (textExts.includes(ext)) {
     previewType.value = 'text'
-    previewTitle.value = `查看文件: ${file.name}`
+    previewTitle.value = t('fileManager.viewFile', { name: file.name })
     previewEditable.value = false
     
     operationLocks.value.preview = true
-    showMessage('正在加载文件...', 'info')
+    showMessage(t('fileManager.loadingFile'), 'info')
     
     try {
       const base64Data = await SSHService.DownloadFile(currentConnId.value, file.path)
@@ -766,18 +771,18 @@ const previewFile = async (file) => {
       showPreviewDialog.value = true
     } catch (error) {
       console.error('[FileManager] 加载文件失败:', error)
-      showMessage('加载文件失败', 'error')
+      showMessage(t('fileManager.loadFileFailed'), 'error')
     } finally {
       operationLocks.value.preview = false
     }
   } else {
-    showMessage(`该文件格式暂不支持预览: .${ext}`, 'info')
+    showMessage(t('fileManager.unsupportedFormat', { ext }), 'info')
   }
 }
 
 const enableEdit = () => {
   previewEditable.value = true
-  previewTitle.value = `编辑文件: ${previewFileName.value}`
+  previewTitle.value = t('fileManager.editFile', { name: previewFileName.value })
 }
 
 const saveEditedFile = async () => {
@@ -791,7 +796,7 @@ const saveEditedFile = async () => {
     // 将 Uint8Array 转换为 base64 字符串
     const base64Data = btoa(String.fromCharCode(...data))
     await SSHService.UploadFile(currentConnId.value, previewTargetFile.value.path, base64Data)
-    showMessage('保存成功', 'success')
+    showMessage(t('fileManager.saveSuccess'), 'success')
     
     // ✅ 刷新文件列表
     loadFiles()
@@ -800,7 +805,7 @@ const saveEditedFile = async () => {
     closePreview()
   } catch (error) {
     console.error('[FileManager] 保存失败:', error)
-    showMessage('保存失败', 'error')
+    showMessage(t('fileManager.saveFailed'), 'error')
   }
 }
 
@@ -829,8 +834,8 @@ const openFile = (file) => {
 const deleteFile = (file) => {
   closeContextMenu()
   showConfirmDialog.value = true
-  confirmTitle.value = '确认删除'
-  confirmMessage.value = `确定要删除 ${file.isDir ? '目录' : '文件'} "${file.name}" 吗？此操作不可恢复！`
+  confirmTitle.value = t('fileManager.confirmDelete')
+  confirmMessage.value = t('fileManager.deleteConfirmMsg', { type: file.isDir ? t('fileManager.directory') : t('fileManager.file'), name: file.name })
   confirmCallback = async () => {
     try {
       await deleteFileOp(file)
@@ -841,12 +846,12 @@ const deleteFile = (file) => {
         
         // 如果搜索结果变为空，清除搜索状态
         if (searchResults.value.length === 0) {
-          showMessage('已删除，搜索结果已清空', 'success')
+          showMessage(t('fileManager.deletedSearchCleared'), 'success')
           searchResults.value = []
           isSearching.value = false
           currentSearchID.value = ''
         } else {
-          showMessage(`已删除，剩余 ${searchResults.value.length} 个结果`, 'success')
+          showMessage(t('fileManager.deletedRemaining', { count: searchResults.value.length }), 'success')
         }
       }
     } catch (error) {
@@ -867,10 +872,10 @@ const renameFile = (file) => {
   closeContextMenu()
   
   showInputDialog.value = true
-  inputTitle.value = '重命名'
-  inputLabel.value = '请输入新名称:'
+  inputTitle.value = t('fileManager.rename')
+  inputLabel.value = t('fileManager.enterNewName')
   inputValue.value = file.name
-  inputPlaceholder.value = '文件名'
+  inputPlaceholder.value = t('fileManager.fileName')
   inputCallback = async (newName) => {
     try {
       await renameFileOp(file, newName)
@@ -914,9 +919,9 @@ const copyFilePath = (file) => {
   closeContextMenu()
   if (file && file.path) {
     navigator.clipboard.writeText(file.path).then(() => {
-      showMessage(`已复制路径: ${file.path}`, 'success')
+      showMessage(t('fileManager.pathCopied', { path: file.path }), 'success')
     }).catch(() => {
-      showMessage('复制路径失败', 'error')
+      showMessage(t('fileManager.copyPathFailed'), 'error')
     })
   }
 }
@@ -946,7 +951,7 @@ const chmodFile = (file) => {
   
   // 检查是否是符号链接
   if (file.mode && file.mode.startsWith('L')) {
-    showMessage('符号链接的权限不可修改', 'warning')
+    showMessage(t('fileManager.symlinkPermissionError'), 'warning')
     return
   }
   
@@ -1011,13 +1016,13 @@ const handleChmodConfirm = async () => {
       const selectedFileList = filteredFiles.value.filter(f => selectedFiles.value.has(f.name))
       
       if (selectedFileList.length === 0) {
-        showMessage('没有选中的文件', 'warning')
+        showMessage(t('fileManager.noSelectedFiles'), 'warning')
         return
       }
-      
+
       showConfirmDialog.value = true
-      confirmTitle.value = '确认批量修改权限'
-      confirmMessage.value = `确定要修改选中的 ${selectedFileList.length} 个${selectedFileList[0].isDir ? '目录' : '文件'}的权限为 ${chmodValue.value} 吗？`
+      confirmTitle.value = t('fileManager.confirmBatchChmod')
+      confirmMessage.value = t('fileManager.batchChmodConfirm', { count: selectedFileList.length, type: selectedFileList[0].isDir ? t('fileManager.directory') : t('fileManager.file'), perm: chmodValue.value })
       confirmCallback = async () => {
         let successCount = 0
         let failCount = 0
@@ -1051,9 +1056,9 @@ const handleChmodConfirm = async () => {
         await loadFiles()
         
         if (failCount === 0) {
-          showMessage(`成功修改 ${successCount} 个文件的权限`, 'success')
+          showMessage(t('fileManager.chmodSuccess', { count: successCount }), 'success')
         } else {
-          showMessage(`修改完成: ${successCount} 成功, ${failCount} 失败`, 'warning')
+          showMessage(t('fileManager.chmodResult', { success: successCount, fail: failCount }), 'warning')
         }
         
         isBatchChmod.value = false
@@ -1077,7 +1082,7 @@ const handleChmodConfirm = async () => {
     // 检查返回结果
     if (result === null || result === undefined) {
       // ExecuteCommand 在连接不存在时返回 null
-      throw new Error('连接不存在或命令执行失败')
+      throw new Error(t('fileManager.connectionOrCommandFailed'))
     }
     
     // Wails v3 的 ExecuteCommand 返回的是 CommandResult 对象
@@ -1092,9 +1097,9 @@ const handleChmodConfirm = async () => {
       // 如果有 stderr 输出，显示警告
       if (stderr && stderr.trim()) {
         console.warn('[FileManager] ⚠️ 权限修改有警告:', stderr)
-        showMessage(`权限修改成功，但有警告: ${stderr}`, 'warning')
+        showMessage(t('fileManager.chmodWarning', { warning: stderr }), 'warning')
       } else {
-        showMessage('权限修改成功', 'success')
+        showMessage(t('fileManager.chmodSuccessSingle'), 'success')
       }
       
       // 强制刷新文件列表
@@ -1102,11 +1107,11 @@ const handleChmodConfirm = async () => {
       isBatchChmod.value = false // 重置标志
       showChmodDialog.value = false
     } else {
-      throw new Error(stderr || '权限修改失败')
+      throw new Error(stderr || t('fileManager.chmodFailedDefault'))
     }
   } catch (error) {
     console.error('[FileManager] 权限修改失败:', error)
-    showMessage(`权限修改失败: ${error.message}`, 'error')
+    showMessage(t('fileManager.chmodFailed', { error: error.message }), 'error')
   }
 }
 
@@ -1119,6 +1124,43 @@ const handlePermissionUpdate = ({ group, perm, value }) => {
 watch(chmodPermissions, () => {
   calculateNumericMode()
 }, { deep: true })
+
+// ========== Wails 文件拖放 ==========
+// 拖放由 Wails 原生处理，通过事件通知前端
+Events.On('file-manager:files-dropped', async (event) => {
+  const data = event?.data
+  if (!data || !data.files || data.files.length === 0) return
+
+  const filePaths = data.files
+  showMessage(t('fileManager.filesDetected', { count: filePaths.length }), 'info')
+
+  // 读取文件内容并上传
+  for (const filePath of filePaths) {
+    try {
+      const fileName = filePath.split(/[/\\]/).pop()
+      const remotePath = joinPath(currentPath.value, fileName)
+
+      // 检查是文件还是目录
+      const isDir = await SSHService.IsLocalDirectory(filePath)
+      if (isDir) {
+        // 目录：使用目录上传
+        await SSHService.UploadDirectory(currentConnId.value, filePath, remotePath)
+        showMessage(t('fileManager.directoryUploaded', { name: fileName }), 'success')
+      } else {
+        // 文件：读取内容并上传
+        const fileData = await SSHService.ReadFileForUpload(currentConnId.value, filePath)
+        if (fileData) {
+          await SSHService.UploadFile(currentConnId.value, remotePath, fileData)
+          showMessage(t('fileManager.fileUploaded', { name: fileName }), 'success')
+        }
+      }
+    } catch (e) {
+      showMessage(t('fileManager.uploadFailedMsg', { error: e?.message || e }), 'error')
+    }
+  }
+
+  loadFiles()
+})
 
 // 触发上传
 const triggerUpload = () => {
@@ -1143,13 +1185,13 @@ const handleFileUpload = async (event) => {
       if (fileName.endsWith('.zip') || fileName.endsWith('.tar.gz') || 
           fileName.endsWith('.tgz') || fileName.endsWith('.tar')) {
         // 压缩包上传，自动解压
-        showMessage('正在上传压缩包...', 'info')
+        showMessage(t('fileManager.uploadingArchive'), 'info')
         
         // 1. 先上传压缩包
         await uploadFilesWithTasks(filesArray)
         
         // 2. 等待上传完成
-        showMessage('正在解压...', 'info')
+        showMessage(t('fileManager.extractingArchive'), 'info')
         
         // 3. 解压到当前目录
         const remoteArchivePath = normalizePath(joinPath(currentPath.value, file.name))
@@ -1158,7 +1200,7 @@ const handleFileUpload = async (event) => {
         // 4. 删除临时压缩包
         await SSHService.DeleteTempFile(currentConnId.value, remoteArchivePath)
         
-        showMessage('解压成功', 'success')
+        showMessage(t('fileManager.extractSuccess'), 'success')
         logFileOperation(currentConnId.value, 'extract', file.name)
         loadFiles()
         event.target.value = ''
@@ -1170,7 +1212,7 @@ const handleFileUpload = async (event) => {
     await uploadFilesWithTasks(filesArray)
   } catch (error) {
     console.error('[FileManager] 上传失败:', error)
-    showMessage('上传失败: ' + error.message, 'error')
+    showMessage(t('fileManager.uploadFailedMsg', { error: error.message }), 'error')
   }
   
   event.target.value = ''
@@ -1179,10 +1221,10 @@ const handleFileUpload = async (event) => {
 // 监听新建文件夹对话框
 watch(showNewFolderDialog, (newValue) => {
   if (newValue) {
-    inputTitle.value = '新建文件夹'
-    inputLabel.value = '请输入文件夹名称:'
+    inputTitle.value = t('fileManager.newFolder')
+    inputLabel.value = t('fileManager.enterFolderName')
     inputValue.value = ''
-    inputPlaceholder.value = '文件夹名称'
+    inputPlaceholder.value = t('fileManager.folderName')
     inputCallback = async (folderName) => {
       if (!folderName) return
       
@@ -1190,12 +1232,12 @@ watch(showNewFolderDialog, (newValue) => {
       
       try {
         await SSHService.CreateDirectory(currentConnId.value, folderPath)
-        showMessage('创建成功', 'success')
+        showMessage(t('fileManager.createSuccess'), 'success')
         logFileOperation(currentConnId.value, 'create', folderPath)
         loadFiles()
       } catch (error) {
         console.error('[FileManager] 创建失败:', error)
-        showMessage('创建失败', 'error')
+        showMessage(t('fileManager.createFailed'), 'error')
       }
     }
     showInputDialog.value = true
@@ -1239,7 +1281,7 @@ onMounted(() => {
     
     // 如果有正在进行的目录上传任务，更新它
     if (directoryUploadTask && directoryUploadTask.status === 'uploading') {
-      directoryUploadTask.fileName = data.message || '处理中...'
+      directoryUploadTask.fileName = data.message || t('fileManager.processing')
       directoryUploadTask.progress = data.progress || 0
       
       // 如果收到了文件大小，更新任务
@@ -1259,9 +1301,21 @@ onMounted(() => {
       navigateToPath()
     }
   })
+
+  // 监听环境面板的目录跳转请求
+  Events.On('file-manager:navigate', (event) => {
+    const data = event.data || event
+    if (!data || data.connId !== currentConnId.value) return
+    if (data.path && data.path !== currentPath.value) {
+      currentPath.value = data.path
+      navigateToPath()
+    }
+  })
 })
 
 onUnmounted(() => {
+  // 清理文件拖放事件
+  Events.Off('file-manager:files-dropped')
 
   // 清理 resize 监听器
   if (resizeTimeout) {
@@ -1283,6 +1337,12 @@ onUnmounted(() => {
 
   // 清理终端 cd 事件监听器
   Events.Off('terminal:cd')
+
+  // 清理目录上传进度事件
+  Events.Off('directory-upload-progress')
+
+  // 清理环境面板导航事件
+  Events.Off('file-manager:navigate')
 })
 
 // 切换文件选择状态
@@ -1317,7 +1377,7 @@ const triggerDirectoryUpload = async () => {
     const taskId = `dir_upload_${Date.now()}`
     directoryUploadTask = {
       id: taskId,
-      fileName: '正在选择目录...',
+      fileName: t('fileManager.selectingDirectory'),
       fileSize: 0,
       uploadedSize: 0,
       progress: 0,
@@ -1333,19 +1393,19 @@ const triggerDirectoryUpload = async () => {
     // ✅ 不再需要手动设置 showUploadPanel，watch 会自动处理
     
     // 调用后端方法，使用原生对话框选择目录并自动压缩上传
-    showMessage('正在选择目录...', 'info')
-    directoryUploadTask.fileName = '正在选择目录...'
+    showMessage(t('fileManager.selectingDirectory'), 'info')
+    directoryUploadTask.fileName = t('fileManager.selectingDirectory')
     directoryUploadTask.progress = 5
     
     await SSHService.SelectLocalDirectoryAndUpload(currentConnId.value, currentPath.value)
     
     // 更新进度
-    directoryUploadTask.fileName = '目录上传成功'
+    directoryUploadTask.fileName = t('fileManager.directoryUploadSuccess')
     directoryUploadTask.progress = 100
     directoryUploadTask.status = 'success'
     directoryUploadTask.endTime = Date.now()
     
-    showMessage('目录上传成功', 'success')
+    showMessage(t('fileManager.directoryUploadSuccess'), 'success')
     logFileOperation(currentConnId.value, 'upload', currentPath.value)
     loadFiles()
     
@@ -1372,7 +1432,7 @@ const triggerDirectoryUpload = async () => {
       directoryUploadTask.endTime = Date.now()
     }
     
-    showMessage('目录上传失败: ' + error.message, 'error')
+    showMessage(t('fileManager.directoryUploadFailed', { error: error.message }), 'error')
   } finally {
     directoryUploadTask = null
   }
@@ -1384,7 +1444,7 @@ const batchDownload = async () => {
   
   // 检查是否正在操作
   if (operationLocks.value.batchDownload) {
-    showMessage('正在下载中，请稍候...', 'warning')
+    showMessage(t('fileManager.downloadingWait'), 'warning')
     return
   }
   
@@ -1394,10 +1454,10 @@ const batchDownload = async () => {
     const selectedFileList = filteredFiles.value.filter(f => selectedFiles.value.has(f.name))
     
     if (selectedFileList.length === 0) {
-      showMessage('没有选中的文件', 'warning')
+      showMessage(t('fileManager.noSelectedFiles'), 'warning')
       return
     }
-    
+
     // 生成压缩包名称（使用时间戳）
     const timestamp = new Date().getTime()
     const archiveName = `batch_download_${timestamp}`
@@ -1406,16 +1466,16 @@ const batchDownload = async () => {
     const filePaths = selectedFileList.map(f => f.path)
     
     
-    showMessage(`正在创建压缩包 (${filePaths.length} 个文件)...`, 'info')
+    showMessage(t('fileManager.creatingArchive', { count: filePaths.length }), 'info')
     
     // 1. 后端创建压缩包
     const tempArchivePath = await SSHService.CreateArchive(currentConnId.value, filePaths, archiveName)
     
     if (!tempArchivePath) {
-      throw new Error('创建压缩包失败')
+      throw new Error(t('fileManager.createArchiveFailed'))
     }
     
-    showMessage('正在下载压缩包...', 'info')
+    showMessage(t('fileManager.downloadingArchive'), 'info')
     
     // 2. 下载压缩包
     const base64Data = await SSHService.DownloadFile(currentConnId.value, tempArchivePath)
@@ -1437,7 +1497,7 @@ const batchDownload = async () => {
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
     
-    showMessage('下载成功', 'success')
+    showMessage(t('fileManager.downloadSuccess'), 'success')
     
     // 4. 删除临时文件
     await SSHService.DeleteTempFile(currentConnId.value, tempArchivePath)
@@ -1452,7 +1512,7 @@ const batchDownload = async () => {
     
   } catch (error) {
     console.error('[FileManager] 批量下载失败:', error)
-    showMessage('批量下载失败: ' + error.message, 'error')
+    showMessage(t('fileManager.batchDownloadFailed', { error: error.message }), 'error')
   } finally {
     operationLocks.value.batchDownload = false
   }
@@ -1464,13 +1524,13 @@ const batchDelete = async () => {
   
   // 检查是否正在操作
   if (operationLocks.value.batchDelete) {
-    showMessage('正在删除中，请稍候...', 'warning')
+    showMessage(t('fileManager.deletingWait'), 'warning')
     return
   }
   
   showConfirmDialog.value = true
-  confirmTitle.value = '确认批量删除'
-  confirmMessage.value = `确定要删除选中的 ${selectedFiles.value.size} 个文件/目录吗？此操作不可恢复！`
+  confirmTitle.value = t('fileManager.confirmBatchDelete')
+  confirmMessage.value = t('fileManager.batchDeleteConfirmMsg', { count: selectedFiles.value.size })
   confirmCallback = async () => {
     operationLocks.value.batchDelete = true
     let successCount = 0
@@ -1479,7 +1539,7 @@ const batchDelete = async () => {
     
     try {
       // 显示开始消息
-      showMessage(`正在删除 ${totalCount} 个文件...`, 'info')
+      showMessage(t('fileManager.deletingFiles', { count: totalCount }), 'info')
       
       // 批量删除时不立即刷新，最后统一刷新
       for (const fileName of selectedFiles.value) {
@@ -1502,7 +1562,7 @@ const batchDelete = async () => {
             // 实时更新进度提示
             const remaining = totalCount - successCount - failCount
             if (remaining > 0) {
-              showMessage(`正在删除... (${successCount + failCount}/${totalCount})`, 'info')
+              showMessage(t('fileManager.deletingProgress', { current: successCount + failCount, total: totalCount }), 'info')
             }
           } catch (error) {
             console.error(`[FileManager] 删除失败: ${fileName}`, error)
@@ -1517,9 +1577,9 @@ const batchDelete = async () => {
       loadFiles()
       
       if (failCount === 0) {
-        showMessage(`成功删除 ${successCount} 个文件`, 'success')
+        showMessage(t('fileManager.deleteSuccess', { count: successCount }), 'success')
       } else {
-        showMessage(`删除完成: ${successCount} 成功, ${failCount} 失败`, 'warning')
+        showMessage(t('fileManager.deleteResult', { success: successCount, fail: failCount }), 'warning')
       }
     } finally {
       operationLocks.value.batchDelete = false
@@ -1537,7 +1597,7 @@ const batchChmod = () => {
   const hasFile = selectedFileList.some(f => !f.isDir)
   
   if (hasDir && hasFile) {
-    showMessage('不能同时修改文件和目录的权限', 'warning')
+    showMessage(t('fileManager.cannotChmodMixed'), 'warning')
     return
   }
   
@@ -1562,6 +1622,8 @@ const batchChmod = () => {
   display: flex;
   flex-direction: column;
   background: var(--bg-panel);
+  position: relative;
+  position: relative;
   overflow: hidden;
 }
 
@@ -1822,6 +1884,39 @@ const batchChmod = () => {
   justify-content: center;
   z-index: 100;
   backdrop-filter: blur(4px);
+}
+
+/* Wails 文件拖放样式 - 全局覆盖层 */
+:global(.wails-drag-overlay) {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(59, 130, 246, 0.15);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  pointer-events: none;
+}
+
+:global(.wails-drag-overlay .drop-zone) {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 40px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px dashed var(--accent-primary);
+  border-radius: 12px;
+  color: var(--accent-primary);
+}
+
+:global(.wails-drag-overlay .drop-zone p) {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
 }
 
 .loading-spinner {

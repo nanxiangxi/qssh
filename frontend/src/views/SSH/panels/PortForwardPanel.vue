@@ -8,12 +8,12 @@
           <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
           <line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
         </svg>
-        <span class="pf-title">端口转发</span>
+        <span class="pf-title">{{ t('portForward.title') }}</span>
       </div>
       <div class="pf-toolbar-right">
         <button class="pf-btn pf-btn-primary" @click="closeDialog(); showAdd = true">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          <span class="pf-btn-text">添加</span>
+          <span class="pf-btn-text">{{ t('common.add') }}</span>
         </button>
       </div>
     </div>
@@ -22,22 +22,22 @@
     <div class="pf-list">
       <div v-if="forwards.length === 0" class="pf-empty">
         <svg class="pf-icon-muted" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-        <p>暂无端口转发规则</p>
-        <button class="pf-btn pf-btn-primary pf-btn-sm" @click="closeDialog(); showAdd = true">添加转发</button>
+        <p>{{ t('portForward.noRules') }}</p>
+        <button class="pf-btn pf-btn-primary pf-btn-sm" @click="closeDialog(); showAdd = true">{{ t('portForward.add') }}</button>
       </div>
 
       <div v-else class="pf-table-wrap">
         <table class="pf-table">
           <thead>
             <tr>
-              <th>名称</th>
-              <th>类型</th>
-              <th>监听地址</th>
-              <th>目标地址</th>
-              <th>连接</th>
-              <th>流量</th>
-              <th>状态</th>
-              <th>操作</th>
+              <th>{{ t('portForward.name') }}</th>
+              <th>{{ t('common.type') }}</th>
+              <th>{{ t('portForward.listenAddress') }}</th>
+              <th>{{ t('portForward.targetAddress') }}</th>
+              <th>{{ t('portForward.connection') }}</th>
+              <th>{{ t('portForward.traffic') }}</th>
+              <th>{{ t('common.status') }}</th>
+              <th>{{ t('common.actions') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -47,7 +47,7 @@
               </td>
               <td>
                 <span class="pf-type-tag" :class="'pf-type-' + fwd.type">
-                  {{ fwd.type === 'local' ? '远程→本地' : '本地→远程' }}
+                  {{ fwd.type === 'local' ? t('portForward.remoteToLocal') : t('portForward.localToRemote') }}
                 </span>
               </td>
               <td class="pf-mono">{{ fwd.bindAddr }}:{{ fwd.bindPort }}</td>
@@ -68,16 +68,16 @@
               </td>
               <td>
                 <div class="pf-actions">
-                  <button v-if="fwd.status !== 'running'" class="pf-btn pf-btn-sm pf-btn-success" @click="startForward(fwd.id)" title="启动">
+                  <button v-if="fwd.status !== 'running'" class="pf-btn pf-btn-sm pf-btn-success" @click="startForward(fwd.id)" :title="t('common.start')">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                   </button>
-                  <button v-else class="pf-btn pf-btn-sm pf-btn-warn" @click="stopForward(fwd.id)" title="停止">
+                  <button v-else class="pf-btn pf-btn-sm pf-btn-warn" @click="stopForward(fwd.id)" :title="t('common.stop')">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
                   </button>
-                  <button v-if="fwd.status !== 'running'" class="pf-btn pf-btn-sm" @click="editForward(fwd)" title="编辑">
+                  <button v-if="fwd.status !== 'running'" class="pf-btn pf-btn-sm" @click="editForward(fwd)" :title="t('common.edit')">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                   </button>
-                  <button class="pf-btn pf-btn-sm pf-btn-danger" @click="removeForward(fwd.id)" title="删除">
+                  <button class="pf-btn pf-btn-sm pf-btn-danger" @click="removeForward(fwd.id)" :title="t('common.delete')">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                   </button>
                 </div>
@@ -90,8 +90,8 @@
 
     <!-- 底部状态栏 -->
     <div class="pf-footer">
-      <span>{{ forwards.length }} 条规则</span>
-      <span>{{ runningCount }} 运行中</span>
+      <span>{{ t('portForward.rules', { count: forwards.length }) }}</span>
+      <span>{{ t('portForward.running', { count: runningCount }) }}</span>
     </div>
 
     <!-- 添加对话框 -->
@@ -99,55 +99,55 @@
       <div v-if="showAdd" class="pf-modal-mask" @click.self="showAdd = false">
         <div class="pf-modal">
           <div class="pf-modal-head">
-            <h3>{{ editingId ? '编辑端口转发' : '添加端口转发' }}</h3>
+            <h3>{{ editingId ? t('portForward.editForward') : t('portForward.addForward') }}</h3>
             <button @click="closeDialog">&times;</button>
           </div>
           <div class="pf-modal-body">
             <div class="pf-field">
-              <label>名称 <span class="pf-hint-inline">（可选，方便记录用途）</span></label>
-              <input v-model="form.name" placeholder="例如：数据库、Web服务、Redis" class="pf-input pf-input-full" />
+              <label>{{ t('portForward.name') }} <span class="pf-hint-inline">（{{ t('portForward.nameHint') }}）</span></label>
+              <input v-model="form.name" :placeholder="t('portForward.namePlaceholder')" class="pf-input pf-input-full" />
             </div>
             <div class="pf-field">
-              <label>转发类型</label>
+              <label>{{ t('portForward.forwardType') }}</label>
               <div class="pf-radio-group">
                 <label class="pf-radio" :class="{ active: form.type === 'local' }">
                   <input type="radio" v-model="form.type" value="local" />
                   <div class="pf-radio-content">
-                    <span class="pf-radio-title">远程 → 本地</span>
-                    <span class="pf-radio-desc">访问远程内网服务</span>
+                    <span class="pf-radio-title">{{ t('portForward.remoteToLocal') }}</span>
+                    <span class="pf-radio-desc">{{ t('portForward.remoteToLocalDesc') }}</span>
                   </div>
                 </label>
                 <label class="pf-radio" :class="{ active: form.type === 'remote' }">
                   <input type="radio" v-model="form.type" value="remote" />
                   <div class="pf-radio-content">
-                    <span class="pf-radio-title">本地 → 远程</span>
-                    <span class="pf-radio-desc">内网穿透</span>
+                    <span class="pf-radio-title">{{ t('portForward.localToRemote') }}</span>
+                    <span class="pf-radio-desc">{{ t('portForward.localToRemoteDesc') }}</span>
                   </div>
                 </label>
               </div>
             </div>
             <div class="pf-field">
-              <label>{{ form.type === 'local' ? '本地监听端口' : '远程开放端口' }}</label>
-              <div class="pf-hint">{{ form.type === 'local' ? '你的电脑上通过哪个端口访问' : '远程服务器上开放哪个端口' }}</div>
+              <label>{{ form.type === 'local' ? t('portForward.localListenPort') : t('portForward.remoteOpenPort') }}</label>
+              <div class="pf-hint">{{ form.type === 'local' ? t('portForward.localListenPortHint') : t('portForward.remoteOpenPortHint') }}</div>
               <div class="pf-input-row">
                 <input v-model="form.bindAddr" :placeholder="form.type === 'local' ? '127.0.0.1' : '0.0.0.0'" class="pf-input pf-input-addr" />
-                <input v-model.number="form.bindPort" type="number" placeholder="端口" class="pf-input pf-input-port" />
+                <input v-model.number="form.bindPort" type="number" :placeholder="t('portForward.port')" class="pf-input pf-input-port" />
               </div>
             </div>
             <div class="pf-field">
-              <label>{{ form.type === 'local' ? '远程目标地址' : '本地服务地址' }}</label>
-              <div class="pf-hint">{{ form.type === 'local' ? 'SSH 服务器能访问到的内网地址' : '你电脑上运行的服务地址' }}</div>
+              <label>{{ form.type === 'local' ? t('portForward.remoteTargetAddress') : t('portForward.localServiceAddress') }}</label>
+              <div class="pf-hint">{{ form.type === 'local' ? t('portForward.remoteTargetAddressHint') : t('portForward.localServiceAddressHint') }}</div>
               <div class="pf-input-row">
                 <input v-model="form.remoteHost" placeholder="127.0.0.1" class="pf-input pf-input-addr" />
-                <input v-model.number="form.remotePort" type="number" placeholder="端口" class="pf-input pf-input-port" />
+                <input v-model.number="form.remotePort" type="number" :placeholder="t('portForward.port')" class="pf-input pf-input-port" />
               </div>
             </div>
             <div v-if="formError" class="pf-error">{{ formError }}</div>
           </div>
           <div class="pf-modal-foot">
-            <button class="pf-btn" @click="closeDialog">取消</button>
+            <button class="pf-btn" @click="closeDialog">{{ t('common.cancel') }}</button>
             <button class="pf-btn pf-btn-primary" @click="addForward" :disabled="submitting">
-              {{ submitting ? (editingId ? '保存中...' : '添加中...') : (editingId ? '保存' : '添加') }}
+              {{ submitting ? (editingId ? t('portForward.saving') : t('portForward.adding')) : (editingId ? t('common.save') : t('common.add')) }}
             </button>
           </div>
         </div>
@@ -158,11 +158,13 @@
 
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted, inject } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { Events } from '@wailsio/runtime'
 import * as PortForwardService from '../../../../bindings/changeme/ssh/portforwardservice.js'
 import { showMessage } from '../../../utils/message'
 import { addLog, LogType, LogLevel } from '../../../utils/logger'
 
+const { t } = useI18n()
 const connId = inject('connId')
 
 const forwards = ref([])
@@ -203,7 +205,7 @@ watch(() => form.value.type, (type) => {
   form.value.bindAddr = type === 'local' ? '127.0.0.1' : '0.0.0.0'
 })
 
-const statusLabel = (s) => ({ running: '运行中', stopped: '已停止', error: '错误' }[s] || s)
+const statusLabel = (s) => ({ running: t('common.active'), stopped: t('common.disconnected'), error: t('common.error') }[s] || s)
 
 const formatBytes = (bytes) => {
   if (!bytes || bytes === 0) return '0 B'
@@ -240,7 +242,7 @@ const editForward = (fwd) => {
 const addForward = async () => {
   formError.value = ''
   if (!form.value.bindPort || !form.value.remotePort) {
-    formError.value = '请填写端口号'
+    formError.value = t('portForward.pleaseFillPort')
     return
   }
   submitting.value = true
@@ -293,11 +295,11 @@ const startForward = async (id) => {
   try {
     await PortForwardService.StartForward(id)
     addLog(connId, 'portForward', LogLevel.INFO, '启动端口转发: ' + id)
-    showMessage('转发已启动', 'success')
+    showMessage(t('portForward.forwardStarted'), 'success')
     await loadForwards()
   } catch (e) {
     addLog(connId, 'portForward', LogLevel.ERROR, '启动端口转发失败: ' + (e?.message || e))
-    showMessage('启动失败: ' + (e?.message || e), 'error')
+    showMessage(t('portForward.startFailed') + ': ' + (e?.message || e), 'error')
   }
 }
 
@@ -305,11 +307,11 @@ const stopForward = async (id) => {
   try {
     await PortForwardService.StopForward(id)
     addLog(connId, 'portForward', LogLevel.INFO, '停止端口转发: ' + id)
-    showMessage('转发已停止', 'success')
+    showMessage(t('portForward.forwardStopped'), 'success')
     await loadForwards()
   } catch (e) {
     addLog(connId, 'portForward', LogLevel.ERROR, '停止端口转发失败: ' + (e?.message || e))
-    showMessage('停止失败: ' + (e?.message || e), 'error')
+    showMessage(t('portForward.stopFailed') + ': ' + (e?.message || e), 'error')
   }
 }
 
@@ -321,11 +323,11 @@ const removeForward = async (id) => {
     delete names[id]
     localStorage.setItem(NAMES_KEY, JSON.stringify(names))
     addLog(connId, 'portForward', LogLevel.INFO, '删除端口转发: ' + id)
-    showMessage('转发已删除', 'success')
+    showMessage(t('portForward.forwardDeleted'), 'success')
     await loadForwards()
   } catch (e) {
     addLog(connId, 'portForward', LogLevel.ERROR, '删除端口转发失败: ' + (e?.message || e))
-    showMessage('删除失败: ' + (e?.message || e), 'error')
+    showMessage(t('portForward.deleteFailed') + ': ' + (e?.message || e), 'error')
   }
 }
 

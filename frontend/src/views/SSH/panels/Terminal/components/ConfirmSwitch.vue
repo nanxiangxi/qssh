@@ -10,16 +10,16 @@
           </svg>
         </div>
         <div class="dialog-body">
-          <h3 class="dialog-title">{{ title }}</h3>
+          <h3 class="dialog-title">{{ displayTitle }}</h3>
           <p class="dialog-desc">{{ description }}</p>
         </div>
         <div class="dialog-actions">
-          <button class="btn btn-cancel" @click="$emit('cancel')">取消</button>
+          <button class="btn btn-cancel" @click="$emit('cancel')">{{ t('common.cancel') }}</button>
           <button class="btn btn-confirm" @click="$emit('confirm')">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polyline points="9 18 15 12 9 6"/>
             </svg>
-            切换并执行
+            {{ t('terminal.switchAndExecute') }}
           </button>
         </div>
       </div>
@@ -28,13 +28,20 @@
 </template>
 
 <script setup>
-defineProps({
+import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
+
+const props = defineProps({
   visible: { type: Boolean, default: false },
-  title: { type: String, default: '需要切换终端模式' },
+  title: { type: String, default: '' },
   description: { type: String, default: '' }
 })
 
 defineEmits(['confirm', 'cancel'])
+
+const displayTitle = computed(() => props.title || t('terminal.needSwitchMode'))
 </script>
 
 <style scoped>

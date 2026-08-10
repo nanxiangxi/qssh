@@ -24,6 +24,8 @@ type SSHService struct {
 	storage       *StorageManager
 	windowManager *WindowManager
 	groupManager  *GroupManager
+	auditLogger   *AuditLogger
+	monitorHistory *MonitorHistory
 	app           *application.App
 	shellSessions map[string]bool
 
@@ -40,6 +42,8 @@ func NewSSHService() *SSHService {
 		clients:          make(map[string]*SSHClient),
 		storage:          NewStorageManager(),
 		groupManager:     NewGroupManager(),
+		auditLogger:      NewAuditLogger(),
+		monitorHistory:   NewMonitorHistory(),
 		shellSessions:    make(map[string]bool),
 		reconnectConfigs: make(map[string]*SSHConfig),
 	}
@@ -208,17 +212,21 @@ func (s *SSHService) CreateAndConnectWithGroup(config *SSHConfig, groupID string
 	connID := generateConnectionID()
 
 	connInfo := &ConnectionInfo{
-		ID:         connID,
-		Name:       config.Name,
-		Host:       config.Host,
-		Port:       config.Port,
-		Username:   config.Username,
-		Password:   config.Password,
-		KeyPath:    config.KeyPath,
-		PrivateKey: config.PrivateKey,
-		Status:     "disconnected",
-		Saved:      true,
-		GroupID:    groupID,
+		ID:           connID,
+		Name:         config.Name,
+		Host:         config.Host,
+		Port:         config.Port,
+		Username:     config.Username,
+		Password:     config.Password,
+		KeyPath:      config.KeyPath,
+		PrivateKey:   config.PrivateKey,
+		JumpHost:     config.JumpHost,
+		JumpUsername: config.JumpUsername,
+		JumpPassword: config.JumpPassword,
+		JumpKeyPath:  config.JumpKeyPath,
+		Status:       "disconnected",
+		Saved:        true,
+		GroupID:      groupID,
 	}
 
 	if err := s.storage.AddConnection(connInfo); err != nil {
@@ -335,16 +343,117 @@ func (s *SSHService) RunCommand(connID, command string) (string, error) {
 	return output, nil
 }
 
-// ExecuteCommand 执行远程命令
+// ExecuteCommand 执行远程命令（自动记录审计日志）
 func (s *SSHService) ExecuteCommand(connID string, command string) (*CommandResult, error) {
 	s.mu.RLock()
-	defer s.mu.RUnlock()
-
 	client, ok := s.clients[connID]
+	var host, username string
+	if ok {
+		host = client.config.Host
+		username = client.config.Username
+	}
+	s.mu.RUnlock()
+
 	if !ok {
 		return nil, fmt.Errorf("连接不存在: %s", connID)
 	}
-	return client.ExecuteCommand(command)
+
+	result, err := client.ExecuteCommand(command)
+
+	// 记录审计日志
+	success := err == nil && result != nil && result.Success
+	errMsg := ""
+	if err != nil {
+		errMsg = err.Error()
+	} else if result != nil && !result.Success {
+		errMsg = result.Stderr
+	}
+	s.auditLogger.Log(connID, host, username, "command", command, success, errMsg)
+
+	return result, err
+}
+
+// ExecuteCommandWithSudo 执行远程命令（权限不足时自动用 SSH 密码 sudo 提权）
+func (s *SSHService) ExecuteCommandWithSudo(connID string, command string) (*CommandResult, error) {
+	s.mu.RLock()
+	client, ok := s.clients[connID]
+	s.mu.RUnlock()
+
+	if !ok {
+		return nil, fmt.Errorf("连接不存在: %s", connID)
+	}
+
+	// 先直接执行
+	result, err := client.ExecuteCommand(command)
+	if err != nil {
+		return nil, err
+	}
+	if result.Success {
+		return result, nil
+	}
+
+	// 检查是否是权限问题
+	errOut := strings.TrimSpace(result.Stderr)
+	if errOut == "" {
+		errOut = strings.TrimSpace(result.Stdout)
+	}
+	isPermErr := strings.Contains(errOut, "Permission denied") ||
+		strings.Contains(errOut, "permission denied") ||
+		strings.Contains(errOut, "Cannot open")
+
+	if !isPermErr {
+		return result, nil
+	}
+
+	// 用 SSH 密码通过 sudo -S 提权
+	password := client.config.Password
+	if password == "" {
+		return result, fmt.Errorf("权限不足且未配置密码，无法提权")
+	}
+
+	encodedPw := base64.StdEncoding.EncodeToString([]byte(password))
+	sudoCmd := fmt.Sprintf("echo %s | base64 -d | sudo -S sh -c %s 2>&1",
+		encodedPw, shellQuote(command))
+	sudoResult, sudoErr := client.ExecuteCommand(sudoCmd)
+	if sudoErr != nil {
+		return result, fmt.Errorf("sudo 执行失败: %v", sudoErr)
+	}
+	if sudoResult.Success {
+		return sudoResult, nil
+	}
+
+	errMsg := strings.TrimSpace(sudoResult.Stderr)
+	if errMsg == "" {
+		errMsg = strings.TrimSpace(sudoResult.Stdout)
+	}
+	return sudoResult, fmt.Errorf("sudo 执行失败: %s", errMsg)
+}
+
+// ReadFileForUpload 读取本地文件并返回 base64 编码（用于拖放上传）
+func (s *SSHService) ReadFileForUpload(connID string, filePath string) (string, error) {
+	s.mu.RLock()
+	_, ok := s.clients[connID]
+	s.mu.RUnlock()
+
+	if !ok {
+		return "", fmt.Errorf("连接不存在: %s", connID)
+	}
+
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return "", fmt.Errorf("读取文件失败: %v", err)
+	}
+
+	return base64.StdEncoding.EncodeToString(data), nil
+}
+
+// IsLocalDirectory 检查本地路径是否是目录
+func (s *SSHService) IsLocalDirectory(filePath string) bool {
+	info, err := os.Stat(filePath)
+	if err != nil {
+		return false
+	}
+	return info.IsDir()
 }
 
 // UploadFile 上传文件
@@ -386,6 +495,39 @@ func (s *SSHService) DownloadFile(connID string, remotePath string) ([]byte, err
 		return nil, fmt.Errorf("连接不存在: %s", connID)
 	}
 	return client.DownloadFileToBytes(remotePath)
+}
+
+// DownloadFileRange 下载文件指定范围（用于断点续传）
+func (s *SSHService) DownloadFileRange(connID string, remotePath string, offset int64, limit int64) ([]byte, error) {
+	s.mu.RLock()
+	client, ok := s.clients[connID]
+	s.mu.RUnlock()
+
+	if !ok {
+		return nil, fmt.Errorf("连接不存在: %s", connID)
+	}
+	return client.DownloadFileRange(remotePath, offset, limit)
+}
+
+// GetRemoteFileSize 获取远程文件大小（用于前端判断是否需要续传）
+func (s *SSHService) GetRemoteFileSize(connID string, remotePath string) (int64, error) {
+	s.mu.RLock()
+	client, ok := s.clients[connID]
+	s.mu.RUnlock()
+
+	if !ok {
+		return 0, fmt.Errorf("连接不存在: %s", connID)
+	}
+	if client.sftpClient == nil {
+		if err := client.InitSFTP(); err != nil {
+			return 0, err
+		}
+	}
+	stat, err := client.sftpClient.Stat(remotePath)
+	if err != nil {
+		return 0, nil // 文件不存在返回 0
+	}
+	return stat.Size(), nil
 }
 
 // ListDirectory 列出目录
@@ -576,7 +718,8 @@ func (s *SSHService) uploadFileWithProgress(client *SSHClient, remotePath string
 
 	remoteFile, err := client.sftpClient.Create(remotePath)
 	if err != nil {
-		return fmt.Errorf("创建远程文件失败: %v", err)
+		// SFTP 权限不足，回退到 sudo 方式
+		return client.uploadViaSudo(remotePath, data, nil)
 	}
 	defer remoteFile.Close()
 
@@ -711,6 +854,33 @@ func (s *SSHService) SyncImportConnection(conn *ConnectionInfo) error {
 	return err
 }
 
+// ImportSSHConfig 解析 ~/.ssh/config 文件，返回可用的连接列表
+func (s *SSHService) ImportSSHConfig() ([]SSHConfig, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return nil, fmt.Errorf("获取用户主目录失败: %v", err)
+	}
+
+	configPath := filepath.Join(home, ".ssh", "config")
+	entries, err := ParseSSHConfig(configPath)
+	if err != nil {
+		return nil, err
+	}
+
+	var configs []SSHConfig
+	for _, e := range entries {
+		configs = append(configs, SSHConfig{
+			Name:       e.Host,
+			Host:       e.HostName,
+			Port:       e.Port,
+			Username:   e.User,
+			KeyPath:    e.IdentityFile,
+		})
+	}
+
+	return configs, nil
+}
+
 // GetAllConnections 获取所有连接（含分组 ID 和真实在线状态）
 func (s *SSHService) GetAllConnections() []*ConnectionInfo {
 	connections := s.storage.GetAllConnections()
@@ -776,6 +946,21 @@ func (s *SSHService) GetAllGroups() []*SSHGroup         { return s.groupManager.
 func (s *SSHService) GetDefaultGroupID() string         { return "group-1" }
 func (s *SSHService) AddToGroup(groupID, connID string) error { return s.groupManager.AddConnectionToGroup(groupID, connID) }
 func (s *SSHService) RemoveFromGroup(groupID, connID string) error { return s.groupManager.RemoveConnectionFromGroup(groupID, connID) }
+
+// UpdateGroup 更新分组属性（名称、颜色、父分组）
+func (s *SSHService) UpdateGroup(groupID, name, color, parentID string) error {
+	return s.groupManager.UpdateGroup(groupID, name, color, parentID)
+}
+
+// ReorderGroups 更新分组排序
+func (s *SSHService) ReorderGroups(groupIDs []string) error {
+	return s.groupManager.ReorderGroups(groupIDs)
+}
+
+// GetChildGroups 获取子分组
+func (s *SSHService) GetChildGroups(parentID string) []*SSHGroup {
+	return s.groupManager.GetChildGroups(parentID)
+}
 
 func (s *SSHService) GetGroupConnections(groupID string) []string {
 	group := s.groupManager.GetGroup(groupID)
@@ -981,7 +1166,46 @@ func (s *SSHService) GetSystemStats(connID string) (*SystemStats, error) {
 	if !ok {
 		return nil, fmt.Errorf("连接不存在")
 	}
-	return client.GetSystemStats(context.Background())
+
+	stats, err := client.GetSystemStats(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	// 自动记录监控快照
+	if stats != nil {
+		var diskPercent float64
+		var diskUsed, diskTotal uint64
+		if len(stats.Disk.Partitions) > 0 {
+			diskPercent = stats.Disk.Partitions[0].UsedPercent
+			diskUsed = stats.Disk.Partitions[0].Used
+			diskTotal = stats.Disk.Partitions[0].Total
+		}
+		s.monitorHistory.Add(connID, MonitorSnapshot{
+			Timestamp:   time.Now().UnixMilli(),
+			CPUPercent:  stats.CPU.UsagePercent,
+			MemPercent:  stats.Memory.UsedPercent,
+			MemUsed:     stats.Memory.Used,
+			MemTotal:    stats.Memory.Total,
+			DiskPercent: diskPercent,
+			DiskUsed:    diskUsed,
+			DiskTotal:   diskTotal,
+			NetRx:       stats.Network.TotalRx,
+			NetTx:       stats.Network.TotalTx,
+		})
+	}
+
+	return stats, nil
+}
+
+// GetMonitorHistory 获取监控历史数据
+func (s *SSHService) GetMonitorHistory(connID string, count int) []MonitorSnapshot {
+	return s.monitorHistory.Get(connID, count)
+}
+
+// GetMonitorHistorySince 获取指定时间以来的监控历史
+func (s *SSHService) GetMonitorHistorySince(connID string, since int64) []MonitorSnapshot {
+	return s.monitorHistory.GetSince(connID, since)
 }
 
 func (s *SSHService) GetProcessList(connID string) ([]ProcessInfo, error) {
@@ -1103,6 +1327,9 @@ func (s *SSHService) onConnectionDisconnected(connID string) {
 	}
 
 	s.broadcastConnections()
+
+	// 自动重连（后台执行，不阻塞）
+	s.AutoReconnect(connID)
 }
 
 // Reconnect 重新连接
@@ -1117,13 +1344,17 @@ func (s *SSHService) Reconnect(connID string) error {
 			return &FriendlyError{Message: "无法找到连接配置，请重新连接"}
 		}
 		config = &SSHConfig{
-			Name:       connInfo.Name,
-			Host:       connInfo.Host,
-			Port:       connInfo.Port,
-			Username:   connInfo.Username,
-			Password:   connInfo.Password,
-			KeyPath:    connInfo.KeyPath,
-			PrivateKey: connInfo.PrivateKey,
+			Name:         connInfo.Name,
+			Host:         connInfo.Host,
+			Port:         connInfo.Port,
+			Username:     connInfo.Username,
+			Password:     connInfo.Password,
+			KeyPath:      connInfo.KeyPath,
+			PrivateKey:   connInfo.PrivateKey,
+			JumpHost:     connInfo.JumpHost,
+			JumpUsername: connInfo.JumpUsername,
+			JumpPassword: connInfo.JumpPassword,
+			JumpKeyPath:  connInfo.JumpKeyPath,
 		}
 	}
 
@@ -1170,20 +1401,24 @@ func (s *SSHService) Reconnect(connID string) error {
 	return nil
 }
 
-// AutoReconnect 自动重连
+// AutoReconnect 自动重连（指数退避，最多重试 10 次，约 3 分钟）
 func (s *SSHService) AutoReconnect(connID string) {
 	go func() {
-		maxRetries := 3
+		maxRetries := 10
 		retryDelay := 2 * time.Second
+		maxDelay := 30 * time.Second
 
 		for i := 0; i < maxRetries; i++ {
-			if i > 0 {
-				time.Sleep(retryDelay)
-				retryDelay *= 2
-			}
+			time.Sleep(retryDelay)
 
 			if err := s.Reconnect(connID); err == nil {
 				return
+			}
+
+			// 指数退避，上限 30 秒
+			retryDelay *= 2
+			if retryDelay > maxDelay {
+				retryDelay = maxDelay
 			}
 		}
 
@@ -1195,6 +1430,58 @@ func (s *SSHService) AutoReconnect(connID string) {
 			})
 		}
 	}()
+}
+
+// ========== SSH 密钥管理 API ==========
+
+var defaultKeyManager = NewKeyManager()
+
+// ListSSHKeys 列出所有 SSH 密钥
+func (s *SSHService) ListSSHKeys() ([]SSHKeyInfo, error) {
+	return defaultKeyManager.ListKeys()
+}
+
+// GenerateSSHKey 生成新密钥
+func (s *SSHService) GenerateSSHKey(name, keyType, comment string, bits int) error {
+	return defaultKeyManager.GenerateKey(name, keyType, comment, bits)
+}
+
+// DeploySSHPublicKey 部署公钥到远程服务器
+func (s *SSHService) DeploySSHPublicKey(keyName, connID string) error {
+	s.mu.RLock()
+	client, ok := s.clients[connID]
+	s.mu.RUnlock()
+	if !ok {
+		return fmt.Errorf("连接不存在: %s", connID)
+	}
+	return defaultKeyManager.DeployPublicKey(keyName, client)
+}
+
+// GetSSHPublicKey 获取公钥内容
+func (s *SSHService) GetSSHPublicKey(keyName string) (string, error) {
+	return defaultKeyManager.GetPublicKey(keyName)
+}
+
+// DeleteSSHKey 删除密钥
+func (s *SSHService) DeleteSSHKey(keyName string) error {
+	return defaultKeyManager.DeleteKey(keyName)
+}
+
+// ========== 审计日志 API ==========
+
+// GetAuditLogs 获取审计日志（最近 N 条）
+func (s *SSHService) GetAuditLogs(limit int) []AuditEntry {
+	return s.auditLogger.GetLogs(limit)
+}
+
+// GetAuditLogsByDate 按日期获取审计日志
+func (s *SSHService) GetAuditLogsByDate(date string) []AuditEntry {
+	return s.auditLogger.GetLogsByDate(date)
+}
+
+// ExportAuditLogs 导出审计日志
+func (s *SSHService) ExportAuditLogs(startDate, endDate string) (string, error) {
+	return s.auditLogger.ExportLogs(startDate, endDate)
 }
 
 // CheckConnectionHealth 检查连接健康状态
@@ -1230,4 +1517,17 @@ func (s *SSHService) StartHealthCheck() {
 			}
 		}
 	}()
+}
+
+// ========== 系统环境检测 API ==========
+
+func (s *SSHService) GetSystemEnvironments(connID string) ([]EnvInfo, error) {
+	s.mu.RLock()
+	client, ok := s.clients[connID]
+	s.mu.RUnlock()
+
+	if !ok {
+		return nil, fmt.Errorf("连接不存在: %s", connID)
+	}
+	return client.GetSystemEnvironments()
 }

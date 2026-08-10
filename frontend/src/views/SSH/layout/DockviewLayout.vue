@@ -6,37 +6,22 @@
       @ready="onReady"
       class="dockview-host"
     />
-    <!-- 右键菜单 -->
-    <Teleport to="body">
-      <div v-if="ctxMenu.show" class="ctx-menu-mask" @mousedown="ctxMenu.show=false">
-        <div class="ctx-menu" :style="{top:ctxMenu.y+'px', left:ctxMenu.x+'px'}" @mousedown.stop>
-          <div v-if="ctxMenu.panelType === 'terminal'" class="ctx-item" @click="newPanelBeside(ctxMenu.panelId, ctxMenu.panelType)">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            新建终端
-          </div>
-          <div v-if="ctxMenu.panelType === 'terminal'" class="ctx-sep"></div>
-          <div class="ctx-item" @click="closePanel(ctxMenu.panelId)">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-            关闭
-          </div>
-          <div class="ctx-item" @click="closeOtherPanels(ctxMenu.panelId)">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18"/></svg>
-            关闭其他
-          </div>
-          <div class="ctx-item" @click="closeAllByType(ctxMenu.panelType)">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9l6 6M15 9l-6 6"/></svg>
-            关闭全部{{ getPanelTitle(ctxMenu.panelType) }}
-          </div>
-        </div>
-      </div>
-    </Teleport>
+    <ContextMenu
+      :visible="ctxMenu.show"
+      :position="{ x: ctxMenu.x, y: ctxMenu.y }"
+      :items="ctxMenuItems"
+      @select="handleCtxSelect"
+      @close="ctxMenu.show = false"
+    />
   </div>
 </template>
 
 <script>
 import { defineComponent, ref, reactive, computed, onMounted, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { DockviewVue } from 'dockview-vue'
 import 'dockview-vue/dist/styles/dockview.css'
+import ContextMenu from '../../../components/ContextMenu.vue'
 import { PANEL_CONFIG } from '../../../stores/sshLayout'
 import { useTerminalSessionStore } from '../../../stores/terminalSessions'
 import { useConfigStore } from '../../../stores/config'
@@ -52,13 +37,16 @@ import PortForwardPanel from '../panels/PortForwardPanel.vue'
 import FirewallPanel from '../panels/FirewallPanel.vue'
 import ProcessGuardPanel from '../panels/ProcessGuardPanel.vue'
 import BatchCommandPanel from '../panels/BatchCommandPanel.vue'
+import DatabasePanel from '../panels/DatabaseManager/DatabaseManager.vue'
+import EnvironmentPanel from '../panels/EnvironmentPanel.vue'
 
 export default defineComponent({
   name: 'DockviewLayout',
   components: {
     DockviewVue,
+    ContextMenu,
     terminal: StructuredTerminalPanel,  // 结构化终端（默认）
-    
+
     fileManager: FileManagerPanel,
     monitor: MonitorPanel,
     aiChat: AIChatPanel,
@@ -66,7 +54,9 @@ export default defineComponent({
     portForward: PortForwardPanel,
     firewall: FirewallPanel,
     guardian: ProcessGuardPanel,
-    batchCmd: BatchCommandPanel
+    batchCmd: BatchCommandPanel,
+    database: DatabasePanel,
+    environment: EnvironmentPanel
   },
   props: {
     connId: { type: String, required: true }
@@ -75,6 +65,7 @@ export default defineComponent({
   setup(props, { emit }) {
     const dockviewRef = ref(null)
     let dockviewApi = null
+    const { t } = useI18n()
 
     const ctxMenu = reactive({ show: false, x: 0, y: 0, panelId: '', panelType: '' })
     const configStore = useConfigStore()
@@ -88,7 +79,67 @@ export default defineComponent({
       root: { type: 'branch', data: [] }
     }
 
-    const getPanelTitle = (type) => PANEL_CONFIG[type]?.title || type
+    // 右键菜单项
+    const ctxMenuItems = computed(() => {
+      const items = []
+      if (ctxMenu.panelType === 'terminal') {
+        items.push({
+          label: t('terminal.newTerminal'),
+          icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+          action: 'new-terminal',
+        })
+        items.push({ divider: true })
+      }
+      items.push({
+        label: t('common.close'),
+        icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>',
+        action: 'close',
+      })
+      items.push({
+        label: t('terminal.closeOthers'),
+        icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18"/></svg>',
+        action: 'close-others',
+      })
+      items.push({
+        label: t('ssh.closeAllPanels', { type: getPanelTitle(ctxMenu.panelType) }),
+        icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9l6 6M15 9l-6 6"/></svg>',
+        action: 'close-all',
+      })
+      return items
+    })
+
+    function handleCtxSelect(item) {
+      if (!item.action) return
+      switch (item.action) {
+        case 'new-terminal':
+          newPanelBeside(ctxMenu.panelId, ctxMenu.panelType)
+          break
+        case 'close':
+          closePanel(ctxMenu.panelId)
+          break
+        case 'close-others':
+          closeOtherPanels(ctxMenu.panelId)
+          break
+        case 'close-all':
+          closeAllByType(ctxMenu.panelType)
+          break
+      }
+    }
+
+    const panelTitleMap = {
+      terminal: 'tabs.terminal',
+      fileManager: 'tabs.fileManager',
+      monitor: 'tabs.monitor',
+      portForward: 'tabs.portForward',
+      firewall: 'tabs.firewall',
+      guardian: 'tabs.guardian',
+      database: 'tabs.database',
+      aiChat: 'tabs.ai',
+      logs: 'tabs.logs',
+      batchCmd: 'tabs.batchCmd',
+      environment: 'tabs.environment',
+    }
+    const getPanelTitle = (type) => t(panelTitleMap[type] || 'common.type')
     const sessionStore = useTerminalSessionStore()
 
     // 获取终端组件名称
@@ -118,7 +169,7 @@ export default defineComponent({
       const { setActive = true, referencePanel = null, position = null, isAI = false, group = null } = opts
 
       let panelId = panelType
-      let title = config.title
+      let title = getPanelTitle(panelType)
       let sessionId = null
       let component = panelType
 
@@ -126,11 +177,11 @@ export default defineComponent({
         if (isAI) {
           const num = getNextTerminalNum('terminal_ai_')
           panelId = `terminal_ai_${num}`
-          title = `AI 终端-${num}`
+          title = `AI ${t('tabs.terminal')} ${num}`
         } else {
           const num = getNextTerminalNum('terminal_')
           panelId = `terminal_${num}`
-          title = `终端 ${num}`
+          title = `${t('tabs.terminal')} ${num}`
         }
         // 使用配置的终端类型
         component = getTerminalComponent()
@@ -264,8 +315,8 @@ export default defineComponent({
     }
 
     const onContainerContextMenu = (e) => {
-      // 检查是否点击在面板 tab 上
-      const tab = e.target.closest('.dv-tab')
+      // 检查是否点击在面板 tab 上（兼容 dockview 的各种 tab 结构）
+      const tab = e.target.closest('.dv-tab') || e.target.closest('.dv-default-tab') || e.target.closest('[data-panel-id]')
       if (!tab) return
 
       // 获取面板 ID
@@ -351,9 +402,11 @@ export default defineComponent({
     return {
       dockviewRef,
       defaultLayout,
-      ctxMenu,
       themeClass,
       getPanelTitle,
+      ctxMenu,
+      ctxMenuItems,
+      handleCtxSelect,
       addPanel,
       closePanel,
       closeOtherPanels,
@@ -453,9 +506,13 @@ export default defineComponent({
   border-color: var(--border-subtle) !important;
 }
 
-/* 内层消失，布局穿透到外层 */
+/* 内层容器 */
 :deep(.dv-default-tab) {
-  display: contents !important;
+  display: flex !important;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
 }
 
 /* 关闭按钮：非激活时隐藏，hover 外层时显示 */

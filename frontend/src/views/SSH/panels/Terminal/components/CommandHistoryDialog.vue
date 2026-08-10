@@ -4,9 +4,9 @@
       <div class="dialog" @mousedown.stop>
         <!-- 标题栏 -->
         <div class="dialog-header">
-          <h3 class="dialog-title">命令历史</h3>
+          <h3 class="dialog-title">{{ t('terminal.commandHistory') }}</h3>
           <div class="header-actions">
-            <button class="header-btn" :class="{ active: showFavorites }" @click="showFavorites = !showFavorites" title="收藏">
+            <button class="header-btn" :class="{ active: showFavorites }" @click="showFavorites = !showFavorites" :title="t('terminal.favorite')">
               <svg width="14" height="14" viewBox="0 0 24 24" :fill="showFavorites ? '#e0af68' : 'none'" stroke="currentColor" stroke-width="2">
                 <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
               </svg>
@@ -26,7 +26,7 @@
             <circle cx="11" cy="11" r="8"/>
             <line x1="21" y1="21" x2="16.65" y2="16.65"/>
           </svg>
-          <input v-model="searchKeyword" class="search-input" placeholder="搜索命令..." />
+          <input v-model="searchKeyword" class="search-input" :placeholder="t('terminal.searchCommands')" />
         </div>
 
         <!-- 命令列表 -->
@@ -37,9 +37,9 @@
               @click="selectCommand(fav.command)">
               <span class="cmd-star">★</span>
               <span class="cmd-text">{{ fav.command }}</span>
-              <button class="cmd-remove" @click.stop="removeFavorite(fav.id)" title="取消收藏">×</button>
+              <button class="cmd-remove" @click.stop="removeFavorite(fav.id)" :title="t('terminal.unfavorite')">×</button>
             </div>
-            <div v-if="favorites.length === 0" class="empty-state">暂无收藏的命令</div>
+            <div v-if="favorites.length === 0" class="empty-state">{{ t('terminal.noFavorites') }}</div>
           </template>
 
           <template v-else>
@@ -52,18 +52,18 @@
                 class="cmd-fav"
                 :class="{ active: isFavorite(entry.command) }"
                 @click.stop="toggleFavorite(entry.command)"
-                :title="isFavorite(entry.command) ? '取消收藏' : '收藏'"
+                :title="isFavorite(entry.command) ? t('terminal.unfavorite') : t('terminal.favorite')"
               >★</button>
             </div>
             <div v-if="filteredHistory.length === 0" class="empty-state">
-              {{ searchKeyword ? '未找到匹配的命令' : '暂无命令历史' }}
+              {{ searchKeyword ? t('terminal.noCommandMatch') : t('terminal.noCommandHistory') }}
             </div>
           </template>
         </div>
 
         <!-- 底部 -->
         <div class="dialog-footer">
-          <span class="footer-hint">点击填入</span>
+          <span class="footer-hint">{{ t('terminal.clickToFill') }}</span>
         </div>
       </div>
     </div>
@@ -72,6 +72,9 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = defineProps({
   visible: { type: Boolean, default: false },

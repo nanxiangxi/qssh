@@ -24,6 +24,14 @@ type ConnectionInfo struct {
 	PrivateKeyCiphertext string `json:"privateKeyCiphertext,omitempty"`
 	CipherKind           string `json:"cipherKind,omitempty"`
 
+	// 跳板机配置
+	JumpHost     string `json:"jumpHost,omitempty"`
+	JumpUsername string `json:"jumpUsername,omitempty"`
+	JumpPassword string `json:"-"` // 内存明文，永不序列化
+	JumpKeyPath  string `json:"jumpKeyPath,omitempty"`
+
+	JumpPasswordCiphertext string `json:"jumpPasswordCiphertext,omitempty"`
+
 	Status  string `json:"status"`
 	Saved   bool   `json:"saved"`
 	GroupID string `json:"group_id,omitempty"`
@@ -179,6 +187,13 @@ func (sm *StorageManager) decryptInPlace(c *ConnectionInfo) {
 			log.Error("解密私钥失败", "id", c.ID, "error", err)
 		}
 	}
+	if c.JumpPasswordCiphertext != "" {
+		if plain, err := sm.cipher.Decrypt(c.JumpPasswordCiphertext); err == nil {
+			c.JumpPassword = plain
+		} else {
+			log.Error("解密跳板机密码失败", "id", c.ID, "error", err)
+		}
+	}
 }
 
 // encryptForWrite 加密内存明文字段到 Cipher 字段（用于写盘）。
@@ -186,6 +201,7 @@ func (sm *StorageManager) encryptForWrite(c *ConnectionInfo) *ConnectionInfo {
 	cp := *c
 	cp.Password = ""
 	cp.PrivateKey = ""
+	cp.JumpPassword = ""
 
 	if c.Password != "" {
 		if enc, err := sm.cipher.Encrypt(c.Password); err == nil {
@@ -201,6 +217,14 @@ func (sm *StorageManager) encryptForWrite(c *ConnectionInfo) *ConnectionInfo {
 			cp.CipherKind = sm.cipher.Kind()
 		} else {
 			log.Error("加密私钥失败", "id", c.ID, "error", err)
+		}
+	}
+	if c.JumpPassword != "" {
+		if enc, err := sm.cipher.Encrypt(c.JumpPassword); err == nil {
+			cp.JumpPasswordCiphertext = enc
+			cp.CipherKind = sm.cipher.Kind()
+		} else {
+			log.Error("加密跳板机密码失败", "id", c.ID, "error", err)
 		}
 	}
 	return &cp

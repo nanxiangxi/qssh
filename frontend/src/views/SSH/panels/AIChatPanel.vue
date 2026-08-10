@@ -6,15 +6,15 @@
       <!-- 头部 -->
       <div class="ai-header">
         <div class="header-left">
-          <span class="header-title">AI 助手</span>
-          <span v-if="!configured" class="badge warn">未配置</span>
+          <span class="header-title">{{ t('ai.title') }}</span>
+          <span v-if="!configured" class="badge warn">{{ t('ai.settings') }}</span>
           <span v-else class="badge ok">{{ config.model }}</span>
         </div>
         <div class="header-right">
-          <button class="hbtn" @click="clearAll" title="清除对话">
+          <button class="hbtn" @click="clearAll" :title="t('ai.clear')">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
           </button>
-          <button class="hbtn" @click="showCfg=true" title="设置">
+          <button class="hbtn" @click="showCfg=true" :title="t('ai.settings')">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
           </button>
         </div>
@@ -25,13 +25,13 @@
         <!-- 空状态 -->
         <div v-if="timeline.length===0 && !loading" class="empty">
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"/><path d="M10 21h4"/><path d="M9 9h6"/><path d="M12 9v4"/></svg>
-          <p class="empty-t">SSH AI 助手</p>
-          <p class="empty-h">分析服务器状态、执行命令、排查问题</p>
+          <p class="empty-t">{{ t('ai.title') }}</p>
+          <p class="empty-h">{{ t('ai.description') }}</p>
           <div class="shortcuts">
-            <button @click="quick('查看当前服务器的系统信息')">系统信息</button>
-            <button @click="quick('查看磁盘使用情况')">磁盘状态</button>
-            <button @click="quick('查看当前运行的进程')">进程列表</button>
-            <button @click="quick('检查服务器安全配置')">安全检查</button>
+            <button @click="quick(t('ai.shortcuts.systemInfo'))">{{ t('ai.shortcuts.systemInfo') }}</button>
+            <button @click="quick(t('ai.shortcuts.diskStatus'))">{{ t('ai.shortcuts.diskStatus') }}</button>
+            <button @click="quick(t('ai.shortcuts.processList'))">{{ t('ai.shortcuts.processList') }}</button>
+            <button @click="quick(t('ai.shortcuts.securityCheck'))">{{ t('ai.shortcuts.securityCheck') }}</button>
           </div>
         </div>
 
@@ -58,13 +58,13 @@
           <!-- 工具结果 -->
           <div v-else-if="item.kind==='tool'" class="tool-card">
             <div class="tc-head"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-success"><polyline points="20 6 9 17 4 12"/></svg>{{ item.command }}</div>
-            <pre class="tc-body">{{ item.result || '(无输出)' }}</pre>
+            <pre class="tc-body">{{ item.result || t('ai.noOutput') }}</pre>
           </div>
 
           <!-- 步骤 -->
           <div v-else-if="item.kind==='steps'" class="steps-card">
             <div class="sc-head" @click="toggleSteps(item.id)">
-              <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 执行过程 ({{ item.steps.length }})</span>
+              <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> {{ t('ai.executionProcess') }} ({{ item.steps.length }})</span>
               <svg :class="{flip:isStepsOpen(item.id)}" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
             <div v-if="isStepsOpen(item.id)" class="sc-list">
@@ -81,7 +81,7 @@
         <div v-if="reasoning" class="reasoning-card">
           <div class="rc-head">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-purple"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-            <span>深度思考</span>
+            <span>{{ t('ai.deepThinking') }}</span>
           </div>
           <div class="rc-body">{{ reasoning }}</div>
         </div>
@@ -93,8 +93,8 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-warning"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
           <code class="ap-cmd">{{ a.command }}</code>
           <div class="ap-btns">
-            <button class="ap-deny" @click="deny(a.id)">拒绝</button>
-            <button class="ap-ok" @click="approve(a.id)">执行</button>
+            <button class="ap-deny" @click="deny(a.id)">{{ t('ai.deny') }}</button>
+            <button class="ap-ok" @click="approve(a.id)">{{ t('ai.execute') }}</button>
           </div>
         </div>
       </div>
@@ -103,33 +103,33 @@
       <div class="ai-input">
         <div class="in-bar">
           <select class="msel" v-model="targetTerminal" @change="onTerminalChange">
-            <option value="">AI 自动</option>
+            <option value="">{{ t('ai.autoTerminal') }}</option>
             <option v-for="t in terminalList" :key="t.id" :value="t.id">{{ t.title }}</option>
           </select>
           <div class="bar-spacer"></div>
           <select class="msel" @change="runQuick($event.target.value); $event.target.value=''">
-            <option value="" disabled selected>快捷功能</option>
-            <optgroup label="运维操作">
-              <option value="clean_cache">清理服务器缓存</option>
-              <option value="update_patches">检查系统补丁</option>
-              <option value="data_backup">数据备份方案</option>
-              <option value="log_cleanup">清理过期日志</option>
+            <option value="" disabled selected>{{ t('ai.quickActions') }}</option>
+            <optgroup :label="t('ai.quickGroup.ops')">
+              <option value="clean_cache">{{ t('ai.quick.cleanCache') }}</option>
+              <option value="update_patches">{{ t('ai.quick.updatePatches') }}</option>
+              <option value="data_backup">{{ t('ai.quick.dataBackup') }}</option>
+              <option value="log_cleanup">{{ t('ai.quick.logCleanup') }}</option>
             </optgroup>
-            <optgroup label="安全检查">
-              <option value="security_audit">安全审计</option>
-              <option value="vuln_scan">漏洞扫描</option>
-              <option value="ssh_security">SSH 安全检查</option>
-              <option value="firewall_audit">防火墙审计</option>
+            <optgroup :label="t('ai.quickGroup.security')">
+              <option value="security_audit">{{ t('ai.quick.securityAudit') }}</option>
+              <option value="vuln_scan">{{ t('ai.quick.vulnScan') }}</option>
+              <option value="ssh_security">{{ t('ai.quick.sshSecurity') }}</option>
+              <option value="firewall_audit">{{ t('ai.quick.firewallAudit') }}</option>
             </optgroup>
-            <optgroup label="性能分析">
-              <option value="disk_analysis">磁盘分析</option>
-              <option value="process_analysis">进程分析</option>
-              <option value="network_analysis">网络连接分析</option>
-              <option value="boot_analysis">启动服务分析</option>
+            <optgroup :label="t('ai.quickGroup.performance')">
+              <option value="disk_analysis">{{ t('ai.quick.diskAnalysis') }}</option>
+              <option value="process_analysis">{{ t('ai.quick.processAnalysis') }}</option>
+              <option value="network_analysis">{{ t('ai.quick.networkAnalysis') }}</option>
+              <option value="boot_analysis">{{ t('ai.quick.bootAnalysis') }}</option>
             </optgroup>
-            <optgroup label="报告生成">
-              <option value="operation_report">运维报告</option>
-              <option value="terminal_review">操作复盘</option>
+            <optgroup :label="t('ai.quickGroup.reports')">
+              <option value="operation_report">{{ t('ai.quick.operationReport') }}</option>
+              <option value="terminal_review">{{ t('ai.quick.terminalReview') }}</option>
             </optgroup>
           </select>
           <select v-if="models.length" class="msel" :value="config.model" @change="switchModel($event.target.value)">
@@ -137,8 +137,8 @@
           </select>
         </div>
         <div class="in-row">
-          <textarea v-model="input" @keydown.enter.exact.prevent="send" @input="autoH" placeholder="输入问题... (Enter 发送)" rows="1" ref="inEl"></textarea>
-          <button v-if="loading" class="cancel-btn" @click="cancelProcessing" title="取消">
+          <textarea v-model="input" @keydown.enter.exact.prevent="send" @input="autoH" :placeholder="t('ai.inputPlaceholder')" rows="1" ref="inEl"></textarea>
+          <button v-if="loading" class="cancel-btn" @click="cancelProcessing" :title="t('common.cancel')">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
           </button>
           <button v-else class="send" @click="send" :disabled="!input.trim()||!configured">
@@ -146,7 +146,7 @@
           </button>
         </div>
         <div class="in-hint">
-          <span v-if="!configured" class="hw">请先配置 AI API</span>
+          <span v-if="!configured" class="hw">{{ t('ai.configurePrompt') }}</span>
           <span v-else class="ht">{{ config.model }}</span>
         </div>
       </div>
@@ -156,44 +156,44 @@
     <Teleport to="body">
       <div v-if="showCfg" class="cfg-mask" @click.self="showCfg=false">
         <div class="cfg-box">
-          <div class="cfg-head"><h3>AI 设置</h3><button @click="showCfg=false">&times;</button></div>
+          <div class="cfg-head"><h3>{{ t('ai.settings') }}</h3><button @click="showCfg=false">&times;</button></div>
           <div class="cfg-body">
             <div class="cfg-sec">
-              <div class="cfg-sl">连接</div>
-              <label>API 端点 <small>填 base URL 或完整 URL 均可</small></label>
+              <div class="cfg-sl">{{ t('ai.connection') }}</div>
+              <label>{{ t('ai.apiEndpoint') }} <small>{{ t('ai.apiEndpointHint') }}</small></label>
               <div class="cfg-row">
                 <input v-model="cfgForm.api_endpoint" placeholder="https://api.openai.com/v1" />
-                <button class="cfg-fetch" @click="fetchModels" :disabled="!cfgForm.api_endpoint||!cfgForm.api_key">获取模型</button>
+                <button class="cfg-fetch" @click="fetchModels" :disabled="!cfgForm.api_endpoint||!cfgForm.api_key">{{ t('ai.fetchModels') }}</button>
               </div>
-              <label>API 密钥</label>
+              <label>{{ t('ai.apiKey') }}</label>
               <input v-model="cfgForm.api_key" type="password" placeholder="sk-..." />
             </div>
             <div class="cfg-sec">
-              <div class="cfg-sl">模型</div>
+              <div class="cfg-sl">{{ t('ai.model') }}</div>
               <div v-if="models.length" class="cfg-models">
                 <button v-for="m in models" :key="m.id" class="cfg-mc" :class="{on:cfgForm.model===m.id}" @click="cfgForm.model=m.id">{{ m.id }}</button>
               </div>
-              <label v-else>模型名称</label>
-              <input v-if="!models.length" v-model="cfgForm.model" placeholder="模型名称（如 gpt-4, mimo-v2.5-pro）" />
+              <label v-else>{{ t('ai.modelName') }}</label>
+              <input v-if="!models.length" v-model="cfgForm.model" :placeholder="t('ai.modelPlaceholder')" />
               <div class="cfg-presets">
                 <button v-for="(_,k) in PRESETS" :key="k" @click="applyPreset(k)">{{ k }}</button>
               </div>
             </div>
             <div class="cfg-sec">
-              <div class="cfg-sl">参数</div>
+              <div class="cfg-sl">{{ t('ai.parameters') }}</div>
               <div class="cfg-2col">
-                <div><label>温度</label><input v-model.number="cfgForm.temperature" type="number" step="0.1" min="0" max="2" /></div>
-                <div><label>Tokens</label><input v-model.number="cfgForm.max_tokens" type="number" min="100" max="131072" /></div>
+                <div><label>{{ t('ai.temperature') }}</label><input v-model.number="cfgForm.temperature" type="number" step="0.1" min="0" max="2" /></div>
+                <div><label>{{ t('ai.maxTokens') }}</label><input v-model.number="cfgForm.max_tokens" type="number" min="100" max="131072" /></div>
               </div>
             </div>
             <div class="cfg-sec">
-              <div class="cfg-sl">系统提示词</div>
+              <div class="cfg-sl">{{ t('ai.systemPrompt') }}</div>
               <textarea v-model="cfgForm.system_prompt" rows="3"></textarea>
             </div>
           </div>
           <div class="cfg-foot">
-            <button class="cfg-cancel" @click="showCfg=false">取消</button>
-            <button class="cfg-save" @click="saveCfg" :disabled="saving">{{ saving?'保存中...':'保存' }}</button>
+            <button class="cfg-cancel" @click="showCfg=false">{{ t('common.cancel') }}</button>
+            <button class="cfg-save" @click="saveCfg" :disabled="saving">{{ saving ? t('common.saving') + '...' : t('common.save') }}</button>
           </div>
         </div>
       </div>
@@ -203,6 +203,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, nextTick, inject } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { AIService } from '../../../../bindings/changeme/ai/index.js'
 import { ChatRequest, AIConfig } from '../../../../bindings/changeme/ai/models.js'
 import { Events } from '@wailsio/runtime'
@@ -212,6 +213,10 @@ import 'highlight.js/styles/github-dark-dimmed.css'
 import Message from '../../../components/Message.vue'
 import { useAIToolLogStore } from '../../../stores/aiToolLog'
 
+const { t } = useI18n()
+let executeLabel = '执行' // will be set after i18n is available
+executeLabel = t('ai.execute')
+
 // --- marked 配置 ---
 const mdRenderer = new marked.Renderer()
 mdRenderer.code = (code, lang) => {
@@ -220,7 +225,7 @@ mdRenderer.code = (code, lang) => {
   const hi = l && hljs.getLanguage(l) ? hljs.highlight(t, {language: l}).value : hljs.highlightAuto(t).value
   const cmds = ['cat','ls','df','free','top','ps','who','last','uname','hostname','uptime','ss ','systemctl','tail','head','grep','find','docker','curl','wget','echo','awk','wc','mount']
   const isCmd = ['bash','sh','shell','zsh'].includes(l) || (t.split('\n').filter(x=>x.trim()&&!x.trim().startsWith('#')).length===1 && cmds.some(p=>t.trim().startsWith(p)))
-  const btn = isCmd ? `<button class="ce-btn" data-c="${t.replace(/"/g,'&quot;')}">执行</button>` : ''
+  const btn = isCmd ? `<button class="ce-btn" data-c="${t.replace(/"/g,'&quot;')}">${executeLabel}</button>` : ''
   return `<div class="cb"><div class="cb-h">${l||'code'}${btn}</div><pre><code class="hljs">${hi}</code></pre></div>`
 }
 marked.setOptions({ breaks: true, gfm: true })
@@ -240,6 +245,12 @@ const toolLog = useAIToolLogStore()
 const msgRef = ref(null)
 const msgsEl = ref(null)
 const inEl = ref(null)
+
+// 代码块执行按钮点击处理
+const onCodeBlockClick = (e) => {
+  const btn = e.target.closest('.ce-btn')
+  if (btn) { input.value = btn.dataset.c; send() }
+}
 
 const msgs = ref([])        // {id, role, content, timestamp}
 const input = ref('')
@@ -315,7 +326,7 @@ const send = async () => {
     let msg = ctx ? t + '\n\n---\n' + ctx : t
     const resp = await AIService.SendMessage(new ChatRequest({ connId, message: msg }))
     if (resp && resp.message === '已排队等待处理') {
-      msgRef.value?.info('已排队等待处理')
+      msgRef.value?.info(t('ai.queued'))
     } else {
       // 新消息开始处理，更新 triggerId
       triggerId.value = tid
@@ -323,7 +334,7 @@ const send = async () => {
       loading.value = true
     }
   } catch(e) {
-    msgRef.value?.error('发送失败')
+    msgRef.value?.error(t('ai.sendFailed'))
   }
 }
 
@@ -334,7 +345,7 @@ const cancelProcessing = async () => {
     loading.value = false
     approvals.value.splice(0)
     steps.value.splice(0)
-    msgRef.value?.info('已取消')
+    msgRef.value?.info(t('ai.cancelled'))
   } catch(e) {
     console.error('取消失败:', e)
   }
@@ -440,19 +451,19 @@ const fetchModels = async () => {
     const r = await AIService.FetchModelsWithParams(cfgForm.value.api_endpoint, cfgForm.value.api_key)
     if (r?.length) {
       models.value = r
-      msgRef.value?.success(`获取到 ${r.length} 个模型`)
+      msgRef.value?.success(t('ai.modelsFetched', { count: r.length }))
     } else {
-      msgRef.value?.error('未获取到模型，请检查 API 端点和密钥')
+      msgRef.value?.error(t('ai.noModels'))
     }
   } catch (e) {
-    msgRef.value?.error('获取模型失败: ' + (e.message || e))
+    msgRef.value?.error(t('ai.fetchModelsFailed') + ': ' + (e.message || e))
   }
 }
 
 const switchModel = async (m) => {
   config.value.model = m
   cfgForm.value.model = m
-  try { await AIService.SaveConfig(new AIConfig({...config.value})); msgRef.value?.success('已切换 '+m) } catch(e) { msgRef.value?.error('切换失败') }
+  try { await AIService.SaveConfig(new AIConfig({...config.value})); msgRef.value?.success(t('ai.modelSwitched', { model: m })) } catch(e) { msgRef.value?.error(t('ai.switchFailed')) }
 }
 
 // --- 设置 ---
@@ -477,14 +488,14 @@ const loadCfg = async () => {
 }
 
 const saveCfg = async () => {
-  if(!cfgForm.value.api_endpoint||!cfgForm.value.api_key||!cfgForm.value.model) { msgRef.value?.error('请填写完整配置'); return }
+  if(!cfgForm.value.api_endpoint||!cfgForm.value.api_key||!cfgForm.value.model) { msgRef.value?.error(t('ai.fillCompleteConfig')); return }
   saving.value = true
   try {
     await AIService.SaveConfig(new AIConfig({...cfgForm.value}))
     config.value = { ...cfgForm.value }
     configured.value = true; showCfg.value = false
-    msgRef.value?.success('配置已保存')
-  } catch(e) { msgRef.value?.error('保存失败') }
+    msgRef.value?.success(t('ai.configSaved'))
+  } catch(e) { msgRef.value?.error(t('ai.saveFailed')) }
   finally { saving.value = false }
 }
 
@@ -499,8 +510,8 @@ const clearAll = async () => {
     await AIService.ClearChatHistory(connId)
     msgs.value.splice(0); steps.value.splice(0); approvals.value.splice(0); toolOuts.value.splice(0); archived.value.splice(0); triggerId.value=null
     toolLog.clearLogs(connId)
-    msgRef.value?.success('已清除')
-  } catch(e) { msgRef.value?.error('清除失败') }
+    msgRef.value?.success(t('ai.cleared'))
+  } catch(e) { msgRef.value?.error(t('ai.clearFailed')) }
 }
 
 // --- 生命周期 ---
@@ -526,10 +537,7 @@ onMounted(async () => {
   })
   if(inEl.value) inEl.value.focus()
   // 代码块执行按钮事件委托
-  msgsEl.value?.addEventListener('click', e => {
-    const btn = e.target.closest('.ce-btn')
-    if(btn) { input.value=btn.dataset.c; send() }
-  })
+  msgsEl.value?.addEventListener('click', onCodeBlockClick)
 })
 
 onUnmounted(() => {
@@ -537,6 +545,8 @@ onUnmounted(() => {
   Events.Off('ai:status', onStatus)
   Events.Off('ai:stream-chunk', onStreamChunk)
   Events.Off('ai:tool-approval', onApproval)
+  // 清理代码块点击事件
+  msgsEl.value?.removeEventListener('click', onCodeBlockClick)
   Events.Off('dockview:terminals-changed')
   Events.Off('ai:tool-result', onResult)
 })

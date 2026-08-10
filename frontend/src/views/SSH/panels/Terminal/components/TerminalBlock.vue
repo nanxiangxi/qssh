@@ -53,20 +53,20 @@
         <!-- 运行状态 -->
         <span v-if="block.status === 'running'" class="status-badge running">
           <span class="spinner"></span>
-          运行中
+          {{ t('terminal.running') }}
         </span>
         <span v-else-if="block.status === 'success'" class="status-badge success">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
             <polyline points="20 6 9 17 4 12"/>
           </svg>
-          {{ block.exitCode === 0 ? '成功' : `退出码: ${block.exitCode}` }}
+          {{ block.exitCode === 0 ? t('common.success') : t('terminal.exitCode', { code: block.exitCode }) }}
         </span>
         <span v-else-if="block.status === 'failed'" class="status-badge failed">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
             <line x1="18" y1="6" x2="6" y2="18"/>
             <line x1="6" y1="6" x2="18" y2="18"/>
           </svg>
-          失败
+          {{ t('common.error') }}
         </span>
 
         <!-- 耗时 -->
@@ -127,7 +127,7 @@
 
     <!-- 块操作栏 -->
     <div class="block-actions" v-if="!block.collapsed">
-      <button class="action-btn" @click.stop="$emit('copy', block.id)" title="复制">
+      <button class="action-btn" @click.stop="$emit('copy', block.id)" :title="t('common.copy')">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <rect x="9" y="9" width="13" height="13" rx="2"/>
           <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
@@ -137,14 +137,14 @@
         v-if="block.type === 'command'"
         class="action-btn"
         @click.stop="$emit('re-execute', block.id)"
-        title="重新执行"
+        :title="t('terminal.rerun')"
       >
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M23 4v6h-6"/>
           <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
         </svg>
       </button>
-      <button class="action-btn delete" @click.stop="$emit('remove', block.id)" title="删除">
+      <button class="action-btn delete" @click.stop="$emit('remove', block.id)" :title="t('common.delete')">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="3 6 5 6 21 6"/>
           <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
@@ -156,7 +156,10 @@
 
 <script setup>
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { highlightTerminalOutput, detectLanguage, highlightCode } from '../utils/codeHighlight'
+
+const { t } = useI18n()
 
 const props = defineProps({
   block: { type: Object, required: true },
@@ -206,13 +209,13 @@ const highlightedError = computed(() => {
 // 类型标签
 const typeLabel = computed(() => {
   const labels = {
-    command: '命令',
-    output: '输出',
-    error: '错误',
-    system: '系统',
-    input: '输入'
+    command: t('terminal.typeCommand'),
+    output: t('terminal.typeOutput'),
+    error: t('terminal.typeError'),
+    system: t('terminal.typeSystem'),
+    input: t('terminal.typeInput')
   }
-  return labels[props.block.type] || '未知'
+  return labels[props.block.type] || t('common.type')
 })
 
 // 是否有内容

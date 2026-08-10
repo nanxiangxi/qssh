@@ -34,13 +34,13 @@
             v-if="!editable && type === 'text'" 
             @click="$emit('enable-edit')" 
             class="toolbar-btn"
-            title="编辑 (Ctrl+E)"
+            :title="t('filePreview.editTitle')"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
             </svg>
-            <span>编辑</span>
+            <span>{{ t('filePreview.edit') }}</span>
           </button>
           
           <button 
@@ -48,18 +48,18 @@
             @click="handleSave" 
             class="toolbar-btn primary"
             :disabled="saving"
-            title="保存 (Ctrl+S)"
+            :title="t('filePreview.saveTitle')"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
               <polyline points="17 21 17 13 7 13 7 21"></polyline>
               <polyline points="7 3 7 8 15 8"></polyline>
             </svg>
-            <span>{{ saving ? '保存中...' : '保存' }}</span>
+            <span>{{ saving ? t('filePreview.saving') : t('filePreview.save') }}</span>
           </button>
           
           <!-- 关闭按钮 -->
-          <button @click="$emit('close')" class="close-btn" title="关闭 (Esc)">
+          <button @click="$emit('close')" class="close-btn" :title="t('filePreview.closeTitle')">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -101,10 +101,10 @@
       <div class="editor-statusbar">
         <div class="statusbar-left">
           <span v-if="editable" class="status-item modified" v-show="isModified">
-            ● 已修改
+            {{ t('filePreview.modified') }}
           </span>
           <span class="status-item">
-            行 {{ cursorPosition.line }}, 列 {{ cursorPosition.column }}
+            {{ t('filePreview.lineCol', { line: cursorPosition.line, col: cursorPosition.column }) }}
           </span>
         </div>
         <div class="statusbar-right">
@@ -122,8 +122,11 @@
 
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import Modal from '@/components/Modal.vue'
 import CodeEditor from './CodeEditor.vue'
+
+const { t } = useI18n()
 
 const props = defineProps({
   visible: {

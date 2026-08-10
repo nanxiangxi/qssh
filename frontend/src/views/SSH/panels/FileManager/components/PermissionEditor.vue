@@ -1,7 +1,8 @@
 <template>
   <Modal
     :visible="showChmodDialog"
-    title="修改权限"
+    :title="t('permissionEditor.title')"
+    :cancel-text="t('common.cancel')"
     width="700px"
     @confirm="$emit('confirm')"
     @close="handleClose"
@@ -14,57 +15,57 @@
       <div class="chmod-sections">
         <!-- 所有者 -->
         <fieldset class="chmod-section">
-          <legend>所有者</legend>
+          <legend>{{ t('permissionEditor.owner') }}</legend>
           <div class="checkbox-group">
             <label class="checkbox-item">
               <input type="checkbox" :checked="getSafePermission('owner', 'r')" @change="$emit('update:permission', { group: 'owner', perm: 'r', value: $event.target.checked })">
-              <span>读取</span>
+              <span>{{ t('permissionEditor.read') }}</span>
             </label>
             <label class="checkbox-item">
               <input type="checkbox" :checked="getSafePermission('owner', 'w')" @change="$emit('update:permission', { group: 'owner', perm: 'w', value: $event.target.checked })">
-              <span>写入</span>
+              <span>{{ t('permissionEditor.write') }}</span>
             </label>
             <label class="checkbox-item">
               <input type="checkbox" :checked="getSafePermission('owner', 'x')" @change="$emit('update:permission', { group: 'owner', perm: 'x', value: $event.target.checked })">
-              <span>执行</span>
+              <span>{{ t('permissionEditor.execute') }}</span>
             </label>
           </div>
         </fieldset>
-        
+
         <!-- 用户组 -->
         <fieldset class="chmod-section">
-          <legend>用户组</legend>
+          <legend>{{ t('permissionEditor.group') }}</legend>
           <div class="checkbox-group">
             <label class="checkbox-item">
               <input type="checkbox" :checked="getSafePermission('group', 'r')" @change="$emit('update:permission', { group: 'group', perm: 'r', value: $event.target.checked })">
-              <span>读取</span>
+              <span>{{ t('permissionEditor.read') }}</span>
             </label>
             <label class="checkbox-item">
               <input type="checkbox" :checked="getSafePermission('group', 'w')" @change="$emit('update:permission', { group: 'group', perm: 'w', value: $event.target.checked })">
-              <span>写入</span>
+              <span>{{ t('permissionEditor.write') }}</span>
             </label>
             <label class="checkbox-item">
               <input type="checkbox" :checked="getSafePermission('group', 'x')" @change="$emit('update:permission', { group: 'group', perm: 'x', value: $event.target.checked })">
-              <span>执行</span>
+              <span>{{ t('permissionEditor.execute') }}</span>
             </label>
           </div>
         </fieldset>
-        
+
         <!-- 公共 -->
         <fieldset class="chmod-section">
-          <legend>公共</legend>
+          <legend>{{ t('permissionEditor.other') }}</legend>
           <div class="checkbox-group">
             <label class="checkbox-item">
               <input type="checkbox" :checked="getSafePermission('other', 'r')" @change="$emit('update:permission', { group: 'other', perm: 'r', value: $event.target.checked })">
-              <span>读取</span>
+              <span>{{ t('permissionEditor.read') }}</span>
             </label>
             <label class="checkbox-item">
               <input type="checkbox" :checked="getSafePermission('other', 'w')" @change="$emit('update:permission', { group: 'other', perm: 'w', value: $event.target.checked })">
-              <span>写入</span>
+              <span>{{ t('permissionEditor.write') }}</span>
             </label>
             <label class="checkbox-item">
               <input type="checkbox" :checked="getSafePermission('other', 'x')" @change="$emit('update:permission', { group: 'other', perm: 'x', value: $event.target.checked })">
-              <span>执行</span>
+              <span>{{ t('permissionEditor.execute') }}</span>
             </label>
           </div>
         </fieldset>
@@ -73,7 +74,7 @@
       <!-- 数字权限显示和预设按钮 -->
       <div class="chmod-footer">
         <div class="chmod-number-input">
-          <label>权限值：</label>
+          <label>{{ t('permissionEditor.permValue') }}</label>
           <input 
             :value="numericValue" 
             class="dialog-input chmod-input"
@@ -93,7 +94,10 @@
 
 <script setup>
 import { computed, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import Modal from '@/components/Modal.vue'
+
+const { t } = useI18n()
 
 const props = defineProps({
   showChmodDialog: {

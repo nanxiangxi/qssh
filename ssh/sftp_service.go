@@ -57,7 +57,13 @@ func (s *SSHClient) UploadFile(localPath, remotePath string) error {
 
 	remoteFile, err := s.sftpClient.Create(remotePath)
 	if err != nil {
-		return fmt.Errorf("创建远程文件失败: %v", err)
+		// SFTP 权限不足，回退到 sudo 方式
+		localFile.Close()
+		data, readErr := os.ReadFile(localPath)
+		if readErr != nil {
+			return fmt.Errorf("读取本地文件失败: %v", readErr)
+		}
+		return s.uploadViaSudo(remotePath, data, nil)
 	}
 	defer remoteFile.Close()
 
@@ -67,7 +73,8 @@ func (s *SSHClient) UploadFile(localPath, remotePath string) error {
 	return nil
 }
 
-// DownloadFile 下载文件
+// DownloadFile 下载文件（支持断点续传）
+// 如果本地文件已存在且小于远程文件大小，自动从断点继续下载
 func (s *SSHClient) DownloadFile(remotePath, localPath string) error {
 	if s.sftpClient == nil {
 		if err := s.InitSFTP(); err != nil {
@@ -81,16 +88,82 @@ func (s *SSHClient) DownloadFile(remotePath, localPath string) error {
 	}
 	defer remoteFile.Close()
 
-	localFile, err := os.Create(localPath)
+	// 获取远程文件大小
+	remoteStat, err := remoteFile.Stat()
 	if err != nil {
-		return fmt.Errorf("创建本地文件失败: %v", err)
+		return fmt.Errorf("获取远程文件信息失败: %v", err)
+	}
+	remoteSize := remoteStat.Size()
+
+	// 检查本地文件是否已存在（断点续传）
+	var localFile *os.File
+	offset := int64(0)
+	if info, err := os.Stat(localPath); err == nil {
+		existingSize := info.Size()
+		if existingSize >= remoteSize {
+			// 本地文件已完整
+			return nil
+		}
+		offset = existingSize
+		localFile, err = os.OpenFile(localPath, os.O_WRONLY|os.O_APPEND, 0644)
+	} else {
+		localFile, err = os.Create(localPath)
+	}
+	if err != nil {
+		return fmt.Errorf("创建/打开本地文件失败: %v", err)
 	}
 	defer localFile.Close()
 
+	// 从断点位置开始读取
+	if offset > 0 {
+		if _, err := remoteFile.Seek(offset, io.SeekStart); err != nil {
+			return fmt.Errorf("seek 到断点位置失败: %v", err)
+		}
+	}
+
 	if _, err := io.Copy(localFile, remoteFile); err != nil {
-		return fmt.Errorf("下载文件失败: %v", err)
+		return fmt.Errorf("下载文件失败 (已下载 %d/%d bytes): %v", offset, remoteSize, err)
 	}
 	return nil
+}
+
+// DownloadFileRange 下载文件指定范围（用于续传或分块下载）
+func (s *SSHClient) DownloadFileRange(remotePath string, offset int64, limit int64) ([]byte, error) {
+	if s.sftpClient == nil {
+		if err := s.InitSFTP(); err != nil {
+			return nil, err
+		}
+	}
+
+	remoteFile, err := s.sftpClient.Open(remotePath)
+	if err != nil {
+		return nil, fmt.Errorf("打开远程文件失败: %v", err)
+	}
+	defer remoteFile.Close()
+
+	// seek 到指定位置
+	if offset > 0 {
+		if _, err := remoteFile.Seek(offset, io.SeekStart); err != nil {
+			return nil, fmt.Errorf("seek 失败: %v", err)
+		}
+	}
+
+	// 读取指定范围
+	if limit > 0 {
+		data := make([]byte, limit)
+		n, err := io.ReadFull(remoteFile, data)
+		if err != nil && err != io.ErrUnexpectedEOF {
+			return nil, fmt.Errorf("读取失败: %v", err)
+		}
+		return data[:n], nil
+	}
+
+	// 无限制，读取全部
+	data, err := io.ReadAll(remoteFile)
+	if err != nil {
+		return nil, fmt.Errorf("读取失败: %v", err)
+	}
+	return data, nil
 }
 
 // ListDirectory 列出远程目录内容（性能优化：移除逐文件 Lstat，异步获取 owner/group）
@@ -341,12 +414,20 @@ func (s *SSHClient) DeleteFile(remotePath string) error {
 
 	isSymlink := fileInfo.Mode()&os.ModeSymlink != 0
 
+	var deleteErr error
 	if isSymlink {
-		return s.sftpClient.Remove(remotePath)
+		deleteErr = s.sftpClient.Remove(remotePath)
 	} else if fileInfo.IsDir() {
-		return s.removeDir(remotePath)
+		deleteErr = s.removeDir(remotePath)
+	} else {
+		deleteErr = s.sftpClient.Remove(remotePath)
 	}
-	return s.sftpClient.Remove(remotePath)
+
+	// SFTP 删除失败，尝试 sudo
+	if deleteErr != nil {
+		return s.deleteViaSudo(remotePath, fileInfo.IsDir())
+	}
+	return nil
 }
 
 // removeDir 递归删除目录
@@ -383,7 +464,30 @@ func (s *SSHClient) CreateDirectory(remotePath string) error {
 			return err
 		}
 	}
-	return s.sftpClient.MkdirAll(remotePath)
+
+	err := s.sftpClient.MkdirAll(remotePath)
+	if err != nil {
+		// SFTP 失败，尝试 sudo
+		return s.mkdirViaSudo(remotePath)
+	}
+	return nil
+}
+
+// mkdirViaSudo 通过 sudo 创建目录
+func (s *SSHClient) mkdirViaSudo(remotePath string) error {
+	password := s.config.Password
+	if password == "" {
+		return fmt.Errorf("权限不足且未配置密码，无法创建目录 %s", remotePath)
+	}
+
+	encodedPw := base64.StdEncoding.EncodeToString([]byte(password))
+	cmd := fmt.Sprintf("echo %s | base64 -d | sudo -S mkdir -p %s 2>&1",
+		encodedPw, remotePath)
+	result, err := s.ExecuteCommand(cmd)
+	if err != nil || !result.Success {
+		return fmt.Errorf("权限不足，无法创建目录 %s", remotePath)
+	}
+	return nil
 }
 
 // RenameFile 重命名文件/目录
@@ -393,7 +497,30 @@ func (s *SSHClient) RenameFile(oldPath, newPath string) error {
 			return err
 		}
 	}
-	return s.sftpClient.Rename(oldPath, newPath)
+
+	err := s.sftpClient.Rename(oldPath, newPath)
+	if err != nil {
+		// SFTP 失败，尝试 sudo
+		return s.renameViaSudo(oldPath, newPath)
+	}
+	return nil
+}
+
+// renameViaSudo 通过 sudo 重命名文件
+func (s *SSHClient) renameViaSudo(oldPath, newPath string) error {
+	password := s.config.Password
+	if password == "" {
+		return fmt.Errorf("权限不足且未配置密码，无法重命名 %s", oldPath)
+	}
+
+	encodedPw := base64.StdEncoding.EncodeToString([]byte(password))
+	cmd := fmt.Sprintf("echo %s | base64 -d | sudo -S mv %s %s 2>&1",
+		encodedPw, oldPath, newPath)
+	result, err := s.ExecuteCommand(cmd)
+	if err != nil || !result.Success {
+		return fmt.Errorf("权限不足，无法重命名 %s", oldPath)
+	}
+	return nil
 }
 
 // CopyFile 复制文件
@@ -434,8 +561,6 @@ func (s *SSHClient) CopyFile(srcPath, destPath string) error {
 }
 
 // copyFileViaShell 用 shell 命令复制（SFTP 权限不足时的 fallback）。
-//
-// 安全修复：使用 base64 编码传递密码，避免 printf 格式化字符串漏洞。
 func (s *SSHClient) copyFileViaShell(srcPath, destPath string) error {
 	cmd := fmt.Sprintf("cp -p %s %s 2>&1", srcPath, destPath)
 	result, err := s.ExecuteCommand(cmd)
@@ -445,25 +570,28 @@ func (s *SSHClient) copyFileViaShell(srcPath, destPath string) error {
 
 	password := s.config.Password
 	if password == "" {
-		destDir := destPath[:strings.LastIndex(destPath, "/")]
-		return fmt.Errorf("权限不足且未配置密码，无法提权。请在服务器上执行：sudo chmod 777 %s", destDir)
+		return fmt.Errorf("权限不足且未配置密码，无法复制文件")
 	}
 
-	// 安全修复：用 base64 编码密码，通过管道传给 sudo -S
-	// 避免 printf '%s\n' '%s' 的格式化字符串漏洞
 	encodedPw := base64.StdEncoding.EncodeToString([]byte(password))
-	cmd = fmt.Sprintf("echo %s | base64 -d | sudo -S cp -p %s %s 2>/dev/null",
+	cmd = fmt.Sprintf("echo %s | base64 -d | sudo -S cp -p %s %s 2>&1",
 		encodedPw, srcPath, destPath)
 	result, err = s.ExecuteCommand(cmd)
-	if err == nil && result.Success {
-		return nil
+	if err != nil {
+		return fmt.Errorf("sudo cp 执行失败: %v", err)
 	}
-
-	destDir := destPath[:strings.LastIndex(destPath, "/")]
-	return fmt.Errorf("权限不足，无法写入 %s。请在服务器上执行：sudo chmod 777 %s", destDir, destDir)
+	if !result.Success {
+		errMsg := strings.TrimSpace(result.Stderr)
+		if errMsg == "" {
+			errMsg = strings.TrimSpace(result.Stdout)
+		}
+		return fmt.Errorf("sudo cp 失败: %s", errMsg)
+	}
+	return nil
 }
 
-// UploadFileFromBytes 从字节数组上传文件
+// UploadFileFromBytes 从字节数组上传文件（支持断点续传）
+// 如果远程文件已存在且小于本地数据大小，自动从断点继续写入
 func (s *SSHClient) UploadFileFromBytes(remotePath string, data []byte, progressCallback func(percent int)) error {
 	if s.sftpClient == nil {
 		if err := s.InitSFTP(); err != nil {
@@ -471,16 +599,49 @@ func (s *SSHClient) UploadFileFromBytes(remotePath string, data []byte, progress
 		}
 	}
 
-	remoteFile, err := s.sftpClient.Create(remotePath)
+	totalSize := len(data)
+	offset := int64(0)
+
+	// 检查远程文件是否已存在（断点续传）
+	if stat, err := s.sftpClient.Stat(remotePath); err == nil {
+		existingSize := stat.Size()
+		if existingSize >= int64(totalSize) {
+			// 远程文件已完整，跳过上传
+			if progressCallback != nil {
+				progressCallback(100)
+			}
+			return nil
+		}
+		offset = existingSize
+	}
+
+	var remoteFile *sftp.File
+	var err error
+
+	if offset > 0 {
+		// 追加模式打开
+		remoteFile, err = s.sftpClient.OpenFile(remotePath, os.O_WRONLY|os.O_APPEND)
+	} else {
+		// 新建文件
+		remoteFile, err = s.sftpClient.Create(remotePath)
+	}
+
 	if err != nil {
-		return fmt.Errorf("创建远程文件失败: %v", err)
+		return s.uploadViaSudo(remotePath, data, progressCallback)
 	}
 	defer remoteFile.Close()
 
-	totalSize := len(data)
+	// 从断点位置开始写入
+	startPos := int(offset)
 	chunkSize := 32 * 1024
-	written := 0
+	written := startPos
 	lastReported := 0
+
+	// 计算初始进度
+	if progressCallback != nil && startPos > 0 {
+		lastReported = startPos * 100 / totalSize
+		progressCallback(lastReported)
+	}
 
 	for written < totalSize {
 		end := written + chunkSize
@@ -490,7 +651,7 @@ func (s *SSHClient) UploadFileFromBytes(remotePath string, data []byte, progress
 
 		n, err := remoteFile.Write(data[written:end])
 		if err != nil {
-			return fmt.Errorf("写入远程文件失败: %v", err)
+			return fmt.Errorf("写入远程文件失败 (已写入 %d/%d bytes): %v", written, totalSize, err)
 		}
 		written += n
 
@@ -503,12 +664,13 @@ func (s *SSHClient) UploadFileFromBytes(remotePath string, data []byte, progress
 		}
 	}
 
+	// 验证最终文件大小
 	fileInfo, err := s.sftpClient.Stat(remotePath)
 	if err != nil {
 		return fmt.Errorf("验证文件失败: %v", err)
 	}
-	if fileInfo.Size() != int64(len(data)) {
-		return fmt.Errorf("文件大小不匹配: 期望 %d bytes, 实际 %d bytes", len(data), fileInfo.Size())
+	if fileInfo.Size() != int64(totalSize) {
+		return fmt.Errorf("文件大小不匹配: 期望 %d bytes, 实际 %d bytes", totalSize, fileInfo.Size())
 	}
 
 	return nil
@@ -544,7 +706,10 @@ func (s *SSHClient) UploadDirectory(localPath, remotePath string) error {
 	}
 
 	if err := s.sftpClient.MkdirAll(remotePath); err != nil {
-		return fmt.Errorf("创建远程目录失败: %v", err)
+		// SFTP 权限不足，尝试 sudo
+		if mkdirErr := s.mkdirViaSudo(remotePath); mkdirErr != nil {
+			return fmt.Errorf("创建远程目录失败: %v", mkdirErr)
+		}
 	}
 
 	entries, err := os.ReadDir(localPath)
@@ -627,5 +792,92 @@ func (s *SSHClient) ExtractArchive(archivePath string, targetDir string) error {
 	if !result.Success {
 		return fmt.Errorf("解压失败: %s", result.Stderr)
 	}
+	return nil
+}
+
+// deleteViaSudo 通过 sudo 删除文件（SFTP 权限不足时的回退方案）
+func (s *SSHClient) deleteViaSudo(remotePath string, isDir bool) error {
+	password := s.config.Password
+	if password == "" {
+		return fmt.Errorf("权限不足且未配置密码，无法删除 %s", remotePath)
+	}
+
+	rmFlag := "-f"
+	if isDir {
+		rmFlag = "-rf"
+	}
+
+	encodedPw := base64.StdEncoding.EncodeToString([]byte(password))
+	cmd := fmt.Sprintf("echo %s | base64 -d | sudo -S rm %s %s 2>&1",
+		encodedPw, rmFlag, remotePath)
+	result, err := s.ExecuteCommand(cmd)
+	if err != nil {
+		return fmt.Errorf("sudo rm 执行失败: %v", err)
+	}
+	if !result.Success {
+		errMsg := strings.TrimSpace(result.Stderr)
+		if errMsg == "" {
+			errMsg = strings.TrimSpace(result.Stdout)
+		}
+		return fmt.Errorf("权限不足，无法删除 %s: %s", remotePath, errMsg)
+	}
+	return nil
+}
+
+// uploadViaSudo 通过 sudo 上传文件（SFTP 权限不足时的回退方案）
+// 先上传到 /tmp，再用 sudo mv 到目标位置
+func (s *SSHClient) uploadViaSudo(remotePath string, data []byte, progressCallback func(percent int)) error {
+	// 1. 上传到 /tmp
+	tmpPath := fmt.Sprintf("/tmp/pzssh_upload_%d", time.Now().UnixNano())
+	tmpFile, err := s.sftpClient.Create(tmpPath)
+	if err != nil {
+		return fmt.Errorf("创建临时文件失败: %v", err)
+	}
+
+	// 写入数据
+	written := 0
+	totalSize := len(data)
+	for written < totalSize {
+		end := written + 32*1024
+		if end > totalSize {
+			end = totalSize
+		}
+		n, err := tmpFile.Write(data[written:end])
+		if err != nil {
+			tmpFile.Close()
+			s.sftpClient.Remove(tmpPath)
+			return fmt.Errorf("写入临时文件失败: %v", err)
+		}
+		written += n
+		if progressCallback != nil {
+			progressCallback(written * 100 / totalSize)
+		}
+	}
+	tmpFile.Close()
+
+	// 2. 用 sudo mv 移动到目标位置
+	password := s.config.Password
+	if password == "" {
+		s.sftpClient.Remove(tmpPath)
+		return fmt.Errorf("权限不足且未配置密码，无法上传到 %s", remotePath)
+	}
+
+	encodedPw := base64.StdEncoding.EncodeToString([]byte(password))
+	cmd := fmt.Sprintf("echo %s | base64 -d | sudo -S mv %s %s 2>&1",
+		encodedPw, tmpPath, remotePath)
+	result, err := s.ExecuteCommand(cmd)
+	if err != nil {
+		s.sftpClient.Remove(tmpPath)
+		return fmt.Errorf("sudo mv 执行失败: %v", err)
+	}
+	if !result.Success {
+		s.sftpClient.Remove(tmpPath)
+		errMsg := strings.TrimSpace(result.Stderr)
+		if errMsg == "" {
+			errMsg = strings.TrimSpace(result.Stdout)
+		}
+		return fmt.Errorf("sudo mv 失败: %s", errMsg)
+	}
+
 	return nil
 }

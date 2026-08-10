@@ -85,6 +85,13 @@ export class AppConfig {
      * @param {Partial<AppConfig>} [$$source = {}] - The source object to create the AppConfig.
      */
     constructor($$source = {}) {
+        if (!("locale" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["locale"] = "";
+        }
         if (!("terminal" in $$source)) {
             /**
              * @member
@@ -130,28 +137,227 @@ export class AppConfig {
      * @returns {AppConfig}
      */
     static createFrom($$source = {}) {
-        const $$createField0_0 = $$createType0;
-        const $$createField1_0 = $$createType1;
-        const $$createField2_0 = $$createType2;
-        const $$createField3_0 = $$createType3;
-        const $$createField4_0 = $$createType4;
+        const $$createField1_0 = $$createType0;
+        const $$createField2_0 = $$createType1;
+        const $$createField3_0 = $$createType2;
+        const $$createField4_0 = $$createType3;
+        const $$createField5_0 = $$createType4;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("terminal" in $$parsedSource) {
-            $$parsedSource["terminal"] = $$createField0_0($$parsedSource["terminal"]);
+            $$parsedSource["terminal"] = $$createField1_0($$parsedSource["terminal"]);
         }
         if ("ui" in $$parsedSource) {
-            $$parsedSource["ui"] = $$createField1_0($$parsedSource["ui"]);
+            $$parsedSource["ui"] = $$createField2_0($$parsedSource["ui"]);
         }
         if ("cloud" in $$parsedSource) {
-            $$parsedSource["cloud"] = $$createField2_0($$parsedSource["cloud"]);
+            $$parsedSource["cloud"] = $$createField3_0($$parsedSource["cloud"]);
         }
         if ("shortcuts" in $$parsedSource) {
-            $$parsedSource["shortcuts"] = $$createField3_0($$parsedSource["shortcuts"]);
+            $$parsedSource["shortcuts"] = $$createField4_0($$parsedSource["shortcuts"]);
         }
         if ("advanced" in $$parsedSource) {
-            $$parsedSource["advanced"] = $$createField4_0($$parsedSource["advanced"]);
+            $$parsedSource["advanced"] = $$createField5_0($$parsedSource["advanced"]);
         }
         return new AppConfig(/** @type {Partial<AppConfig>} */($$parsedSource));
+    }
+}
+
+/**
+ * AuditEntry 审计日志条目
+ */
+export class AuditEntry {
+    /**
+     * Creates a new AuditEntry instance.
+     * @param {Partial<AuditEntry>} [$$source = {}] - The source object to create the AuditEntry.
+     */
+    constructor($$source = {}) {
+        if (!("id" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["id"] = "";
+        }
+        if (!("timestamp" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["timestamp"] = "";
+        }
+        if (!("connId" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["connId"] = "";
+        }
+        if (!("host" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["host"] = "";
+        }
+        if (!("username" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["username"] = "";
+        }
+        if (!("action" in $$source)) {
+            /**
+             * command, upload, download, delete, rename, connect, disconnect
+             * @member
+             * @type {string}
+             */
+            this["action"] = "";
+        }
+        if (!("detail" in $$source)) {
+            /**
+             * 具体内容
+             * @member
+             * @type {string}
+             */
+            this["detail"] = "";
+        }
+        if (!("success" in $$source)) {
+            /**
+             * @member
+             * @type {boolean}
+             */
+            this["success"] = false;
+        }
+        if (/** @type {any} */(false)) {
+            /**
+             * @member
+             * @type {string | undefined}
+             */
+            this["error"] = undefined;
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new AuditEntry instance from a string or object.
+     * @param {any} [$$source = {}]
+     * @returns {AuditEntry}
+     */
+    static createFrom($$source = {}) {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new AuditEntry(/** @type {Partial<AuditEntry>} */($$parsedSource));
+    }
+}
+
+/**
+ * BatchCommand 批量命令
+ */
+export class BatchCommand {
+    /**
+     * Creates a new BatchCommand instance.
+     * @param {Partial<BatchCommand>} [$$source = {}] - The source object to create the BatchCommand.
+     */
+    constructor($$source = {}) {
+        if (!("command" in $$source)) {
+            /**
+             * 命令模板（支持 {{host}}, {{user}}, {{port}} 等变量）
+             * @member
+             * @type {string}
+             */
+            this["command"] = "";
+        }
+        if (!("targets" in $$source)) {
+            /**
+             * 目标连接 ID 列表
+             * @member
+             * @type {string[]}
+             */
+            this["targets"] = [];
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new BatchCommand instance from a string or object.
+     * @param {any} [$$source = {}]
+     * @returns {BatchCommand}
+     */
+    static createFrom($$source = {}) {
+        const $$createField1_0 = $$createType5;
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("targets" in $$parsedSource) {
+            $$parsedSource["targets"] = $$createField1_0($$parsedSource["targets"]);
+        }
+        return new BatchCommand(/** @type {Partial<BatchCommand>} */($$parsedSource));
+    }
+}
+
+/**
+ * BatchResult 批量执行结果
+ */
+export class BatchResult {
+    /**
+     * Creates a new BatchResult instance.
+     * @param {Partial<BatchResult>} [$$source = {}] - The source object to create the BatchResult.
+     */
+    constructor($$source = {}) {
+        if (!("connId" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["connId"] = "";
+        }
+        if (!("host" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["host"] = "";
+        }
+        if (!("command" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["command"] = "";
+        }
+        if (!("output" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["output"] = "";
+        }
+        if (!("success" in $$source)) {
+            /**
+             * @member
+             * @type {boolean}
+             */
+            this["success"] = false;
+        }
+        if (/** @type {any} */(false)) {
+            /**
+             * @member
+             * @type {string | undefined}
+             */
+            this["error"] = undefined;
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new BatchResult instance from a string or object.
+     * @param {any} [$$source = {}]
+     * @returns {BatchResult}
+     */
+    static createFrom($$source = {}) {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new BatchResult(/** @type {Partial<BatchResult>} */($$parsedSource));
     }
 }
 
@@ -206,8 +412,8 @@ export class CPUStats {
      * @returns {CPUStats}
      */
     static createFrom($$source = {}) {
-        const $$createField2_0 = $$createType5;
-        const $$createField3_0 = $$createType6;
+        const $$createField2_0 = $$createType6;
+        const $$createField3_0 = $$createType7;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("perCpuUsage" in $$parsedSource) {
             $$parsedSource["perCpuUsage"] = $$createField2_0($$parsedSource["perCpuUsage"]);
@@ -406,6 +612,35 @@ export class ConnectionInfo {
              * @type {string | undefined}
              */
             this["cipherKind"] = undefined;
+        }
+        if (/** @type {any} */(false)) {
+            /**
+             * 跳板机配置
+             * @member
+             * @type {string | undefined}
+             */
+            this["jumpHost"] = undefined;
+        }
+        if (/** @type {any} */(false)) {
+            /**
+             * @member
+             * @type {string | undefined}
+             */
+            this["jumpUsername"] = undefined;
+        }
+        if (/** @type {any} */(false)) {
+            /**
+             * @member
+             * @type {string | undefined}
+             */
+            this["jumpKeyPath"] = undefined;
+        }
+        if (/** @type {any} */(false)) {
+            /**
+             * @member
+             * @type {string | undefined}
+             */
+            this["jumpPasswordCiphertext"] = undefined;
         }
         if (!("status" in $$source)) {
             /**
@@ -614,8 +849,8 @@ export class DiskStats {
      * @returns {DiskStats}
      */
     static createFrom($$source = {}) {
-        const $$createField0_0 = $$createType8;
-        const $$createField1_0 = $$createType9;
+        const $$createField0_0 = $$createType9;
+        const $$createField1_0 = $$createType10;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("partitions" in $$parsedSource) {
             $$parsedSource["partitions"] = $$createField0_0($$parsedSource["partitions"]);
@@ -624,6 +859,86 @@ export class DiskStats {
             $$parsedSource["ioStats"] = $$createField1_0($$parsedSource["ioStats"]);
         }
         return new DiskStats(/** @type {Partial<DiskStats>} */($$parsedSource));
+    }
+}
+
+/**
+ * EnvInfo 检测到的环境信息
+ */
+export class EnvInfo {
+    /**
+     * Creates a new EnvInfo instance.
+     * @param {Partial<EnvInfo>} [$$source = {}] - The source object to create the EnvInfo.
+     */
+    constructor($$source = {}) {
+        if (!("name" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["name"] = "";
+        }
+        if (!("category" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["category"] = "";
+        }
+        if (!("description" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["description"] = "";
+        }
+        if (!("version" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["version"] = "";
+        }
+        if (!("path" in $$source)) {
+            /**
+             * 主路径（第一个找到的）
+             * @member
+             * @type {string}
+             */
+            this["path"] = "";
+        }
+        if (/** @type {any} */(false)) {
+            /**
+             * 所有找到的路径
+             * @member
+             * @type {string[] | undefined}
+             */
+            this["paths"] = undefined;
+        }
+        if (!("status" in $$source)) {
+            /**
+             * installed / not_found
+             * @member
+             * @type {string}
+             */
+            this["status"] = "";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new EnvInfo instance from a string or object.
+     * @param {any} [$$source = {}]
+     * @returns {EnvInfo}
+     */
+    static createFrom($$source = {}) {
+        const $$createField5_0 = $$createType5;
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("paths" in $$parsedSource) {
+            $$parsedSource["paths"] = $$createField5_0($$parsedSource["paths"]);
+        }
+        return new EnvInfo(/** @type {Partial<EnvInfo>} */($$parsedSource));
     }
 }
 
@@ -817,8 +1132,8 @@ export class FirewallInfo {
      * @returns {FirewallInfo}
      */
     static createFrom($$source = {}) {
-        const $$createField2_0 = $$createType11;
-        const $$createField4_0 = $$createType12;
+        const $$createField2_0 = $$createType12;
+        const $$createField4_0 = $$createType5;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("rules" in $$parsedSource) {
             $$parsedSource["rules"] = $$createField2_0($$parsedSource["rules"]);
@@ -1162,6 +1477,100 @@ export class MemoryStats {
     static createFrom($$source = {}) {
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         return new MemoryStats(/** @type {Partial<MemoryStats>} */($$parsedSource));
+    }
+}
+
+/**
+ * MonitorSnapshot 监控快照
+ */
+export class MonitorSnapshot {
+    /**
+     * Creates a new MonitorSnapshot instance.
+     * @param {Partial<MonitorSnapshot>} [$$source = {}] - The source object to create the MonitorSnapshot.
+     */
+    constructor($$source = {}) {
+        if (!("timestamp" in $$source)) {
+            /**
+             * @member
+             * @type {number}
+             */
+            this["timestamp"] = 0;
+        }
+        if (!("cpuPercent" in $$source)) {
+            /**
+             * @member
+             * @type {number}
+             */
+            this["cpuPercent"] = 0;
+        }
+        if (!("memPercent" in $$source)) {
+            /**
+             * @member
+             * @type {number}
+             */
+            this["memPercent"] = 0;
+        }
+        if (!("memUsed" in $$source)) {
+            /**
+             * @member
+             * @type {number}
+             */
+            this["memUsed"] = 0;
+        }
+        if (!("memTotal" in $$source)) {
+            /**
+             * @member
+             * @type {number}
+             */
+            this["memTotal"] = 0;
+        }
+        if (!("diskPercent" in $$source)) {
+            /**
+             * @member
+             * @type {number}
+             */
+            this["diskPercent"] = 0;
+        }
+        if (!("diskUsed" in $$source)) {
+            /**
+             * @member
+             * @type {number}
+             */
+            this["diskUsed"] = 0;
+        }
+        if (!("diskTotal" in $$source)) {
+            /**
+             * @member
+             * @type {number}
+             */
+            this["diskTotal"] = 0;
+        }
+        if (!("netRx" in $$source)) {
+            /**
+             * @member
+             * @type {number}
+             */
+            this["netRx"] = 0;
+        }
+        if (!("netTx" in $$source)) {
+            /**
+             * @member
+             * @type {number}
+             */
+            this["netTx"] = 0;
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new MonitorSnapshot instance from a string or object.
+     * @param {any} [$$source = {}]
+     * @returns {MonitorSnapshot}
+     */
+    static createFrom($$source = {}) {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new MonitorSnapshot(/** @type {Partial<MonitorSnapshot>} */($$parsedSource));
     }
 }
 
@@ -1641,6 +2050,38 @@ export class SSHConfig {
              */
             this["knownHostsFile"] = undefined;
         }
+        if (/** @type {any} */(false)) {
+            /**
+             * 跳板机 host:port
+             * @member
+             * @type {string | undefined}
+             */
+            this["jumpHost"] = undefined;
+        }
+        if (/** @type {any} */(false)) {
+            /**
+             * 跳板机用户名
+             * @member
+             * @type {string | undefined}
+             */
+            this["jumpUsername"] = undefined;
+        }
+        if (/** @type {any} */(false)) {
+            /**
+             * 跳板机密码
+             * @member
+             * @type {string | undefined}
+             */
+            this["jumpPassword"] = undefined;
+        }
+        if (/** @type {any} */(false)) {
+            /**
+             * 跳板机密钥路径
+             * @member
+             * @type {string | undefined}
+             */
+            this["jumpKeyPath"] = undefined;
+        }
 
         Object.assign(this, $$source);
     }
@@ -1679,6 +2120,30 @@ export class SSHGroup {
              */
             this["name"] = "";
         }
+        if (/** @type {any} */(false)) {
+            /**
+             * 父分组ID，空=顶级分组
+             * @member
+             * @type {string | undefined}
+             */
+            this["parent_id"] = undefined;
+        }
+        if (/** @type {any} */(false)) {
+            /**
+             * 分组颜色标记
+             * @member
+             * @type {string | undefined}
+             */
+            this["color"] = undefined;
+        }
+        if (!("order" in $$source)) {
+            /**
+             * 排序序号
+             * @member
+             * @type {number}
+             */
+            this["order"] = 0;
+        }
         if (!("conn_ids" in $$source)) {
             /**
              * @member
@@ -1710,12 +2175,92 @@ export class SSHGroup {
      * @returns {SSHGroup}
      */
     static createFrom($$source = {}) {
-        const $$createField2_0 = $$createType12;
+        const $$createField5_0 = $$createType5;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("conn_ids" in $$parsedSource) {
-            $$parsedSource["conn_ids"] = $$createField2_0($$parsedSource["conn_ids"]);
+            $$parsedSource["conn_ids"] = $$createField5_0($$parsedSource["conn_ids"]);
         }
         return new SSHGroup(/** @type {Partial<SSHGroup>} */($$parsedSource));
+    }
+}
+
+/**
+ * SSHKeyInfo SSH 密钥信息
+ */
+export class SSHKeyInfo {
+    /**
+     * Creates a new SSHKeyInfo instance.
+     * @param {Partial<SSHKeyInfo>} [$$source = {}] - The source object to create the SSHKeyInfo.
+     */
+    constructor($$source = {}) {
+        if (!("name" in $$source)) {
+            /**
+             * 文件名
+             * @member
+             * @type {string}
+             */
+            this["name"] = "";
+        }
+        if (!("path" in $$source)) {
+            /**
+             * 完整路径
+             * @member
+             * @type {string}
+             */
+            this["path"] = "";
+        }
+        if (!("type" in $$source)) {
+            /**
+             * ed25519, rsa, ecdsa
+             * @member
+             * @type {string}
+             */
+            this["type"] = "";
+        }
+        if (!("bits" in $$source)) {
+            /**
+             * 密钥位数
+             * @member
+             * @type {number}
+             */
+            this["bits"] = 0;
+        }
+        if (!("comment" in $$source)) {
+            /**
+             * 注释
+             * @member
+             * @type {string}
+             */
+            this["comment"] = "";
+        }
+        if (!("createdAt" in $$source)) {
+            /**
+             * 创建时间
+             * @member
+             * @type {string}
+             */
+            this["createdAt"] = "";
+        }
+        if (!("hasPublic" in $$source)) {
+            /**
+             * 是否有公钥
+             * @member
+             * @type {boolean}
+             */
+            this["hasPublic"] = false;
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new SSHKeyInfo instance from a string or object.
+     * @param {any} [$$source = {}]
+     * @returns {SSHKeyInfo}
+     */
+    static createFrom($$source = {}) {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new SSHKeyInfo(/** @type {Partial<SSHKeyInfo>} */($$parsedSource));
     }
 }
 
@@ -2064,13 +2609,13 @@ const $$createType2 = CloudConfig.createFrom;
 const $$createType3 = ShortcutsConfig.createFrom;
 const $$createType4 = AdvancedConfig.createFrom;
 const $$createType5 = $Create.Array($Create.Any);
-const $$createType6 = LoadAvg.createFrom;
-const $$createType7 = DiskPartition.createFrom;
-const $$createType8 = $Create.Array($$createType7);
-const $$createType9 = DiskIOStats.createFrom;
-const $$createType10 = FirewallRule.createFrom;
-const $$createType11 = $Create.Array($$createType10);
-const $$createType12 = $Create.Array($Create.Any);
+const $$createType6 = $Create.Array($Create.Any);
+const $$createType7 = LoadAvg.createFrom;
+const $$createType8 = DiskPartition.createFrom;
+const $$createType9 = $Create.Array($$createType8);
+const $$createType10 = DiskIOStats.createFrom;
+const $$createType11 = FirewallRule.createFrom;
+const $$createType12 = $Create.Array($$createType11);
 const $$createType13 = NetInterface.createFrom;
 const $$createType14 = $Create.Array($$createType13);
 const $$createType15 = CPUStats.createFrom;

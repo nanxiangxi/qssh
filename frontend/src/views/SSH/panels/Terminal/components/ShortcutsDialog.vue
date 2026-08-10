@@ -3,7 +3,7 @@
     <div v-if="visible" class="mask" @mousedown.self="$emit('close')">
       <div class="dialog">
         <div class="dialog-header">
-          <h3>快捷键参考</h3>
+          <h3>{{ t('terminal.shortcutsReference') }}</h3>
           <button class="close-btn" @click="$emit('close')">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="18" y1="6" x2="6" y2="18"/>
@@ -28,7 +28,10 @@
 </template>
 
 <script setup>
+import { useI18n } from 'vue-i18n'
 import { getKeybindingCategories } from '../utils/keybindings'
+
+const { t } = useI18n()
 
 defineProps({ visible: { type: Boolean, default: false } })
 defineEmits(['close'])

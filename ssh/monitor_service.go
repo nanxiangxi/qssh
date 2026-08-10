@@ -450,49 +450,42 @@ func parsePsOutput(output string) ([]ProcessInfo, error) {
 }
 
 
-// convertProcessStatus 转换进程状态为中文
+// convertProcessStatus 将 ps 状态码转换为简短英文状态名（前端负责 i18n 翻译）
 func convertProcessStatus(status string) string {
 	if len(status) == 0 {
-		return "未知"
+		return "unknown"
 	}
 
-	// 取第一个字符作为主要状态
-	mainStatus := status[0]
-
-	switch mainStatus {
+	switch status[0] {
 	case 'R':
-		return "运行中"
-	case 'S':
-		return "休眠"
+		return "running"
+	case 'S', 'I':
+		return "sleeping"
 	case 'D':
-		return "不可中断"
+		return "uninterruptible"
 	case 'Z':
-		return "僵尸"
-	case 'T':
-		return "已停止"
-	case 't':
-		return "追踪停止"
+		return "zombie"
+	case 'T', 't':
+		return "stopped"
 	case 'X':
-		return "死亡"
-	case 'I':
-		return "空闲"
+		return "dead"
 	default:
-		return string(mainStatus)
+		return "unknown"
 	}
 }
 
-// formatUptime 格式化系统运行时间
+// formatUptime 格式化系统运行时间（返回英文格式，前端负责翻译）
 func formatUptime(seconds float64) string {
 	days := int(seconds) / 86400
 	hours := (int(seconds) % 86400) / 3600
 	minutes := (int(seconds) % 3600) / 60
 
 	if days > 0 {
-		return fmt.Sprintf("%d天%d小时%d分钟", days, hours, minutes)
+		return fmt.Sprintf("%dd %dh %dm", days, hours, minutes)
 	} else if hours > 0 {
-		return fmt.Sprintf("%d小时%d分钟", hours, minutes)
+		return fmt.Sprintf("%dh %dm", hours, minutes)
 	} else {
-		return fmt.Sprintf("%d分钟", minutes)
+		return fmt.Sprintf("%dm", minutes)
 	}
 }
 

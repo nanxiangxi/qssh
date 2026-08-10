@@ -169,11 +169,20 @@ export function useFileOperations(currentConnId, currentPath, loadFiles) {
     try {
       const tarName = `${file.name}.tar.gz`
       const tarPath = joinPath(currentPath.value, tarName)
-      
+
       // 使用 tar 命令压缩目录（tar 比 zip 更通用）
-      const cmd = `cd "${currentPath.value}" && tar -czf "${tarName}" "${file.name}"`
-      await SSHService.ExecuteCommand(currentConnId.value, cmd)
-      
+      const cmd = `cd "${currentPath.value}" && tar -czf "${tarName}" "${file.name}" 2>&1`
+      const result = await SSHService.ExecuteCommandWithSudo(currentConnId.value, cmd)
+
+      // 检查压缩是否成功
+      if (!result.success) {
+        const errDetail = result.stderr || result.stdout || '压缩失败'
+        throw new Error(errDetail)
+      }
+
+      // 等待文件写入完成
+      await new Promise(resolve => setTimeout(resolve, 500))
+
       // 下载压缩文件
       const base64Data = await SSHService.DownloadFile(currentConnId.value, tarPath)
       
@@ -282,14 +291,16 @@ export function useFileOperations(currentConnId, currentPath, loadFiles) {
   // 压缩为 tar.gz
   const compressFile = async (file) => {
     const tarName = `${file.name}.tar.gz`
-    
+
     try {
       showMessage('正在压缩...', 'info')
-      // 使用 tar 命令压缩（tar 比 zip 更通用）
-      const cmd = `cd "${currentPath.value}" && tar -czf "${tarName}" "${file.name}"`
-      await SSHService.ExecuteCommand(currentConnId.value, cmd)
+      const cmd = `cd "${currentPath.value}" && tar -czf "${tarName}" "${file.name}" 2>&1`
+      const result = await SSHService.ExecuteCommandWithSudo(currentConnId.value, cmd)
+      if (!result.success) {
+        throw new Error(result.stderr || result.stdout || '压缩失败')
+      }
       showMessage(`已压缩: ${tarName}`, 'success')
-      logFileOperation(currentConnId.value, 'compress', tarPath)
+      logFileOperation(currentConnId.value, 'compress', joinPath(currentPath.value, tarName))
       loadFiles()
     } catch (error) {
       console.error('[FileManager] 压缩失败:', error)

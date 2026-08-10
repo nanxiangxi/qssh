@@ -1,12 +1,12 @@
 <template>
   <div ref="toolbarRef" class="toolbar" :class="{ compact }">
     <div class="toolbar-left">
-      <button @click="$emit('go-up')" class="tool-btn" :disabled="currentPath === '/'" title="上一级">
+      <button @click="$emit('go-up')" class="tool-btn" :disabled="currentPath === '/'" :title="t('fileManager.goUp')">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M18 15l-6-6-6 6"/>
         </svg>
       </button>
-      <button @click="$emit('refresh')" class="tool-btn" title="刷新">
+      <button @click="$emit('refresh')" class="tool-btn" :title="t('fileManager.refresh')">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="23 4 23 10 17 10"></polyline>
           <polyline points="1 4 1 10 7 10"></polyline>
@@ -16,14 +16,14 @@
     </div>
     
     <div class="path-bar">
-      <span v-if="!compact" class="path-label">路径:</span>
+      <span v-if="!compact" class="path-label">{{ t('fileManager.path') }}:</span>
       <input
         v-model="localPath"
         @keyup.enter="confirmPath"
         class="path-input"
         placeholder="/"
       />
-      <button @click="confirmPath" class="path-go-btn" title="跳转">
+      <button @click="confirmPath" class="path-go-btn" :title="t('fileManager.goToPath')">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="9 18 15 12 9 6"/>
         </svg>
@@ -41,15 +41,15 @@
         @input="$emit('search', $event.target.value)"
         @keyup.enter="$emit('search-enter')"
         class="search-input"
-        placeholder="搜索文件（回车全目录搜索）..."
+        :placeholder="t('fileManager.searchPlaceholder')"
       />
-      <button v-if="isSearching" @click="$emit('cancel-search')" class="cancel-search" title="取消搜索">
+      <button v-if="isSearching" @click="$emit('cancel-search')" class="cancel-search" :title="t('fileManager.cancelSearch')">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="18" y1="6" x2="6" y2="18"></line>
           <line x1="6" y1="6" x2="18" y2="18"></line>
         </svg>
       </button>
-      <button v-else-if="searchKeyword" @click="$emit('search', '')" class="clear-search" title="清除搜索">
+      <button v-else-if="searchKeyword" @click="$emit('search', '')" class="clear-search" :title="t('fileManager.clearSearch')">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="18" y1="6" x2="6" y2="18"></line>
           <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -63,73 +63,73 @@
         v-if="selectedCount > 0" 
         @click="$emit('batch-download')" 
         class="action-btn batch-btn"
-        :title="`下载选中的 ${selectedCount} 个文件`"
+        :title="t('fileManager.downloadSelected', { count: selectedCount })"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
           <polyline points="7 10 12 15 17 10"></polyline>
           <line x1="12" y1="15" x2="12" y2="3"></line>
         </svg>
-        <span v-if="!compact">下载({{ selectedCount }})</span>
+        <span v-if="!compact">{{ t('fileManager.download') }}({{ selectedCount }})</span>
       </button>
       
       <button 
         v-if="selectedCount > 0" 
         @click="$emit('batch-delete')" 
         class="action-btn batch-btn danger"
-        :title="`删除选中的 ${selectedCount} 个文件`"
+        :title="t('fileManager.deleteSelected', { count: selectedCount })"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="3 6 5 6 21 6"></polyline>
           <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
         </svg>
-        <span v-if="!compact">删除({{ selectedCount }})</span>
+        <span v-if="!compact">{{ t('common.delete') }}({{ selectedCount }})</span>
       </button>
       
       <button 
         v-if="selectedCount > 0" 
         @click="$emit('batch-chmod')" 
         class="action-btn batch-btn"
-        :title="`修改选中 ${selectedCount} 个文件的权限`"
+        :title="t('fileManager.chmodSelected', { count: selectedCount })"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
           <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
         </svg>
-        <span v-if="!compact">权限({{ selectedCount }})</span>
+        <span v-if="!compact">{{ t('fileManager.permissions') }}({{ selectedCount }})</span>
       </button>
       
-      <button v-if="hasCutFile" @click="$emit('paste')" class="action-btn" title="粘贴">
+      <button v-if="hasCutFile" @click="$emit('paste')" class="action-btn" :title="t('common.paste')">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
           <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
         </svg>
-        <span v-if="!compact">粘贴</span>
+        <span v-if="!compact">{{ t('common.paste') }}</span>
       </button>
-      <button @click="$emit('new-folder')" class="action-btn" title="新建文件夹">
+      <button @click="$emit('new-folder')" class="action-btn" :title="t('fileManager.newFolder')">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
           <line x1="12" y1="11" x2="12" y2="17"></line>
           <line x1="9" y1="14" x2="15" y2="14"></line>
         </svg>
-        <span v-if="!compact">新建文件夹</span>
+        <span v-if="!compact">{{ t('fileManager.newFolder') }}</span>
       </button>
-      <button @click="$emit('upload')" class="action-btn" title="上传文件">
+      <button @click="$emit('upload')" class="action-btn" :title="t('fileManager.upload')">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
           <polyline points="17 8 12 3 7 8"></polyline>
           <line x1="12" y1="3" x2="12" y2="15"></line>
         </svg>
-        <span v-if="!compact">上传</span>
+        <span v-if="!compact">{{ t('fileManager.upload') }}</span>
       </button>
       <!-- 上传目录按钮（前端自动压缩为 zip） -->
-      <button @click="$emit('upload-directory')" class="action-btn" title="上传目录">
+      <button @click="$emit('upload-directory')" class="action-btn" :title="t('fileManager.uploadDir')">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
           <polyline points="17 8 12 3 7 8"></polyline>
           <line x1="12" y1="3" x2="12" y2="15"></line>
         </svg>
-        <span v-if="!compact">上传目录</span>
+        <span v-if="!compact">{{ t('fileManager.uploadDir') }}</span>
       </button>
     </div>
   </div>
@@ -137,6 +137,9 @@
 
 <script setup>
 import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = defineProps({
   currentPath: {

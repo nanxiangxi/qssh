@@ -36,6 +36,10 @@ type SSHConfig struct {
 	Timeout        int             `json:"timeout,omitempty"`
 	HostKeyPolicy  HostKeyCallback `json:"hostKeyPolicy,omitempty"`
 	KnownHostsFile string          `json:"knownHostsFile,omitempty"`
+	JumpHost       string          `json:"jumpHost,omitempty"`       // 跳板机 host:port
+	JumpUsername   string          `json:"jumpUsername,omitempty"`   // 跳板机用户名
+	JumpPassword   string          `json:"jumpPassword,omitempty"`   // 跳板机密码
+	JumpKeyPath    string          `json:"jumpKeyPath,omitempty"`    // 跳板机密钥路径
 }
 
 // shellSession 单个 shell 会话
@@ -116,6 +120,35 @@ func (s *SSHClient) handleDisconnect() {
 	}
 }
 
+// keepaliveLoop 定期发送 SSH keepalive 检测连接存活
+func (s *SSHClient) keepaliveLoop() {
+	ticker := time.NewTicker(15 * time.Second)
+	defer ticker.Stop()
+
+	consecutiveFailures := 0
+	const maxFailures = 3 // 连续 3 次失败判定断线（45秒）
+
+	for range ticker.C {
+		if s.closing.Load() == 1 || s.isConnected.Load() == 0 {
+			return
+		}
+		if s.client == nil {
+			return
+		}
+
+		_, _, err := s.client.SendRequest("keepalive@openssh.com", true, nil)
+		if err != nil {
+			consecutiveFailures++
+			if consecutiveFailures >= maxFailures {
+				s.handleDisconnect()
+				return
+			}
+		} else {
+			consecutiveFailures = 0
+		}
+	}
+}
+
 // Connect 连接到 SSH 服务器
 func (s *SSHClient) Connect() error {
 	var authMethods []ssh.AuthMethod
@@ -157,7 +190,16 @@ func (s *SSHClient) Connect() error {
 	addr := fmt.Sprintf("%s:%d", s.config.Host, s.config.Port)
 
 	start := time.Now()
-	client, err := ssh.Dial("tcp", addr, sshConfig)
+
+	var client *ssh.Client
+
+	// 跳板机代理连接
+	if s.config.JumpHost != "" {
+		client, err = s.connectViaJumpHost(addr, sshConfig)
+	} else {
+		client, err = ssh.Dial("tcp", addr, sshConfig)
+	}
+
 	if err != nil {
 		return fmt.Errorf("连接SSH服务器失败: %v", err)
 	}
@@ -166,7 +208,65 @@ func (s *SSHClient) Connect() error {
 	s.lastPingTime = start
 	s.client = client
 	s.isConnected.Store(1)
+
+	// 启动 SSH keepalive 心跳（检测网络断开）
+	go s.keepaliveLoop()
+
 	return nil
+}
+
+// connectViaJumpHost 通过跳板机连接目标服务器
+func (s *SSHClient) connectViaJumpHost(targetAddr string, targetConfig *ssh.ClientConfig) (*ssh.Client, error) {
+	// 1. 构建跳板机认证
+	jumpAuth := []ssh.AuthMethod{}
+	if s.config.JumpPassword != "" {
+		jumpAuth = append(jumpAuth, ssh.Password(s.config.JumpPassword))
+	}
+	if s.config.JumpKeyPath != "" {
+		key, err := loadPrivateKey(s.config.JumpKeyPath)
+		if err == nil {
+			jumpAuth = append(jumpAuth, key)
+		}
+	}
+	// 如果跳板机没有单独配置认证，使用目标服务器的认证
+	if len(jumpAuth) == 0 {
+		jumpAuth = targetConfig.Auth
+	}
+
+	jumpUser := s.config.JumpUsername
+	if jumpUser == "" {
+		jumpUser = s.config.Username
+	}
+
+	jumpConfig := &ssh.ClientConfig{
+		User:            jumpUser,
+		Auth:            jumpAuth,
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(), // 跳板机通常不校验
+		Timeout:         time.Duration(s.config.Timeout) * time.Second,
+	}
+
+	// 2. 连接跳板机
+	jumpConn, err := ssh.Dial("tcp", s.config.JumpHost, jumpConfig)
+	if err != nil {
+		return nil, fmt.Errorf("连接跳板机失败: %v", err)
+	}
+
+	// 3. 通过跳板机连接目标服务器
+	targetConn, err := jumpConn.Dial("tcp", targetAddr)
+	if err != nil {
+		jumpConn.Close()
+		return nil, fmt.Errorf("通过跳板机拨号目标服务器失败: %v", err)
+	}
+
+	// 4. 建立 SSH 连接
+	ncc, chans, reqs, err := ssh.NewClientConn(targetConn, targetAddr, targetConfig)
+	if err != nil {
+		targetConn.Close()
+		jumpConn.Close()
+		return nil, fmt.Errorf("通过跳板机建立SSH连接失败: %v", err)
+	}
+
+	return ssh.NewClient(ncc, chans, reqs), nil
 }
 
 // buildHostKeyCallback 根据策略构造 ssh.HostKeyCallback
@@ -358,6 +458,7 @@ func (s *SSHClient) CreateShell(sessionID string) (*ssh.Session, error) {
 	return sess, nil
 }
 
+
 // readShellOutput 持续读取单个 session 的输出
 func (s *SSHClient) readShellOutput(sessionID string, sh *shellSession) {
 	buf := make([]byte, 4096)
@@ -460,20 +561,14 @@ func (s *SSHClient) GetSessionIDs() []string {
 	return ids
 }
 
-// UpdateLatency 更新延迟
+// UpdateLatency 更新延迟（使用轻量 SSH request 测量，不创建新会话）
 func (s *SSHClient) UpdateLatency() int64 {
 	if s.isConnected.Load() == 0 || s.client == nil {
 		return 0
 	}
 
 	start := time.Now()
-	session, err := s.client.NewSession()
-	if err != nil {
-		return s.latency
-	}
-	defer session.Close()
-
-	err = session.Run("true")
+	_, _, err := s.client.SendRequest("keepalive@openssh.com", true, nil)
 	if err == nil {
 		s.latency = time.Since(start).Milliseconds()
 		s.lastPingTime = start

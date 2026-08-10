@@ -2,14 +2,14 @@
   <div class="file-list-container">
     <div v-if="loading" class="loading-state">
       <div class="spinner"></div>
-      <p>加载中...</p>
+      <p>{{ t('fileTable.loading') }}</p>
     </div>
     
     <div v-else-if="files.length === 0" class="empty-state">
       <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
         <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
       </svg>
-      <p>空目录</p>
+      <p>{{ t('fileTable.emptyDir') }}</p>
     </div>
     
     <table v-else class="file-table">
@@ -24,20 +24,20 @@
             />
           </th>
           <th @click="$emit('sort', 'name')" class="sortable">
-            名称
+            {{ t('fileTable.name') }}
             <span v-if="sortKey === 'name'" class="sort-indicator">{{ sortOrder === 'asc' ? '↑' : '↓' }}</span>
           </th>
           <th @click="$emit('sort', 'size')" class="sortable">
-            大小
+            {{ t('fileTable.size') }}
             <span v-if="sortKey === 'size'" class="sort-indicator">{{ sortOrder === 'asc' ? '↑' : '↓' }}</span>
           </th>
           <th @click="$emit('sort', 'modTime')" class="sortable">
-            修改时间
+            {{ t('fileTable.modTime') }}
             <span v-if="sortKey === 'modTime'" class="sort-indicator">{{ sortOrder === 'asc' ? '↑' : '↓' }}</span>
           </th>
-          <th>所有者</th>
-          <th>权限</th>
-          <th style="width: 60px;">操作</th>
+          <th>{{ t('fileTable.owner') }}</th>
+          <th>{{ t('fileTable.permissions') }}</th>
+          <th style="width: 60px;">{{ t('fileTable.actions') }}</th>
         </tr>
       </thead>
       <tbody>
@@ -68,7 +68,7 @@
           <td class="mode-text">{{ getNumericMode(file.mode) }}</td>
           <td>
             <div class="action-menu-wrapper" @click.stop>
-              <button @click="$emit('show-menu', file, $event)" class="menu-btn" title="更多操作">
+              <button @click="$emit('show-menu', file, $event)" class="menu-btn" :title="t('fileTable.moreActions')">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                   <circle cx="12" cy="5" r="2"></circle>
                   <circle cx="12" cy="12" r="2"></circle>
@@ -84,7 +84,10 @@
 </template>
 
 <script setup>
+import { useI18n } from 'vue-i18n'
 import { formatSize, formatTime, getNumericMode } from '../utils/pathHelper'
+
+const { t } = useI18n()
 
 defineProps({
   files: {

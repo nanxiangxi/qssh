@@ -6,7 +6,7 @@
       <div class="stat-card cpu">
         <div class="card-header">
           <svg class="card-icon icon-cpu" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>
-          <span class="card-title">CPU</span>
+          <span class="card-title">{{ t('monitor.cpu') }}</span>
         </div>
         <div class="card-body">
           <div class="usage-circle" :style="{ background: getCpuGradient() }">
@@ -14,16 +14,16 @@
           </div>
           <div class="card-details">
             <div class="detail-item">
-              <span class="label">核心数:</span>
+              <span class="label">{{ t('monitor.cpuUsage') }}:</span>
               <span class="value">{{ systemStats?.cpu?.cores || 0 }}</span>
             </div>
             <div class="detail-item">
-              <span class="label">负载:</span>
+              <span class="label">Load:</span>
               <span class="value">{{ systemStats?.cpu?.loadAvg?.load1?.toFixed(2) || '0.00' }}</span>
             </div>
             <div class="detail-item">
-              <span class="label">运行时间:</span>
-              <span class="value uptime-value">{{ systemStats?.uptime || '加载中...' }}</span>
+              <span class="label">{{ t('monitor.runningTime') }}:</span>
+              <span class="value uptime-value">{{ systemStats?.uptime || t('common.loading') + '...' }}</span>
             </div>
           </div>
         </div>
@@ -33,26 +33,26 @@
       <div class="stat-card memory">
         <div class="card-header">
           <svg class="card-icon icon-memory" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="6" width="20" height="12" rx="2"/><line x1="6" y1="10" x2="6" y2="14"/><line x1="10" y1="10" x2="10" y2="14"/><line x1="14" y1="10" x2="14" y2="14"/><line x1="18" y1="10" x2="18" y2="14"/><line x1="2" y1="10" x2="2" y2="6"/><line x1="22" y1="10" x2="22" y2="6"/></svg>
-          <span class="card-title">内存</span>
+          <span class="card-title">{{ t('monitor.memory') }}</span>
         </div>
         <div class="card-body">
           <div class="usage-bar">
-            <div 
-              class="usage-fill" 
+            <div
+              class="usage-fill"
               :style="{ width: (systemStats?.memory?.usedPercent || 0) + '%' }"
             ></div>
           </div>
           <div class="card-details">
             <div class="detail-item">
-              <span class="label">已用:</span>
+              <span class="label">{{ t('monitor.memUsage') }}:</span>
               <span class="value">{{ formatBytes(systemStats?.memory?.used || 0) }}</span>
             </div>
             <div class="detail-item">
-              <span class="label">总计:</span>
+              <span class="label">{{ t('common.total') }}:</span>
               <span class="value">{{ formatBytes(systemStats?.memory?.total || 0) }}</span>
             </div>
             <div class="detail-item">
-              <span class="label">使用率:</span>
+              <span class="label">{{ t('monitor.memUsage') }}:</span>
               <span class="value">{{ (systemStats?.memory?.usedPercent || 0).toFixed(1) }}%</span>
             </div>
           </div>
@@ -63,7 +63,7 @@
       <div class="stat-card disk">
         <div class="card-header">
           <svg class="card-icon icon-disk" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="6"/></svg>
-          <span class="card-title">磁盘</span>
+          <span class="card-title">{{ t('monitor.disk') }}</span>
         </div>
         <div class="card-body">
           <div class="disk-list">
@@ -102,16 +102,16 @@
       <div class="stat-card network">
         <div class="card-header">
           <svg class="card-icon icon-network" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-          <span class="card-title">网络</span>
+          <span class="card-title">{{ t('monitor.network') }}</span>
         </div>
         <div class="card-body">
           <div class="network-stats">
             <div class="net-item">
-              <span class="net-label">↓ 接收:</span>
+              <span class="net-label">↓ {{ t('common.receive') }}:</span>
               <span class="net-value">{{ formatBytes(systemStats?.network?.totalRx || 0) }}</span>
             </div>
             <div class="net-item">
-              <span class="net-label">↑ 发送:</span>
+              <span class="net-label">↑ {{ t('common.send') }}:</span>
               <span class="net-value">{{ formatBytes(systemStats?.network?.totalTx || 0) }}</span>
             </div>
           </div>
@@ -148,50 +148,42 @@
 
     <!-- 进程列表 -->
     <div class="process-section">
-      <div class="section-header">
-        <h3>进程列表</h3>
-        <div class="header-actions">
-          <button @click="refreshProcesses" class="refresh-btn" :disabled="loadingProcesses">
-            {{ loadingProcesses ? '刷新中...' : '刷新' }}
-          </button>
-        </div>
-      </div>
 
       <div class="process-table-container">
         <table class="process-table">
           <thead>
             <tr>
               <th @click="sortBy('name')" class="sortable">
-                名称
+                {{ t('monitor.processName') }}
                 <span v-if="sortKey === 'name'" class="sort-indicator">{{ sortOrder === 'asc' ? '↑' : '↓' }}</span>
               </th>
               <th @click="sortBy('pid')" class="sortable">
-                PID
+                {{ t('monitor.pid') }}
                 <span v-if="sortKey === 'pid'" class="sort-indicator">{{ sortOrder === 'asc' ? '↑' : '↓' }}</span>
               </th>
               <th @click="sortBy('cpuPercent')" class="sortable">
-                CPU %
+                {{ t('monitor.cpu') }} %
                 <span v-if="sortKey === 'cpuPercent'" class="sort-indicator">{{ sortOrder === 'asc' ? '↑' : '↓' }}</span>
               </th>
               <th @click="sortBy('memPercent')" class="sortable">
-                内存 %
+                {{ t('monitor.memory') }} %
                 <span v-if="sortKey === 'memPercent'" class="sort-indicator">{{ sortOrder === 'asc' ? '↑' : '↓' }}</span>
               </th>
               <th @click="sortBy('memRss')" class="sortable">
-                内存使用
+                {{ t('monitor.memUsage') }}
                 <span v-if="sortKey === 'memRss'" class="sort-indicator">{{ sortOrder === 'asc' ? '↑' : '↓' }}</span>
               </th>
               <th @click="sortBy('startTime')" class="sortable">
-                启动时间
+                {{ t('monitor.startTime') }}
                 <span v-if="sortKey === 'startTime'" class="sort-indicator">{{ sortOrder === 'asc' ? '↑' : '↓' }}</span>
               </th>
               <th @click="sortBy('elapsedTime')" class="sortable">
-                运行时长
+                {{ t('monitor.runningTime') }}
                 <span v-if="sortKey === 'elapsedTime'" class="sort-indicator">{{ sortOrder === 'asc' ? '↑' : '↓' }}</span>
               </th>
-              <th>用户</th>
-              <th>状态</th>
-              <th>操作</th>
+              <th>{{ t('connection.username') }}</th>
+              <th>{{ t('common.status') }}</th>
+              <th>{{ t('common.actions') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -212,22 +204,22 @@
               <td :title="proc.startTime">{{ formatStartTime(proc.startTime) }}</td>
               <td :title="proc.elapsedTime">{{ formatElapsed(proc.elapsedTime) }}</td>
               <td>{{ proc.username }}</td>
-              <td>{{ proc.status }}</td>
+              <td>{{ statusLabel(proc.status) }}</td>
               <td>
                 <div class="action-buttons">
-                  <button 
-                    @click="showSignalMenu(proc.pid, $event)" 
+                  <button
+                    @click="showSignalMenu(proc.pid, $event)"
                     class="signal-btn"
-                    title="发送信号"
+                    :title="t('monitor.sendSignal')"
                   >
-                    信号
+                    {{ t('monitor.sendSignal') }}
                   </button>
-                  <button 
-                    @click="killProcess(proc.pid)" 
+                  <button
+                    @click="killProcess(proc.pid)"
                     class="kill-btn"
-                    title="终止进程"
+                    :title="t('monitor.killProcess')"
                   >
-                    终止
+                    {{ t('monitor.killProcess') }}
                   </button>
                 </div>
               </td>
@@ -241,38 +233,38 @@
   <!-- 确认对话框 -->
   <Modal
     v-model:visible="showKillConfirm"
-    title="终止进程"
+    :title="t('monitor.killProcess')"
     :content="killConfirmMessage"
     danger
-    confirm-text="终止"
-    cancel-text="取消"
+    :confirm-text="t('monitor.killProcess')"
+    :cancel-text="t('common.cancel')"
     @confirm="confirmKillProcess"
     @close="showKillConfirm = false"
     @cancel="showKillConfirm = false"
   />
 
   <!-- 信号选择菜单 -->
-  <Teleport to="body">
-    <div v-if="showSignalDropdown" class="signal-dropdown" :style="{ top: signalMenuPosition.y + 'px', left: signalMenuPosition.x + 'px' }" @click.stop>
-      <div class="dropdown-header">发送信号到进程 {{ selectedPid }}</div>
-      <button @click="sendSignal('TERM')" class="dropdown-item">SIGTERM (正常终止)</button>
-      <button @click="sendSignal('HUP')" class="dropdown-item">SIGHUP (挂起)</button>
-      <button @click="sendSignal('INT')" class="dropdown-item">SIGINT (中断)</button>
-      <button @click="sendSignal('QUIT')" class="dropdown-item">SIGQUIT (退出)</button>
-      <button @click="sendSignal('KILL')" class="dropdown-item danger">SIGKILL (强制终止)</button>
-      <button @click="sendSignal('STOP')" class="dropdown-item">SIGSTOP (停止)</button>
-      <button @click="sendSignal('CONT')" class="dropdown-item">SIGCONT (继续)</button>
-    </div>
-  </Teleport>
+  <ContextMenu
+    :visible="showSignalDropdown"
+    :header="t('monitor.sendSignalToProcess', { pid: selectedPid })"
+    :position="signalMenuPosition"
+    :items="signalMenuItems"
+    @select="handleSignalSelect"
+    @close="showSignalDropdown = false"
+  />
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useSSHLayoutStore } from '../../../stores/sshLayout'
 import { SSHService } from '../../../../bindings/changeme/ssh/index.js'
 import { showMessage } from '../../../utils/message'
 import Modal from '../../../components/Modal.vue'
+import ContextMenu from '../../../components/ContextMenu.vue'
 import { logFileOperation, logSystemEvent } from '@/utils/logger'
+
+const { t } = useI18n()
 
 // 定义接受的 props（Dockview 传递的 params）
 defineProps({
@@ -313,6 +305,17 @@ const pendingKillPid = ref(null)
 const showSignalDropdown = ref(false)
 const selectedPid = ref(null)
 const signalMenuPosition = ref({ x: 0, y: 0 })
+const signalMenuItems = computed(() => [
+  { label: 'SIGTERM (' + t('common.stop') + ')', action: 'TERM' },
+  { label: 'SIGHUP (Hangup)', action: 'HUP' },
+  { label: 'SIGINT (Interrupt)', action: 'INT' },
+  { label: 'SIGQUIT (Quit)', action: 'QUIT' },
+  { divider: true },
+  { label: 'SIGKILL (' + t('common.delete') + ')', action: 'KILL', danger: true },
+  { divider: true },
+  { label: 'SIGSTOP (' + t('common.pause') + ')', action: 'STOP' },
+  { label: 'SIGCONT (' + t('common.resume') + ')', action: 'CONT' },
+])
 
 // 定时器
 let statsTimer = null
@@ -406,7 +409,7 @@ const killProcess = (pid) => {
   
   // 显示自定义确认对话框
   pendingKillPid.value = pid
-  killConfirmMessage.value = `确定要终止进程 ${pid} 吗？此操作不可恢复。`
+  killConfirmMessage.value = t('monitor.killConfirm', { pid })
   showKillConfirm.value = true
 }
 
@@ -416,7 +419,7 @@ const confirmKillProcess = async () => {
   
   try {
     await SSHService.KillProcess(currentConnId.value, pendingKillPid.value)
-    showMessage('进程已终止', 'success')
+    showMessage(t('monitor.processKilled'), 'success')
     
     // 记录日志
     logFileOperation(currentConnId.value, 'kill_process', `PID: ${pendingKillPid.value}`)
@@ -428,7 +431,7 @@ const confirmKillProcess = async () => {
     setTimeout(() => fetchProcessList(), 500)
   } catch (error) {
     console.error('[MonitorPanel] 终止进程失败:', error)
-    showMessage('终止进程失败', 'error')
+    showMessage(t('monitor.killFailed'), 'error')
   }
 }
 
@@ -436,41 +439,18 @@ const confirmKillProcess = async () => {
 const showSignalMenu = (pid, event) => {
   event.stopPropagation()
   selectedPid.value = pid
-  const rect = event.target.getBoundingClientRect()
-  
-  // 计算菜单位置，避免超出屏幕
-  const menuWidth = 200
-  const menuHeight = 280 // 估算菜单高度
-  const viewportWidth = window.innerWidth
-  const viewportHeight = window.innerHeight
-  
-  let x = rect.left
-  let y = rect.bottom + 5
-  
-  // 如果菜单会超出右边界，向左调整
-  if (x + menuWidth > viewportWidth) {
-    x = viewportWidth - menuWidth - 10
-  }
-  
-  // 如果菜单会超出下边界，向上显示
-  if (y + menuHeight > viewportHeight) {
-    y = rect.top - menuHeight - 5
-  }
-  
-  signalMenuPosition.value = { x, y }
+  signalMenuPosition.value = { x: event.clientX, y: event.clientY }
   showSignalDropdown.value = true
-  
-  // 添加全局点击监听，点击外部关闭
-  setTimeout(() => {
-    document.addEventListener('click', closeSignalMenu)
-  }, 0)
 }
 
-// 关闭信号菜单
 const closeSignalMenu = () => {
   showSignalDropdown.value = false
-  selectedPid.value = null
-  document.removeEventListener('click', closeSignalMenu)
+}
+
+function handleSignalSelect(item) {
+  if (item.action) {
+    sendSignal(item.action)
+  }
 }
 
 // 发送信号
@@ -479,7 +459,7 @@ const sendSignal = async (signal) => {
   
   try {
     await SSHService.SendSignal(currentConnId.value, selectedPid.value, signal)
-    showMessage(`已发送 ${signal} 信号`, 'success')
+    showMessage(t('monitor.signalSent', { signal }), 'success')
     
     // 记录日志
     logSystemEvent(currentConnId.value, `发送信号 ${signal} 到进程 ${selectedPid.value}`, 'info')
@@ -490,8 +470,23 @@ const sendSignal = async (signal) => {
     setTimeout(() => fetchProcessList(), 500)
   } catch (error) {
     console.error('[MonitorPanel] 发送信号失败:', error)
-    showMessage('发送信号失败', 'error')
+    showMessage(t('monitor.signalFailed'), 'error')
   }
+}
+
+// 进程状态 i18n 映射
+const statusMap = {
+  running: 'monitor.statusRunning',
+  sleeping: 'monitor.statusSleeping',
+  uninterruptible: 'monitor.statusUninterruptible',
+  zombie: 'monitor.statusZombie',
+  stopped: 'monitor.statusStopped',
+  dead: 'monitor.statusDead',
+  unknown: 'monitor.statusUnknown',
+}
+
+const statusLabel = (status) => {
+  return t(statusMap[status] || 'monitor.statusUnknown')
 }
 
 // 排序
@@ -534,9 +529,9 @@ const formatElapsed = (etime) => {
   const days = parseInt(m[1] || '0')
   const hours = parseInt(m[2])
   const mins = parseInt(m[3])
-  if (days > 0) return `${days}天${hours}小时`
-  if (hours > 0) return `${hours}小时${mins}分`
-  return `${mins}分钟`
+  if (days > 0) return t('monitor.daysHours', { days, hours })
+  if (hours > 0) return t('monitor.hoursMinutes', { hours, mins })
+  return t('monitor.minutes', { mins })
 }
 
 // 将 ps lstart 格式转为中文：Fri Jun 12 13:59:10 2026 → 06-12 13:59
@@ -643,12 +638,14 @@ const getCurrentNetworkTxRate = () => {
 onMounted(() => {
   fetchSystemStats()
   fetchProcessList()
-  
+
   // 每 2 秒更新系统统计
   statsTimer = setInterval(fetchSystemStats, 2000)
-  
+
   // 每 5 秒更新进程列表
   processesTimer = setInterval(fetchProcessList, 5000)
+
+  document.addEventListener('click', closeSignalMenu)
 })
 
 onUnmounted(() => {
@@ -923,21 +920,6 @@ onUnmounted(() => {
   overflow: hidden;
 }
 
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--surface-hover);
-}
-
-.section-header h3 {
-  margin: 0;
-  color: var(--text-primary);
-  font-size: 0.875rem;
-  font-weight: 600;
-}
-
 .refresh-btn {
   padding: 0.375rem 0.75rem;
   background: var(--primary-bg);
@@ -1207,10 +1189,6 @@ onUnmounted(() => {
     font-size: 0.625rem;
   }
 
-  .section-header {
-    padding: 0.5rem;
-  }
-
   .process-table-container {
     max-height: 200px;
   }
@@ -1281,14 +1259,6 @@ onUnmounted(() => {
 
   .process-section {
     min-height: 0;
-  }
-
-  .section-header {
-    padding: 0.25rem 0.5rem;
-  }
-
-  .section-header h3 {
-    font-size: 0.75rem;
   }
 
   .process-table-container {

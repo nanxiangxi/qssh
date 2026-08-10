@@ -1,26 +1,47 @@
 <template>
   <div class="settings-page">
     <div class="page-header">
-      <button class="back-btn" @click="goBack" title="返回">
+      <button class="back-btn" @click="goBack" :title="t('settings.back')">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M19 12H5M12 19l-7-7 7-7"/>
         </svg>
-        <span>返回</span>
+        <span>{{ t('settings.back') }}</span>
       </button>
-      <h1 class="page-title">设置</h1>
+      <h1 class="page-title">{{ t('settings.title') }}</h1>
+    </div>
+
+    <!-- 语言设置 -->
+    <div class="config-section">
+      <div class="section-title">{{ t('settings.language') }}</div>
+      <div class="config-list">
+        <div class="config-item">
+          <div class="config-info">
+            <div class="config-label">{{ t('settings.languageLabel') }}</div>
+            <div class="config-desc">{{ t('settings.languageDesc') }}</div>
+          </div>
+          <div class="config-control">
+            <select
+              :value="currentLocale"
+              @change="handleLocaleChange($event)"
+              class="select-input"
+            >
+              <option value="zh-CN">中文</option>
+              <option value="en-US">English</option>
+            </select>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="config-section">
-      <div class="section-title">终端</div>
+      <div class="section-title">{{ t('settings.terminal') }}</div>
 
       <div class="config-list">
         <!-- 默认终端类型 -->
         <div class="config-item">
           <div class="config-info">
-            <div class="config-label">默认终端类型</div>
-            <div class="config-desc">
-              新建终端时使用的类型。结构化终端适合查看命令历史，经典终端兼容性最好。
-            </div>
+            <div class="config-label">{{ t('settings.defaultTerminalType') }}</div>
+            <div class="config-desc">{{ t('settings.defaultTerminalDesc') }}</div>
           </div>
           <div class="config-control">
             <select
@@ -28,8 +49,8 @@
               @change="handleChange($event)"
               class="select-input"
             >
-              <option value="structured">结构化终端（推荐）</option>
-              <option value="classic">经典终端</option>
+              <option value="structured">{{ t('settings.structuredTerminal') }}</option>
+              <option value="classic">{{ t('settings.classicTerminal') }}</option>
             </select>
           </div>
         </div>
@@ -37,10 +58,8 @@
         <!-- 交互式操作模式 -->
         <div class="config-item">
           <div class="config-info">
-            <div class="config-label">结构化终端交互式操作模式</div>
-            <div class="config-desc">
-              按 Ctrl+R/Z 等交互式快捷键时的处理方式。
-            </div>
+            <div class="config-label">{{ t('settings.interactiveMode') }}</div>
+            <div class="config-desc">{{ t('settings.interactiveModeDesc') }}</div>
           </div>
           <div class="config-control">
             <select
@@ -48,8 +67,8 @@
               @change="handleSwitchModeChange($event)"
               class="select-input"
             >
-              <option value="prompt">跳转至经典终端</option>
-              <option value="inline">临时终端</option>
+              <option value="prompt">{{ t('settings.switchToClassic') }}</option>
+              <option value="inline">{{ t('settings.inlineTerminal') }}</option>
             </select>
           </div>
         </div>
@@ -57,10 +76,8 @@
         <!-- 终端字体大小 -->
         <div class="config-item">
           <div class="config-info">
-            <div class="config-label">终端字体大小</div>
-            <div class="config-desc">
-              终端显示的字体大小，范围 10-24。
-            </div>
+            <div class="config-label">{{ t('settings.fontSize') }}</div>
+            <div class="config-desc">{{ t('settings.fontSizeDesc') }}</div>
           </div>
           <div class="config-control">
             <div class="number-control">
@@ -74,11 +91,8 @@
         <!-- 命令发送方式 -->
         <div class="config-item">
           <div class="config-info">
-            <div class="config-label">结构化终端命令发送方式</div>
-            <div class="config-desc">
-              回车发送：按 Enter 直接发送命令。<br>
-              按钮发送：按 Enter 换行，点击按钮发送，支持多行命令。
-            </div>
+            <div class="config-label">{{ t('settings.commandSendMode') }}</div>
+            <div class="config-desc">{{ t('settings.commandSendModeDesc') }}</div>
           </div>
           <div class="config-control">
             <select
@@ -86,8 +100,8 @@
               @change="handleCommandSendModeChange($event)"
               class="select-input"
             >
-              <option value="enter">回车发送</option>
-              <option value="button">按钮发送</option>
+              <option value="enter">{{ t('settings.enterSend') }}</option>
+              <option value="button">{{ t('settings.buttonSend') }}</option>
             </select>
           </div>
         </div>
@@ -95,10 +109,8 @@
         <!-- 经典终端代码高亮 -->
         <div class="config-item">
           <div class="config-info">
-            <div class="config-label">经典终端代码高亮</div>
-            <div class="config-desc">
-              开启后，经典终端输出会自动对代码关键字、字符串、数字进行语法高亮。
-            </div>
+            <div class="config-label">{{ t('settings.codeHighlight') }}</div>
+            <div class="config-desc">{{ t('settings.codeHighlightDesc') }}</div>
           </div>
           <div class="config-control">
             <label class="toggle">
@@ -112,12 +124,12 @@
 
 
     <div class="config-section">
-      <div class="section-title">快捷键</div>
+      <div class="section-title">{{ t('settings.shortcuts') }}</div>
       <div class="config-list">
         <div class="config-item">
           <div class="config-info">
-            <div class="config-label">启用全局快捷键</div>
-            <div class="config-desc">开启后可使用以下快捷键。</div>
+            <div class="config-label">{{ t('settings.enableGlobalShortcuts') }}</div>
+            <div class="config-desc">{{ t('settings.enableGlobalShortcutsDesc') }}</div>
           </div>
           <div class="config-control">
             <label class="toggle">
@@ -129,7 +141,7 @@
         <div class="config-item">
           <div class="config-info">
             <div class="config-label">Ctrl+← / Ctrl+→</div>
-            <div class="config-desc">快速切换 SSH 标签页。</div>
+            <div class="config-desc">{{ t('settings.switchTab') }}</div>
           </div>
           <div class="config-control">
             <label class="toggle">
@@ -141,7 +153,7 @@
         <div class="config-item">
           <div class="config-info">
             <div class="config-label">Ctrl+Shift+S</div>
-            <div class="config-desc">快速保存当前选中的连接。</div>
+            <div class="config-desc">{{ t('settings.saveGroup') }}</div>
           </div>
           <div class="config-control">
             <label class="toggle">
@@ -153,7 +165,7 @@
         <div class="config-item">
           <div class="config-info">
             <div class="config-label">Ctrl+Shift+U</div>
-            <div class="config-desc">快速上传连接配置到云端。</div>
+            <div class="config-desc">{{ t('settings.cloudUpload') }}</div>
           </div>
           <div class="config-control">
             <label class="toggle">
@@ -165,7 +177,7 @@
         <div class="config-item">
           <div class="config-info">
             <div class="config-label">Ctrl+Shift+D</div>
-            <div class="config-desc">快速从云端下载连接配置。</div>
+            <div class="config-desc">{{ t('settings.cloudDownload') }}</div>
           </div>
           <div class="config-control">
             <label class="toggle">
@@ -178,12 +190,12 @@
     </div>
 
     <div class="config-section">
-      <div class="section-title">高级</div>
+      <div class="section-title">{{ t('settings.advanced') }}</div>
       <div class="config-list">
         <div class="config-item">
           <div class="config-info">
-            <div class="config-label">多个连接时的分组行为</div>
-            <div class="config-desc">当有多个 SSH 连接时，新连接的处理方式。</div>
+            <div class="config-label">{{ t('settings.groupBehavior') }}</div>
+            <div class="config-desc">{{ t('settings.groupBehaviorDesc') }}</div>
           </div>
           <div class="config-control">
             <select
@@ -191,25 +203,23 @@
               @change="handleGroupBehaviorChange($event)"
               class="select-input"
             >
-              <option value="prompt">弹出选择</option>
-              <option value="join_default">加入默认分组</option>
-              <option value="new_window">打开新窗口</option>
+              <option value="prompt">{{ t('settings.promptSelect') }}</option>
+              <option value="join_default">{{ t('settings.joinDefault') }}</option>
+              <option value="new_window">{{ t('settings.newWindow') }}</option>
             </select>
           </div>
         </div>
       </div>
     </div>
     <div class="config-section">
-      <div class="section-title">窗口</div>
+      <div class="section-title">{{ t('settings.window') }}</div>
 
       <div class="config-list">
         <!-- 主题 -->
         <div class="config-item">
           <div class="config-info">
-            <div class="config-label">主题</div>
-            <div class="config-desc">
-              选择界面主题风格，切换后所有窗口同步生效。
-            </div>
+            <div class="config-label">{{ t('settings.theme') }}</div>
+            <div class="config-desc">{{ t('settings.themeDesc') }}</div>
           </div>
           <div class="config-control">
             <select
@@ -217,8 +227,8 @@
               @change="handleThemeChange($event)"
               class="select-input"
             >
-              <option value="dark">深色</option>
-              <option value="light">浅色</option>
+              <option value="dark">{{ t('settings.dark') }}</option>
+              <option value="light">{{ t('settings.light') }}</option>
             </select>
           </div>
         </div>
@@ -226,10 +236,8 @@
         <!-- 连接后自动最小化到托盘 -->
         <div class="config-item">
           <div class="config-info">
-            <div class="config-label">连接后自动最小化到托盘</div>
-            <div class="config-desc">
-              开启后，SSH 连接成功时自动将主窗口最小化到系统托盘。
-            </div>
+            <div class="config-label">{{ t('settings.autoTray') }}</div>
+            <div class="config-desc">{{ t('settings.autoTrayDesc') }}</div>
           </div>
           <div class="config-control">
             <label class="toggle">
@@ -242,10 +250,8 @@
         <!-- 记忆窗口位置 -->
         <div class="config-item">
           <div class="config-info">
-            <div class="config-label">记忆窗口位置和大小</div>
-            <div class="config-desc">
-              开启后，关闭窗口时自动保存窗口的位置和大小，下次打开时恢复到上次的状态。
-            </div>
+            <div class="config-label">{{ t('settings.rememberPosition') }}</div>
+            <div class="config-desc">{{ t('settings.rememberPositionDesc') }}</div>
           </div>
           <div class="config-control">
             <label class="toggle">
@@ -258,10 +264,8 @@
         <!-- SSH窗口关闭后自动显示首页 -->
         <div class="config-item">
           <div class="config-info">
-            <div class="config-label">SSH窗口关闭后自动显示首页</div>
-            <div class="config-desc">
-              开启后，当所有SSH窗口关闭时，首页窗口会自动显示并获得焦点。
-            </div>
+            <div class="config-label">{{ t('settings.autoShowHome') }}</div>
+            <div class="config-desc">{{ t('settings.autoShowHomeDesc') }}</div>
           </div>
           <div class="config-control">
             <label class="toggle">
@@ -274,29 +278,25 @@
         <!-- 清除窗口位置记忆 -->
         <div class="config-item">
           <div class="config-info">
-            <div class="config-label">清除窗口位置记忆</div>
-            <div class="config-desc">
-              清除已保存的所有窗口位置和大小记录，下次打开窗口将使用默认位置。
-            </div>
+            <div class="config-label">{{ t('settings.clearWindowPositions') }}</div>
+            <div class="config-desc">{{ t('settings.clearWindowPositionsDesc') }}</div>
           </div>
           <div class="config-control">
-            <button class="action-btn-sm" @click="clearWindowPositions">清除</button>
+            <button class="action-btn-sm" @click="clearWindowPositions">{{ t('settings.clear') }}</button>
           </div>
         </div>
       </div>
     </div>
 
     <div class="config-section">
-      <div class="section-title">私有云端</div>
+      <div class="section-title">{{ t('settings.cloud') }}</div>
 
       <div class="config-list">
         <!-- 启用云端 -->
         <div class="config-item">
           <div class="config-info">
-            <div class="config-label">启用私有云端同步</div>
-            <div class="config-desc">
-              连接到私有云端服务器，实现跨设备连接配置同步。
-            </div>
+            <div class="config-label">{{ t('settings.cloudEnabled') }}</div>
+            <div class="config-desc">{{ t('settings.cloudEnabledDesc') }}</div>
           </div>
           <div class="config-control">
             <label class="toggle">
@@ -309,10 +309,8 @@
         <!-- 服务器地址 -->
         <div class="config-item">
           <div class="config-info">
-            <div class="config-label">服务器地址</div>
-            <div class="config-desc">
-              私有云端服务器 IP 和端口
-            </div>
+            <div class="config-label">{{ t('settings.serverAddress') }}</div>
+            <div class="config-desc">{{ t('settings.serverAddressDesc') }}</div>
           </div>
           <div class="config-control cloud-addr">
             <input
@@ -336,17 +334,15 @@
         <!-- 认证令牌 -->
         <div class="config-item">
           <div class="config-info">
-            <div class="config-label">认证令牌</div>
-            <div class="config-desc">
-              云端服务器的认证令牌，与服务端启动时设置的令牌一致。
-            </div>
+            <div class="config-label">{{ t('settings.authToken') }}</div>
+            <div class="config-desc">{{ t('settings.authTokenDesc') }}</div>
           </div>
           <div class="config-control">
             <input
               type="password"
               v-model="cloudToken"
               class="text-input"
-              placeholder="输入令牌"
+              :placeholder="t('settings.inputToken')"
               @change="handleCloudConfigChange"
             >
           </div>
@@ -355,14 +351,14 @@
         <!-- 同步状态 -->
         <div class="config-item">
           <div class="config-info">
-            <div class="config-label">连接状态</div>
+            <div class="config-label">{{ t('settings.connectionStatus') }}</div>
             <div class="config-desc">
               {{ cloudStatusText }}
             </div>
           </div>
           <div class="config-control">
             <button class="action-btn-sm" @click="testCloudConnection">
-              测试连接
+              {{ t('settings.testConnection') }}
             </button>
           </div>
         </div>
@@ -370,10 +366,8 @@
         <!-- 自动同步到云端 -->
         <div class="config-item">
           <div class="config-info">
-            <div class="config-label">自动同步到云端</div>
-            <div class="config-desc">
-              开启后，本地连接配置变更时自动上传到云端，其他设备可同步。
-            </div>
+            <div class="config-label">{{ t('settings.autoSyncTo') }}</div>
+            <div class="config-desc">{{ t('settings.autoSyncToDesc') }}</div>
           </div>
           <div class="config-control">
             <label class="toggle">
@@ -386,10 +380,8 @@
         <!-- 自动从云端同步 -->
         <div class="config-item">
           <div class="config-info">
-            <div class="config-label">自动从云端同步</div>
-            <div class="config-desc">
-              开启后，自动从云端下载其他设备的连接配置，按 IP:端口 去重，最新覆盖旧的。
-            </div>
+            <div class="config-label">{{ t('settings.autoSyncFrom') }}</div>
+            <div class="config-desc">{{ t('settings.autoSyncFromDesc') }}</div>
           </div>
           <div class="config-control">
             <label class="toggle">
@@ -402,14 +394,103 @@
         <!-- 手动同步 -->
         <div class="config-item">
           <div class="config-info">
-            <div class="config-label">手动同步</div>
-            <div class="config-desc">
-              立即上传本地连接配置到云端，或从云端下载。
-            </div>
+            <div class="config-label">{{ t('settings.manualSync') }}</div>
+            <div class="config-desc">{{ t('settings.manualSyncDesc') }}</div>
           </div>
           <div class="config-control sync-btns">
-            <button class="action-btn-sm" @click="syncUpload" :disabled="!cloudEnabled">上传</button>
-            <button class="action-btn-sm" @click="syncDownload" :disabled="!cloudEnabled">下载</button>
+            <button class="action-btn-sm" @click="syncUpload" :disabled="!cloudEnabled">{{ t('settings.upload') }}</button>
+            <button class="action-btn-sm" @click="syncDownload" :disabled="!cloudEnabled">{{ t('settings.download') }}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SSH 密钥管理 -->
+    <div class="config-section">
+      <div class="section-header">
+        <div class="section-title">{{ t('settings.sshKeys') }}</div>
+        <button class="section-action-btn" @click="loadSSHKeys">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="23 4 23 10 17 10"/>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+          </svg>
+          {{ t('settings.refresh') }}
+        </button>
+      </div>
+
+      <div class="config-list">
+        <!-- 密钥列表 -->
+        <div v-if="sshKeys.length > 0" class="key-grid">
+          <div v-for="key in sshKeys" :key="key.name" class="key-card">
+            <div class="key-card-header">
+              <div class="key-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+                </svg>
+              </div>
+              <div class="key-card-title">{{ key.name }}</div>
+              <div class="key-card-actions">
+                <button class="icon-btn-xs" @click="showPublicKey(key)" :title="t('settings.copyPublicKey')">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                  </svg>
+                </button>
+                <button class="icon-btn-xs danger" @click="deleteKey(key)" :title="t('settings.deleteKey')">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="key-card-body">
+              <div class="key-tag" :class="key.type">{{ key.type }}</div>
+              <span v-if="key.bits" class="key-bits">{{ key.bits }} bit</span>
+              <span v-if="key.comment" class="key-comment">{{ key.comment }}</span>
+            </div>
+            <div v-if="key.createdAt" class="key-card-footer">
+              {{ key.createdAt }}
+            </div>
+          </div>
+        </div>
+        <div v-else class="empty-state-card">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4">
+            <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+          </svg>
+          <span>{{ t('settings.noKeys') }}</span>
+          <span class="empty-hint">{{ t('settings.noKeysHint') }}</span>
+        </div>
+
+        <!-- 生成新密钥 -->
+        <div class="gen-section">
+          <div class="gen-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            {{ t('settings.generateNewKey') }}
+          </div>
+          <div class="gen-form">
+            <div class="gen-row">
+              <div class="gen-field">
+                <label>{{ t('settings.keyName') }}</label>
+                <input v-model="newKey.name" type="text" :placeholder="t('settings.keyNamePlaceholder')" class="gen-input" />
+              </div>
+              <div class="gen-field">
+                <label>{{ t('settings.keyType') }}</label>
+                <select v-model="newKey.type" class="gen-input">
+                  <option value="ed25519">Ed25519 ({{ t('common.recommended') }})</option>
+                  <option value="rsa">RSA (4096)</option>
+                </select>
+              </div>
+              <div class="gen-field">
+                <label>{{ t('settings.keyComment') }}</label>
+                <input v-model="newKey.comment" type="text" :placeholder="t('settings.keyCommentPlaceholder')" class="gen-input" />
+              </div>
+              <button class="gen-btn" @click="generateKey" :disabled="generatingKey">
+                {{ generatingKey ? t('settings.generating') : t('settings.generate') }}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -423,7 +504,7 @@
           <polyline points="7 10 12 15 17 10"/>
           <line x1="12" y1="15" x2="12" y2="3"/>
         </svg>
-        导出
+        {{ t('settings.export') }}
       </button>
       <button class="action-btn" @click="showImport = true">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -431,18 +512,41 @@
           <polyline points="17 8 12 3 7 8"/>
           <line x1="12" y1="3" x2="12" y2="15"/>
         </svg>
-        导入
+        {{ t('settings.import') }}
       </button>
+    </div>
+
+    <!-- 赞助开发者 -->
+    <div class="config-section">
+      <div class="section-title">{{ t('settings.sponsor') }}</div>
+      <div class="sponsor-card">
+        <div class="sponsor-info">
+          <p class="sponsor-text">{{ t('settings.sponsorText') }}</p>
+          <p class="sponsor-hint">{{ t('settings.sponsorHint') }}</p>
+        </div>
+        <div class="sponsor-qr">
+          <img src="/sponsor-qr.png" :alt="t('settings.sponsor')" class="qr-image" @error="qrError = true" />
+          <div v-if="qrError" class="qr-placeholder">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3">
+              <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+              <rect x="14" y="14" width="3" height="3"/><rect x="18" y="14" width="3" height="3"/><rect x="14" y="18" width="3" height="3"/>
+              <rect x="18" y="18" width="3" height="3"/>
+            </svg>
+            <span>{{ t('settings.qrPlaceholder') }}</span>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- 导入对话框 -->
     <Modal
       v-model:visible="showImport"
-      title="导入配置"
+      :title="t('settings.importConfig')"
+      :cancel-text="t('common.cancel')"
       @confirm="handleImport"
     >
       <template #content>
-        <textarea v-model="importJson" class="import-textarea" placeholder="粘贴配置 JSON..." rows="10"></textarea>
+        <textarea v-model="importJson" class="import-textarea" :placeholder="t('settings.pasteConfig')" rows="10"></textarea>
       </template>
     </Modal>
 
@@ -452,8 +556,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useConfigStore } from '../../stores/config'
 import { Events } from '@wailsio/runtime'
 import * as SSHService from '../../../bindings/changeme/ssh/sshservice.js'
@@ -461,10 +566,12 @@ import * as CloudService from '../../../bindings/changeme/ssh/cloudservice.js'
 import Modal from '../../components/Modal.vue'
 import Message from '../../components/Message.vue'
 
+const { locale, t } = useI18n()
 const router = useRouter()
 const configStore = useConfigStore()
 const messageRef = ref(null)
 
+const currentLocale = ref(locale.value)
 const theme = ref('dark')
 const defaultType = ref('classic')
 const switchMode = ref('prompt')
@@ -476,6 +583,8 @@ const rememberPosition = ref(true)
 const autoShowHome = ref(true)
 const showImport = ref(false)
 const importJson = ref('')
+const qrError = ref(false)
+const unsubCloud = ref(null)
 
 // 云端配置
 const cloudEnabled = ref(false)
@@ -484,13 +593,31 @@ const cloudPort = ref(9527)
 const cloudToken = ref('')
 const cloudAutoSyncTo = ref(false)
 const cloudAutoSyncFrom = ref(false)
-const cloudStatusText = ref('未连接')
+const cloudStatusText = ref(t('settings.disconnected'))
 const shortcutsEnabled = ref(true)
 const shortcutSwitchTab = ref(true)
 const shortcutSaveGroup = ref(true)
 const shortcutCloudUpload = ref(true)
 const shortcutCloudDownload = ref(true)
 const groupBehavior = ref('prompt')
+
+// 语言切换
+const handleLocaleChange = async (e) => {
+  const newLocale = e.target.value
+  locale.value = newLocale
+  currentLocale.value = newLocale
+  localStorage.setItem('locale', newLocale)
+  // 保存到后端配置
+  try {
+    await configStore.set('locale', 'value', newLocale)
+  } catch {}
+  messageRef.value?.warning(t('settings.languageRestartRequired'))
+}
+
+// SSH 密钥管理
+const sshKeys = ref([])
+const newKey = ref({ name: '', type: 'ed25519', comment: '' })
+const generatingKey = ref(false)
 
 function goBack() {
   router.back()
@@ -531,36 +658,43 @@ onMounted(async () => {
   // 检查实际连接状态
   try {
     const connected = await CloudService.IsConnected()
-    cloudStatusText.value = connected ? '已连接' : '未连接'
+    cloudStatusText.value = connected ? t('settings.connected') : t('settings.disconnected')
   } catch {
-    cloudStatusText.value = '未连接'
+    cloudStatusText.value = t('settings.disconnected')
   }
 
   // 监听云端状态变化
-  Events.On('cloud:status', (e) => {
+  unsubCloud.value = Events.On('cloud:status', (e) => {
     const d = e?.data
     if (d) {
-      cloudStatusText.value = d.connected ? '已连接' : '未连接'
+      cloudStatusText.value = d.connected ? t('settings.connected') : t('settings.disconnected')
     }
   })
+
+  // 加载 SSH 密钥
+  loadSSHKeys()
+})
+
+onUnmounted(() => {
+  if (unsubCloud.value) unsubCloud.value()
 })
 
 async function handleThemeChange(e) {
   theme.value = e.target.value
   await configStore.setTheme(e.target.value)
-  showToast('主题已切换')
+  showToast(t('settings.themeSwitched'))
 }
 
 async function handleChange(e) {
   defaultType.value = e.target.value
   await configStore.set('terminal', 'defaultType', e.target.value)
-  showToast('设置已保存')
+  showToast(t('settings.settingsSaved'))
 }
 
 async function handleSwitchModeChange(e) {
   switchMode.value = e.target.value
   await configStore.set('terminal', 'switchMode', e.target.value)
-  showToast('设置已保存')
+  showToast(t('settings.settingsSaved'))
 }
 
 async function changeFontSize(delta) {
@@ -568,101 +702,101 @@ async function changeFontSize(delta) {
   if (newSize !== fontSize.value) {
     fontSize.value = newSize
     await configStore.set('terminal', 'fontSize', newSize)
-    showToast('设置已保存')
+    showToast(t('settings.settingsSaved'))
   }
 }
 
 async function handleCommandSendModeChange(e) {
   commandSendMode.value = e.target.value
   await configStore.set('terminal', 'commandSendMode', e.target.value)
-  showToast('设置已保存')
+  showToast(t('settings.settingsSaved'))
 }
 
 async function handleCodeHighlightChange(e) {
   codeHighlight.value = e.target.checked
   await configStore.set('terminal', 'codeHighlight', e.target.checked)
-  showToast('设置已保存')
+  showToast(t('settings.settingsSaved'))
 }
 
 async function handleShortcutsChange(e) {
   shortcutsEnabled.value = e.target.checked
   await configStore.set('shortcuts', 'enabled', e.target.checked)
-  showToast('设置已保存')
+  showToast(t('settings.settingsSaved'))
 }
 
 async function handleShortcutSwitchTabChange(e) {
   shortcutSwitchTab.value = e.target.checked
   await configStore.set('shortcuts', 'switchTab', e.target.checked)
-  showToast('设置已保存')
+  showToast(t('settings.settingsSaved'))
 }
 
 async function handleShortcutSaveGroupChange(e) {
   shortcutSaveGroup.value = e.target.checked
   await configStore.set('shortcuts', 'saveGroup', e.target.checked)
-  showToast('设置已保存')
+  showToast(t('settings.settingsSaved'))
 }
 
 async function handleShortcutCloudUploadChange(e) {
   shortcutCloudUpload.value = e.target.checked
   await configStore.set('shortcuts', 'cloudUpload', e.target.checked)
-  showToast('设置已保存')
+  showToast(t('settings.settingsSaved'))
 }
 
 async function handleShortcutCloudDownloadChange(e) {
   shortcutCloudDownload.value = e.target.checked
   await configStore.set('shortcuts', 'cloudDownload', e.target.checked)
-  showToast('设置已保存')
+  showToast(t('settings.settingsSaved'))
 }
 
 async function handleGroupBehaviorChange(e) {
   groupBehavior.value = e.target.value
   await configStore.set('advanced', 'groupBehavior', e.target.value)
-  showToast('设置已保存')
+  showToast(t('settings.settingsSaved'))
 }
 
 async function handleAutoTrayChange(e) {
   autoTray.value = e.target.checked
   await configStore.set('ui', 'autoTray', e.target.checked)
-  showToast('设置已保存')
+  showToast(t('settings.settingsSaved'))
 }
 
 async function handleRememberPositionChange(e) {
   rememberPosition.value = e.target.checked
   await configStore.set('ui', 'rememberPosition', e.target.checked)
-  showToast('设置已保存')
+  showToast(t('settings.settingsSaved'))
 }
 
 async function handleAutoShowHomeChange(e) {
   autoShowHome.value = e.target.checked
   await configStore.set('ui', 'autoShowHome', e.target.checked)
-  showToast('设置已保存')
+  showToast(t('settings.settingsSaved'))
 }
 
 async function clearWindowPositions() {
   try {
     await SSHService.ClearWindowPositions()
-    showToast('窗口位置记忆已清除')
+    showToast(t('settings.windowPositionsCleared'))
   } catch (e) {
-    showToast('清除失败')
+    showToast(t('settings.clearFailed'))
   }
 }
 
 async function handleCloudEnabledChange(e) {
   cloudEnabled.value = e.target.checked
   await configStore.set('cloud', 'enabled', e.target.checked)
-  showToast('设置已保存')
+  showToast(t('settings.settingsSaved'))
 }
 
 async function handleAutoSyncToChange(e) {
   cloudAutoSyncTo.value = e.target.checked
   await configStore.set('cloud', 'autoSyncTo', e.target.checked)
-  showToast('设置已保存')
+  showToast(t('settings.settingsSaved'))
 }
 
 async function handleAutoSyncFromChange(e) {
   cloudAutoSyncFrom.value = e.target.checked
   await configStore.set('cloud', 'autoSyncFrom', e.target.checked)
-  showToast('设置已保存')
+  showToast(t('settings.settingsSaved'))
 }
 
 async function handleCloudConfigChange() {
@@ -672,20 +806,20 @@ async function handleCloudConfigChange() {
 
 async function testCloudConnection() {
   if (!cloudHost.value || !cloudToken.value) {
-    showToast('请填写服务器地址和令牌')
+    showToast(t('settings.pleaseFillAddress'))
     return
   }
-  cloudStatusText.value = '连接中...'
+  cloudStatusText.value = t('settings.connecting')
   const addr = `${cloudHost.value}:${cloudPort.value || 9527}`
   console.log('[Settings] 测试连接:', addr)
   const ok = await CloudService.Connect(addr, cloudToken.value)
   if (ok) {
-    cloudStatusText.value = '已连接'
-    showToast('连接成功')
+    cloudStatusText.value = t('settings.connected')
+    showToast(t('settings.connectionSuccess'))
     await CloudService.Disconnect()
   } else {
-    cloudStatusText.value = '连接失败'
-    showToast('连接失败')
+    cloudStatusText.value = t('settings.connectionFailed')
+    showToast(t('settings.connectionFailed'))
   }
 }
 
@@ -693,7 +827,7 @@ async function ensureCloudConnected() {
   const connected = await CloudService.IsConnected()
   if (connected) return true
   if (!cloudHost.value || !cloudToken.value) {
-    showToast('请先配置服务器地址和令牌')
+    showToast(t('settings.pleaseFillServerAddress'))
     return false
   }
   const addr = `${cloudHost.value}:${cloudPort.value || 9527}`
@@ -734,9 +868,9 @@ async function syncUpload() {
 
     // 4. 推送合并后的完整数据
     await CloudService.PushSync(Array.from(merged.values()))
-    showToast(`上传成功，共 ${merged.size} 个连接`)
+    showToast(t('settings.uploadSuccess', { count: merged.size }))
   } catch (e) {
-    showToast('上传失败: ' + (e?.message || e))
+    showToast(t('settings.uploadFailed') + ': ' + (e?.message || e))
   }
 }
 
@@ -745,7 +879,7 @@ async function syncDownload() {
     if (!await ensureCloudConnected()) return
     const conns = await CloudService.PullSync()
     if (!conns || conns.length === 0) {
-      showToast('云端无连接配置')
+      showToast(t('settings.noCloudConfig'))
       return
     }
 
@@ -765,14 +899,21 @@ async function syncDownload() {
         console.warn('[Cloud] 同步导入失败:', c.name, e.message)
       }
     }
-    showToast(`同步完成，处理了 ${count} 个连接`)
+    showToast(t('settings.syncComplete', { count: count }))
   } catch (e) {
-    showToast('下载失败: ' + (e?.message || e))
+    showToast(t('settings.downloadFailed') + ': ' + (e?.message || e))
   }
 }
 
 function showToast(msg) {
   messageRef.value?.success(msg)
+}
+
+function formatTime(timestamp) {
+  if (!timestamp) return ''
+  // 只显示时间部分（HH:MM:SS）
+  const parts = timestamp.split(' ')
+  return parts.length > 1 ? parts[1] : timestamp
 }
 
 async function exportConfig() {
@@ -796,6 +937,58 @@ async function handleImport() {
       importJson.value = ''
       defaultType.value = configStore.getDefaultTerminalType()
     }
+  }
+}
+
+// ========== SSH 密钥管理 ==========
+
+async function loadSSHKeys() {
+  try {
+    const keys = await SSHService.ListSSHKeys()
+    sshKeys.value = keys || []
+  } catch (e) {
+    console.error('[Settings] 加载 SSH 密钥失败:', e)
+    sshKeys.value = []
+  }
+}
+
+async function generateKey() {
+  if (!newKey.value.name) {
+    showToast(t('settings.pleaseFillKeyName'))
+    return
+  }
+  generatingKey.value = true
+  try {
+    await SSHService.GenerateSSHKey(newKey.value.name, newKey.value.type, newKey.value.comment, 0)
+    showToast(t('settings.keyGenerated'))
+    newKey.value = { name: '', type: 'ed25519', comment: '' }
+    await loadSSHKeys()
+  } catch (e) {
+    showToast(t('settings.keyGenerateFailed') + ': ' + (e?.message || e))
+  } finally {
+    generatingKey.value = false
+  }
+}
+
+async function showPublicKey(key) {
+  try {
+    const pubKey = await SSHService.GetSSHPublicKey(key.name)
+    // 复制到剪贴板
+    await navigator.clipboard.writeText(pubKey)
+    showToast(t('settings.publicKeyCopied'))
+  } catch (e) {
+    showToast(t('settings.getPublicKeyFailed') + ': ' + (e?.message || e))
+  }
+}
+
+async function deleteKey(key) {
+  if (!confirm(t('settings.deleteKeyConfirm', { name: key.name }))) return
+  try {
+    await SSHService.DeleteSSHKey(key.name)
+    showToast(t('settings.keyDeleted'))
+    await loadSSHKeys()
+  } catch (e) {
+    showToast(t('settings.keyDeleteFailed') + ': ' + (e?.message || e))
   }
 }
 </script>
@@ -1070,5 +1263,326 @@ async function handleImport() {
 .sync-btns {
   display: flex;
   gap: 6px;
+}
+
+/* Section Header */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.section-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.section-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: var(--bg-panel);
+  border: 1px solid var(--surface-hover);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.section-action-btn:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+
+/* SSH 密钥管理 - 卡片式 */
+.key-grid {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.key-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--surface-hover);
+  border-radius: 10px;
+  overflow: hidden;
+  transition: all 0.2s;
+}
+
+.key-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.key-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px 8px;
+}
+
+.key-icon {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-primary-bg);
+  border-radius: 8px;
+  color: var(--accent-primary);
+}
+
+.key-card-title {
+  flex: 1;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.key-card-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.icon-btn-xs {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.icon-btn-xs:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+}
+
+.icon-btn-xs.danger:hover {
+  background: var(--accent-danger-bg);
+  color: var(--accent-danger);
+}
+
+.key-card-body {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px 10px;
+  flex-wrap: wrap;
+}
+
+.key-tag {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.key-tag.ed25519 {
+  background: #10b98120;
+  color: #10b981;
+}
+
+.key-tag.rsa {
+  background: #6366f120;
+  color: #6366f1;
+}
+
+.key-bits {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.key-comment {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.key-card-footer {
+  padding: 8px 14px;
+  border-top: 1px solid var(--surface-hover);
+  font-size: 0.6875rem;
+  color: var(--text-disabled);
+}
+
+/* 空状态卡片 */
+.empty-state-card {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 32px 20px;
+  background: var(--bg-panel);
+  border: 1px dashed var(--surface-hover);
+  border-radius: 10px;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.empty-hint {
+  font-size: 0.75rem;
+  color: var(--text-disabled);
+}
+
+/* 生成密钥表单 */
+.gen-section {
+  grid-column: 1 / -1;
+  background: var(--bg-panel);
+  border: 1px solid var(--surface-hover);
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.gen-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+.gen-form {
+  width: 100%;
+}
+
+.gen-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.gen-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.gen-field label {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.gen-input {
+  padding: 8px 10px;
+  background: var(--bg-input);
+  border: 1px solid var(--surface-hover);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 0.8125rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.gen-input:focus {
+  border-color: var(--accent-primary);
+}
+
+.gen-btn {
+  padding: 8px 20px;
+  background: var(--accent-primary);
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.gen-btn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.gen-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.danger {
+  color: var(--accent-danger) !important;
+}
+
+.danger:hover {
+  background: var(--accent-danger-bg) !important;
+}
+
+/* 赞助开发者 */
+.sponsor-card {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 16px;
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+}
+
+.sponsor-info {
+  flex: 1;
+}
+
+.sponsor-text {
+  font-size: 13px;
+  color: var(--text-primary);
+  margin: 0 0 4px;
+  line-height: 1.5;
+}
+
+.sponsor-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.sponsor-qr {
+  flex-shrink: 0;
+  width: 120px;
+  height: 120px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+}
+
+.qr-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #fff;
+}
+
+.qr-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font-size: 11px;
 }
 </style>

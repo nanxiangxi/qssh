@@ -3,20 +3,20 @@
   <header class="app-header">
     <div class="header-left">
       <div class="logo-container">
-        <img src="../../../零启.svg" alt="启SSH Logo" class="logo" />
-        <span class="app-name">启SSH</span>
+        <img src="../../../零启.svg" :alt="t('app.name') + ' Logo'" class="logo" />
+        <span class="app-name">{{ t('app.name') }}</span>
         <span class="version">v{{ version }}</span>
       </div>
     </div>
     
     <div class="header-right">
       <div class="window-controls">
-        <button class="control-btn minimize" title="最小化" @click="Window.Minimise()">
+        <button class="control-btn minimize" :title="t('app.minimize')" @click="Window.Minimise()">
           <svg width="12" height="12" viewBox="0 0 12 12">
             <line x1="0" y1="6" x2="12" y2="6" stroke="currentColor" stroke-width="1.5"/>
           </svg>
         </button>
-        <button class="control-btn maximize" :title="isMaximised ? '恢复' : '最大化'" @click="toggleMaximise">
+        <button class="control-btn maximize" :title="isMaximised ? t('app.restore') : t('app.maximize')" @click="toggleMaximise">
           <svg v-if="!isMaximised" width="12" height="12" viewBox="0 0 12 12">
             <rect x="1" y="1" width="10" height="10" stroke="currentColor" stroke-width="1.5" fill="none"/>
           </svg>
@@ -25,7 +25,7 @@
             <rect x="1" y="3" width="8" height="8" stroke="currentColor" stroke-width="1.5" fill="white"/>
           </svg>
         </button>
-        <button class="control-btn close" title="关闭" @click="Window.Close()">
+        <button class="control-btn close" :title="t('app.close')" @click="Window.Close()">
           <svg width="12" height="12" viewBox="0 0 12 12">
             <line x1="1" y1="1" x2="11" y2="11" stroke="currentColor" stroke-width="1.5"/>
             <line x1="11" y1="1" x2="1" y2="11" stroke="currentColor" stroke-width="1.5"/>
@@ -37,9 +37,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { Window } from '@wailsio/runtime'
 import { GetVersion } from '../../../../bindings/changeme/ssh/greetservice.js'
+
+const { t } = useI18n()
 
 const isMaximised = ref(false)
 const version = ref('0.2.0')
@@ -67,11 +70,14 @@ async function updateMaximiseButton() {
 }
 
 // 监听窗口大小变化
+let maxCheckTimer = null
 onMounted(() => {
   updateMaximiseButton()
-  
-  // 定期检查窗口状态
-  setInterval(updateMaximiseButton, 500)
+  maxCheckTimer = setInterval(updateMaximiseButton, 500)
+})
+
+onUnmounted(() => {
+  if (maxCheckTimer) clearInterval(maxCheckTimer)
 })
 </script>
 

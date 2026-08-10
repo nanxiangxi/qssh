@@ -4,20 +4,20 @@
     <div class="pg-toolbar">
       <div class="pg-toolbar-left">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="pg-icon-purple"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        <span class="pg-title">进程守护</span>
+        <span class="pg-title">{{ t('guardian.title') }}</span>
         <span v-if="processes.length" class="pg-badge">{{ processes.length }}</span>
       </div>
       <div class="pg-toolbar-right">
-        <button class="pg-btn" :class="{ 'pg-btn-active': autoRefresh }" @click="toggleAutoRefresh" title="自动刷新">
+        <button class="pg-btn" :class="{ 'pg-btn-active': autoRefresh }" @click="toggleAutoRefresh" :title="t('guardian.autoRefresh')">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
         </button>
         <button class="pg-btn" @click="showAdd = true">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          <span class="pg-btn-text">创建守护</span>
+          <span class="pg-btn-text">{{ t('guardian.createGuardian') }}</span>
         </button>
         <button class="pg-btn" @click="loadProcesses" :disabled="loading">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-          <span class="pg-btn-text">刷新</span>
+          <span class="pg-btn-text">{{ t('common.refresh') }}</span>
         </button>
       </div>
     </div>
@@ -26,13 +26,13 @@
     <div class="pg-content">
       <div v-if="loading && !processes.length" class="pg-loading">
         <div class="pg-spinner"></div>
-        <p>正在检测守护进程...</p>
+        <p>{{ t('guardian.detecting') }}</p>
       </div>
 
       <div v-else-if="processes.length === 0" class="pg-empty">
         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="pg-icon-disabled"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        <p>暂无守护进程</p>
-        <p class="pg-hint">创建守护进程可确保关键服务持续运行</p>
+        <p>{{ t('guardian.empty') }}</p>
+        <p class="pg-hint">{{ t('guardian.emptyHint') }}</p>
       </div>
 
       <div v-else class="pg-list">
@@ -43,19 +43,19 @@
               <span class="pg-status-tag" :class="'pg-st-' + proc.status">{{ statusLabel(proc.status) }}</span>
             </div>
             <div class="pg-card-actions">
-              <button v-if="proc.status === 'running'" class="pg-btn pg-btn-sm pg-btn-warn" @click="stopProcess(proc)" title="停止">
+              <button v-if="proc.status === 'running'" class="pg-btn pg-btn-sm pg-btn-warn" @click="stopProcess(proc)" :title="t('guardian.stop')">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
               </button>
-              <button v-else class="pg-btn pg-btn-sm pg-btn-success" @click="startProcess(proc)" title="启动">
+              <button v-else class="pg-btn pg-btn-sm pg-btn-success" @click="startProcess(proc)" :title="t('guardian.start')">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
               </button>
-              <button class="pg-btn pg-btn-sm" @click="restartProcess(proc)" title="重启">
+              <button class="pg-btn pg-btn-sm" @click="restartProcess(proc)" :title="t('guardian.restart')">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
               </button>
-              <button class="pg-btn pg-btn-sm" @click="viewLogs(proc)" title="日志">
+              <button class="pg-btn pg-btn-sm" @click="viewLogs(proc)" :title="t('guardian.logs')">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
               </button>
-              <button class="pg-btn pg-btn-sm pg-btn-danger" @click="deleteProcess(proc)" title="删除">
+              <button class="pg-btn pg-btn-sm pg-btn-danger" @click="deleteProcess(proc)" :title="t('guardian.delete')">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
               </button>
             </div>
@@ -63,7 +63,7 @@
           <div class="pg-card-cmd">{{ proc.command }}</div>
           <div class="pg-card-meta">
             <span v-if="proc.pid" class="pg-meta-item">PID {{ proc.pid }}</span>
-            <span v-if="proc.restarts > 0" class="pg-meta-item pg-restart">重启 {{ proc.restarts }} 次</span>
+            <span v-if="proc.restarts > 0" class="pg-meta-item pg-restart">{{ t('guardian.restartCount', { count: proc.restarts }) }}</span>
           </div>
         </div>
       </div>
@@ -71,8 +71,8 @@
 
     <!-- 底部 -->
     <div class="pg-footer">
-      <span v-if="autoRefresh" class="pg-auto-badge">自动刷新</span>
-      <span class="pg-footer-info">{{ runningCount }} 运行 / {{ processes.length }} 总计</span>
+      <span v-if="autoRefresh" class="pg-auto-badge">{{ t('guardian.autoRefresh') }}</span>
+      <span class="pg-footer-info">{{ t('guardian.footerStats', { running: runningCount, total: processes.length }) }}</span>
     </div>
 
     <!-- 创建守护弹窗 -->
@@ -80,34 +80,34 @@
       <div v-if="showAdd" class="pg-modal-mask" @click.self="showAdd = false">
         <div class="pg-modal">
           <div class="pg-modal-head">
-            <h3>创建守护进程</h3>
+            <h3>{{ t('guardian.createDialog') }}</h3>
             <button class="pg-modal-close" @click="showAdd = false">&times;</button>
           </div>
           <div class="pg-modal-body">
             <div class="pg-field">
-              <label>名称</label>
-              <input v-model="addForm.name" class="pg-input" placeholder="如 my-app、nginx-monitor" />
+              <label>{{ t('guardian.name') }}</label>
+              <input v-model="addForm.name" class="pg-input" :placeholder="t('guardian.namePlaceholder')" />
             </div>
             <div class="pg-field">
-              <label>启动命令</label>
-              <input v-model="addForm.command" class="pg-input pg-mono" placeholder="如 python3 /opt/app/main.py" />
+              <label>{{ t('guardian.command') }}</label>
+              <input v-model="addForm.command" class="pg-input pg-mono" :placeholder="t('guardian.commandPlaceholder')" />
             </div>
             <div class="pg-field">
-              <label>工作目录</label>
-              <input v-model="addForm.workDir" class="pg-input pg-mono" placeholder="留空默认 /tmp" />
+              <label>{{ t('guardian.workDir') }}</label>
+              <input v-model="addForm.workDir" class="pg-input pg-mono" :placeholder="t('guardian.workDirPlaceholder')" />
             </div>
             <div class="pg-field">
               <label class="pg-checkbox-label">
                 <input type="checkbox" v-model="addForm.autoRestart" />
-                <span>异常退出自动重启（3秒后重试）</span>
+                <span>{{ t('guardian.autoRestart') }}</span>
               </label>
             </div>
             <div v-if="addError" class="pg-error">{{ addError }}</div>
           </div>
           <div class="pg-modal-foot">
-            <button class="pg-btn" @click="showAdd = false">取消</button>
+            <button class="pg-btn" @click="showAdd = false">{{ t('common.cancel') }}</button>
             <button class="pg-btn pg-btn-primary" @click="createProcess" :disabled="addSubmitting">
-              {{ addSubmitting ? '创建中...' : '创建' }}
+              {{ addSubmitting ? t('guardian.creating') : t('guardian.create') }}
             </button>
           </div>
         </div>
@@ -119,15 +119,15 @@
       <div v-if="showLogs" class="pg-modal-mask" @click.self="showLogs = false">
         <div class="pg-modal pg-modal-wide">
           <div class="pg-modal-head">
-            <h3>{{ logName }} - 运行日志</h3>
+            <h3>{{ logName }} - {{ t('guardian.logs') }}</h3>
             <button class="pg-modal-close" @click="showLogs = false">&times;</button>
           </div>
           <div class="pg-modal-body">
-            <pre ref="logRef" class="pg-log-content">{{ logContent || '暂无日志' }}</pre>
+            <pre ref="logRef" class="pg-log-content">{{ logContent || t('guardian.noLogs') }}</pre>
           </div>
           <div class="pg-modal-foot">
-            <button class="pg-btn" @click="showLogs = false">关闭</button>
-            <button class="pg-btn pg-btn-primary" @click="refreshLogs">刷新</button>
+            <button class="pg-btn" @click="showLogs = false">{{ t('common.close') }}</button>
+            <button class="pg-btn pg-btn-primary" @click="refreshLogs">{{ t('common.refresh') }}</button>
           </div>
         </div>
       </div>
@@ -137,11 +137,13 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted, onUnmounted, inject, nextTick } from 'vue'
+import { useI18n } from 'vue-i18n'
 import * as GuardianService from '../../../../bindings/changeme/ssh/processguardianservice.js'
 import { showMessage } from '../../../utils/message'
 import { useConfirm } from '../../../utils/confirm'
 import { addLog, LogLevel } from '../../../utils/logger'
 
+const { t } = useI18n()
 const connId = inject('connId')
 const { confirm } = useConfirm()
 
@@ -163,7 +165,7 @@ const logRef = ref(null)
 const runningCount = computed(() => processes.value.filter(p => p.status === 'running').length)
 
 const statusLabel = (s) => ({
-  running: '运行中', stopped: '已停止', failed: '失败', unknown: '未知'
+  running: t('guardian.running'), stopped: t('guardian.stopped'), failed: t('guardian.failed'), unknown: t('common.loading')
 }[s] || s)
 
 const loadProcesses = async () => {
@@ -182,17 +184,17 @@ const toggleAutoRefresh = () => {
   autoRefresh.value = !autoRefresh.value
   if (autoRefresh.value) {
     refreshTimer = setInterval(loadProcesses, 5000)
-    showMessage('已开启自动刷新（5秒）', 'info')
+    showMessage(t('guardian.autoRefreshEnabled'), 'info')
   } else {
     clearInterval(refreshTimer)
     refreshTimer = null
-    showMessage('已关闭自动刷新', 'info')
+    showMessage(t('guardian.autoRefreshDisabled'), 'info')
   }
 }
 
 const createProcess = async () => {
   if (!addForm.name.trim() || !addForm.command.trim()) {
-    addError.value = '请填写名称和命令'
+    addError.value = t('guardian.fillNameAndCommand')
     return
   }
   addSubmitting.value = true
@@ -200,7 +202,7 @@ const createProcess = async () => {
   try {
     await GuardianService.CreateGuardian(connId, addForm.name, addForm.command, addForm.workDir, addForm.autoRestart)
     addLog(connId, 'guardian', LogLevel.SUCCESS, `创建守护进程: ${addForm.name} → ${addForm.command}`)
-    showMessage('守护进程已创建', 'success')
+    showMessage(t('guardian.created'), 'success')
     showAdd.value = false
     addForm.name = ''
     addForm.command = ''
@@ -219,24 +221,24 @@ const startProcess = async (proc) => {
   try {
     await GuardianService.StartGuardian(connId, proc.name)
     addLog(connId, 'guardian', LogLevel.INFO, `启动守护进程: ${proc.name}`)
-    showMessage('已启动', 'success')
+    showMessage(t('guardian.started'), 'success')
     await loadProcesses()
   } catch (e) {
     addLog(connId, 'guardian', LogLevel.ERROR, `启动失败: ${proc.name}`)
-    showMessage('启动失败: ' + (e?.message || e), 'error')
+    showMessage(t('guardian.startFailed') + ': ' + (e?.message || e), 'error')
   }
 }
 
 const stopProcess = async (proc) => {
-  const ok = await confirm({ title: '停止进程', message: `确定停止 ${proc.name}？` })
+  const ok = await confirm({ title: t('guardian.stopProcess'), message: t('guardian.confirmStop', { name: proc.name }) })
   if (!ok) return
   try {
     await GuardianService.StopGuardian(connId, proc.name)
     addLog(connId, 'guardian', LogLevel.WARNING, `停止守护进程: ${proc.name}`)
-    showMessage('已停止', 'success')
+    showMessage(t('guardian.stopped'), 'success')
     await loadProcesses()
   } catch (e) {
-    showMessage('停止失败: ' + (e?.message || e), 'error')
+    showMessage(t('guardian.stopFailed') + ': ' + (e?.message || e), 'error')
   }
 }
 
@@ -244,23 +246,23 @@ const restartProcess = async (proc) => {
   try {
     await GuardianService.RestartGuardian(connId, proc.name)
     addLog(connId, 'guardian', LogLevel.INFO, `重启守护进程: ${proc.name}`)
-    showMessage('已重启', 'success')
+    showMessage(t('guardian.restarted'), 'success')
     await loadProcesses()
   } catch (e) {
-    showMessage('重启失败: ' + (e?.message || e), 'error')
+    showMessage(t('guardian.restartFailed') + ': ' + (e?.message || e), 'error')
   }
 }
 
 const deleteProcess = async (proc) => {
-  const ok = await confirm({ title: '删除守护进程', message: `确定删除 ${proc.name}？\n将停止服务并删除所有配置和日志。`, danger: true })
+  const ok = await confirm({ title: t('guardian.deleteProcess'), message: t('guardian.confirmDelete', { name: proc.name }), danger: true })
   if (!ok) return
   try {
     await GuardianService.DeleteGuardian(connId, proc.name)
     addLog(connId, 'guardian', LogLevel.WARNING, `删除守护进程: ${proc.name}`)
-    showMessage('已删除', 'success')
+    showMessage(t('guardian.deleted'), 'success')
     await loadProcesses()
   } catch (e) {
-    showMessage('删除失败: ' + (e?.message || e), 'error')
+    showMessage(t('guardian.deleteFailed') + ': ' + (e?.message || e), 'error')
   }
 }
 
@@ -269,18 +271,18 @@ const viewLogs = async (proc) => {
   logContent.value = ''
   showLogs.value = true
   try {
-    logContent.value = await GuardianService.GetGuardianLogs(connId, proc.name, 500) || '暂无日志'
+    logContent.value = await GuardianService.GetGuardianLogs(connId, proc.name, 500) || t('guardian.noLogs')
     await nextTick()
     if (logRef.value) logRef.value.scrollTop = logRef.value.scrollHeight
   } catch (e) {
-    logContent.value = '获取日志失败: ' + (e?.message || e)
+    logContent.value = t('guardian.getLogFailed') + ': ' + (e?.message || e)
   }
 }
 
 const refreshLogs = async () => {
   if (!logName.value) return
   try {
-    logContent.value = await GuardianService.GetGuardianLogs(connId, logName.value, 500) || '暂无日志'
+    logContent.value = await GuardianService.GetGuardianLogs(connId, logName.value, 500) || t('guardian.noLogs')
     await nextTick()
     if (logRef.value) logRef.value.scrollTop = logRef.value.scrollHeight
   } catch (e) {}

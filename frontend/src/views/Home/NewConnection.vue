@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { SSHService, SSHConfig } from "../../../bindings/changeme/ssh"
 import { useSSHConnectionsStore } from '../../stores/sshConnections'
 import { useConfigStore } from '../../stores/config'
 import { Events, Dialogs } from '@wailsio/runtime'
 import ConnectionOptionsDialog from './ConnectionOptionsDialog.vue'
 import Message from '../../components/Message.vue'
+
+const { t } = useI18n()
 
 // 消息提示
 const messageRef = ref<InstanceType<typeof Message> | null>(null)
@@ -16,7 +19,7 @@ const pendingConfig = ref<any>(null)
 
 // 解析后端返回的错误对象，提取真正的错误消息
 const extractErrorMessage = (error: any): string => {
-  if (!error) return '未知错误'
+  if (!error) return t('common.error')
   
   // 如果 error 是字符串，直接返回
   if (typeof error === 'string') return error
@@ -50,7 +53,15 @@ const formData = reactive({
   authType: 'password', // password 或 key
   password: '',
   privateKey: '',
-  timeout: 30
+  timeout: 30,
+  // 跳板机配置
+  useJumpHost: false,
+  jumpHost: '',
+  jumpPort: 22,
+  jumpUsername: '',
+  jumpAuthType: 'password', // password 或 key
+  jumpPassword: '',
+  jumpPrivateKey: '',
 })
 
 // 加载状态
@@ -59,27 +70,27 @@ const loading = ref(false)
 // 验证表单
 const validateForm = () => {
   if (!formData.name.trim()) {
-    messageRef.value?.error('请输入连接名称')
+    messageRef.value?.error(t('connection.pleaseEnterName'))
     return false
   }
   if (!formData.host.trim()) {
-    messageRef.value?.error('请输入主机地址')
+    messageRef.value?.error(t('connection.pleaseEnterHost'))
     return false
   }
   if (formData.port < 1 || formData.port > 65535) {
-    messageRef.value?.error('端口号必须在 1-65535 之间')
+    messageRef.value?.error(t('connection.invalidPort'))
     return false
   }
   if (!formData.username.trim()) {
-    messageRef.value?.error('请输入用户名')
+    messageRef.value?.error(t('connection.pleaseEnterUsername'))
     return false
   }
   if (formData.authType === 'password' && !formData.password) {
-    messageRef.value?.error('请输入密码')
+    messageRef.value?.error(t('connection.pleaseEnterPassword'))
     return false
   }
   if (formData.authType === 'key' && !formData.privateKey.trim()) {
-    messageRef.value?.error('请输入私钥内容')
+    messageRef.value?.error(t('connection.pleaseEnterPrivateKey'))
     return false
   }
   return true
@@ -91,16 +102,24 @@ const testConnection = async () => {
 
   loading.value = true
   try {
-    await SSHService.TestConnection(new SSHConfig({
+    const config: any = {
       host: formData.host,
       port: formData.port,
       username: formData.username,
       password: formData.authType === 'password' ? formData.password : undefined,
       privateKey: formData.authType === 'key' ? formData.privateKey : undefined,
       timeout: formData.timeout
-    }))
+    }
+    // 跳板机配置
+    if (formData.useJumpHost && formData.jumpHost) {
+      config.jumpHost = `${formData.jumpHost}:${formData.jumpPort}`
+      config.jumpUsername = formData.jumpUsername || undefined
+      config.jumpPassword = formData.jumpAuthType === 'password' ? (formData.jumpPassword || undefined) : undefined
+      config.jumpKeyPath = formData.jumpAuthType === 'key' ? (formData.jumpPrivateKey || undefined) : undefined
+    }
+    await SSHService.TestConnection(new SSHConfig(config))
 
-    messageRef.value?.success('连接测试成功！')
+    messageRef.value?.success(t('connection.testSuccess'))
   } catch (error: any) {
     messageRef.value?.error(extractErrorMessage(error))
   } finally {
@@ -121,7 +140,7 @@ const saveAndConnect = async () => {
   const hasExistingWindow = await checkExistingSSHWindow()
 
   // 先保存配置
-  pendingConfig.value = {
+  const config: any = {
     name: formData.name || `${formData.username}@${formData.host}`,
     host: formData.host,
     port: formData.port,
@@ -130,6 +149,14 @@ const saveAndConnect = async () => {
     privateKey: formData.authType === 'key' ? formData.privateKey : undefined,
     timeout: formData.timeout
   }
+  // 跳板机配置
+  if (formData.useJumpHost && formData.jumpHost) {
+    config.jumpHost = `${formData.jumpHost}:${formData.jumpPort}`
+    config.jumpUsername = formData.jumpUsername || undefined
+    config.jumpPassword = formData.jumpAuthType === 'password' ? (formData.jumpPassword || undefined) : undefined
+    config.jumpKeyPath = formData.jumpAuthType === 'key' ? (formData.jumpPrivateKey || undefined) : undefined
+  }
+  pendingConfig.value = config
 
   if (!hasExistingWindow) {
     // 第一个连接，直接使用默认分组，不显示对话框
@@ -166,25 +193,13 @@ const saveAndConnect = async () => {
   }
 }
 
-// 检查是否已有SSH窗口打开
+// 检查是否已有SSH窗口打开（检查实际在线的连接，而非分组中的旧ID）
 const checkExistingSSHWindow = async (): Promise<boolean> => {
   try {
-    // 获取所有分组
-    const groups = await SSHService.GetAllGroups()
-    console.log('[NewConnection] 🔍 当前分组列表:', groups)
-    
-    // 检查是否有非空分组（除了默认分组）
-    for (const group of groups) {
-      if (group && group.conn_ids && group.conn_ids.length > 0) {
-        console.log('[NewConnection] ✅ 发现已有连接的分组:', group.id)
-        return true
-      }
-    }
-    
-    console.log('[NewConnection] ❌ 没有已连接的分组')
-    return false
+    const connections = await SSHService.GetAllConnections()
+    const onlineCount = (connections || []).filter(c => c.status === 'connected').length
+    return onlineCount > 0
   } catch (error) {
-    console.error('[NewConnection] ⚠️ 检查窗口失败:', error)
     return false
   }
 }
@@ -211,7 +226,7 @@ const handleDialogSelect = async (type: string) => {
     if (type === 'new-window') {
       // 创建新分组
       console.log('[NewConnection] 🪟 创建新分组...')
-      groupID = await SSHService.CreateGroup('临时分组')
+      groupID = await SSHService.CreateGroup(t('connection.temporaryGroup'))
       console.log('[NewConnection] ✅ 分组创建成功:', groupID)
     } else {
       // 使用默认分组
@@ -237,7 +252,7 @@ const handleDialogSelect = async (type: string) => {
     // 重置表单
     resetForm()
     
-    messageRef.value?.success('连接成功！正在打开窗口...')
+    messageRef.value?.success(t('connection.connectSuccess'))
     
     // 打开SSH窗口（传递 connID 作为 activeConn）
     console.log('[NewConnection] 🪟 调用 OpenSSHWindow...')
@@ -283,6 +298,13 @@ const resetForm = () => {
   formData.password = ''
   formData.privateKey = ''
   formData.timeout = 30
+  formData.useJumpHost = false
+  formData.jumpHost = ''
+  formData.jumpPort = 22
+  formData.jumpUsername = ''
+  formData.jumpAuthType = 'password'
+  formData.jumpPassword = ''
+  formData.jumpPrivateKey = ''
 }
 </script>
 
@@ -300,36 +322,36 @@ const resetForm = () => {
 
     <!-- 上半部分：连接配置表单 -->
     <div class="form-section">
-      <h2 class="section-title">新建 SSH 连接</h2>
+      <h2 class="section-title">{{ t('connection.newConnection') }}</h2>
       
       <div class="form-grid">
         <!-- 连接名称 -->
         <div class="form-group">
-          <label for="name">连接名称</label>
+          <label for="name">{{ t('connection.name') }}</label>
           <input
             id="name"
             v-model="formData.name"
             type="text"
-            placeholder="例如：我的服务器"
+            :placeholder="t('connection.name')"
             class="form-input"
           />
         </div>
 
         <!-- 主机地址 -->
         <div class="form-group">
-          <label for="host">主机地址</label>
+          <label for="host">{{ t('connection.host') }}</label>
           <input
             id="host"
             v-model="formData.host"
             type="text"
-            placeholder="例如：192.168.1.100 或 example.com"
+            placeholder="192.168.1.100"
             class="form-input"
           />
         </div>
 
         <!-- 端口 -->
         <div class="form-group">
-          <label for="port">端口</label>
+          <label for="port">{{ t('connection.port') }}</label>
           <input
             id="port"
             v-model.number="formData.port"
@@ -342,19 +364,19 @@ const resetForm = () => {
 
         <!-- 用户名 -->
         <div class="form-group">
-          <label for="username">用户名</label>
+          <label for="username">{{ t('connection.username') }}</label>
           <input
             id="username"
             v-model="formData.username"
             type="text"
-            placeholder="例如：root"
+            :placeholder="t('connection.username') + ' (root)'"
             class="form-input"
           />
         </div>
 
         <!-- 认证方式 -->
         <div class="form-group full-width">
-          <label>认证方式</label>
+          <label>{{ t('connection.authType') }}</label>
           <div class="auth-type-selector">
             <button
               type="button"
@@ -362,7 +384,7 @@ const resetForm = () => {
               :class="{ active: formData.authType === 'password' }"
               @click="formData.authType = 'password'"
             >
-              密码认证
+              {{ t('connection.passwordAuth') }}
             </button>
             <button
               type="button"
@@ -370,30 +392,30 @@ const resetForm = () => {
               :class="{ active: formData.authType === 'key' }"
               @click="formData.authType = 'key'"
             >
-              密钥认证
+              {{ t('connection.keyAuth') }}
             </button>
           </div>
         </div>
 
         <!-- 密码输入 -->
         <div v-if="formData.authType === 'password'" class="form-group full-width">
-          <label for="password">密码</label>
+          <label for="password">{{ t('connection.password') }}</label>
           <input
             id="password"
             v-model="formData.password"
             type="password"
-            placeholder="输入SSH密码"
+            :placeholder="t('connection.passwordPlaceholder')"
             class="form-input"
           />
         </div>
 
         <!-- 密钥输入 -->
         <div v-if="formData.authType === 'key'" class="form-group full-width">
-          <label for="privateKey">私钥内容</label>
+          <label for="privateKey">{{ t('connection.privateKey') }}</label>
           <textarea
             id="privateKey"
             v-model="formData.privateKey"
-            placeholder="粘贴 SSH 私钥内容（以 -----BEGIN 开头）"
+            :placeholder="t('connection.privateKeyPlaceholder')"
             class="form-textarea key-textarea"
             rows="6"
           ></textarea>
@@ -401,7 +423,7 @@ const resetForm = () => {
 
         <!-- 超时时间 -->
         <div class="form-group">
-          <label for="timeout">超时时间（秒）</label>
+          <label for="timeout">{{ t('connection.timeout') }} (s)</label>
           <input
             id="timeout"
             v-model.number="formData.timeout"
@@ -411,6 +433,107 @@ const resetForm = () => {
             class="form-input"
           />
         </div>
+
+        <!-- 跳板机配置 -->
+        <div class="form-group full-width">
+          <div class="divider-toggle" @click="formData.useJumpHost = !formData.useJumpHost">
+            <div class="divider-line"></div>
+            <span class="divider-text" :class="{ active: formData.useJumpHost }">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 12h16m-8-8l8 8-8 8"/>
+              </svg>
+              {{ t('connection.jumpHost') }} (ProxyJump)
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" :class="{ rotated: formData.useJumpHost }">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </span>
+            <div class="divider-line"></div>
+          </div>
+        </div>
+
+        <template v-if="formData.useJumpHost">
+          <!-- 跳板机主机信息 -->
+          <div class="form-group">
+            <label for="jumpHost">{{ t('connection.jumpHostAddr') }}</label>
+            <input
+              id="jumpHost"
+              v-model="formData.jumpHost"
+              type="text"
+              placeholder="10.0.0.1"
+              class="form-input"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="jumpPort">{{ t('connection.jumpHostPort') }}</label>
+            <input
+              id="jumpPort"
+              v-model.number="formData.jumpPort"
+              type="number"
+              min="1"
+              max="65535"
+              class="form-input"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="jumpUsername">{{ t('connection.jumpHostUser') }}</label>
+            <input
+              id="jumpUsername"
+              v-model="formData.jumpUsername"
+              type="text"
+              :placeholder="t('connection.jumpUsernamePlaceholder')"
+              class="form-input"
+            />
+          </div>
+
+          <!-- 跳板机认证方式 -->
+          <div class="form-group full-width">
+            <label>{{ t('connection.authType') }}</label>
+            <div class="auth-type-selector">
+              <button
+                type="button"
+                class="auth-btn"
+                :class="{ active: formData.jumpAuthType === 'password' }"
+                @click="formData.jumpAuthType = 'password'"
+              >
+                {{ t('connection.passwordAuth') }}
+              </button>
+              <button
+                type="button"
+                class="auth-btn"
+                :class="{ active: formData.jumpAuthType === 'key' }"
+                @click="formData.jumpAuthType = 'key'"
+              >
+                {{ t('connection.keyAuth') }}
+              </button>
+            </div>
+          </div>
+
+          <!-- 跳板机密码输入 -->
+          <div v-if="formData.jumpAuthType === 'password'" class="form-group full-width">
+            <label for="jumpPassword">{{ t('connection.jumpHostPassword') }}</label>
+            <input
+              id="jumpPassword"
+              v-model="formData.jumpPassword"
+              type="password"
+              :placeholder="t('connection.jumpPasswordPlaceholder')"
+              class="form-input"
+            />
+          </div>
+
+          <!-- 跳板机密钥输入 -->
+          <div v-if="formData.jumpAuthType === 'key'" class="form-group full-width">
+            <label for="jumpPrivateKey">{{ t('connection.jumpPrivateKey') }}</label>
+            <textarea
+              id="jumpPrivateKey"
+              v-model="formData.jumpPrivateKey"
+              :placeholder="t('connection.jumpPrivateKeyPlaceholder')"
+              class="form-textarea key-textarea"
+              rows="4"
+            ></textarea>
+          </div>
+        </template>
       </div>
     </div>
 
@@ -423,7 +546,7 @@ const resetForm = () => {
           @click="resetForm"
           :disabled="loading"
         >
-          重置
+          {{ t('common.reset') }}
         </button>
         <button
           type="button"
@@ -431,7 +554,7 @@ const resetForm = () => {
           @click="testConnection"
           :disabled="loading"
         >
-          {{ loading ? '测试中...' : '测试连接' }}
+          {{ loading ? t('common.loading') : t('connection.test') }}
         </button>
         <button
           type="button"
@@ -439,7 +562,7 @@ const resetForm = () => {
           @click="saveAndConnect"
           :disabled="loading"
         >
-          {{ loading ? '连接中...' : '立即连接' }}
+          {{ loading ? t('common.connecting') : t('connection.connect') }}
         </button>
       </div>
     </div>
@@ -640,6 +763,50 @@ const resetForm = () => {
 
 .form-section::-webkit-scrollbar-thumb:hover {
   background: var(--scrollbar-thumb-hover);
+}
+
+/* 分隔线切换器（跳板机） */
+.divider-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.divider-line {
+  flex: 1;
+  height: 0.0625rem;
+  background: var(--surface-hover);
+}
+
+.divider-text {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  transition: color 0.2s;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.375rem;
+}
+
+.divider-text:hover {
+  color: var(--text-secondary);
+  background: var(--surface-hover);
+}
+
+.divider-text.active {
+  color: var(--accent-primary);
+}
+
+.divider-text svg {
+  transition: transform 0.2s;
+}
+
+.divider-text svg.rotated {
+  transform: rotate(180deg);
 }
 
 </style>

@@ -16,22 +16,106 @@
               height: 100vh;
               min-height: 100vh;
               max-height: 100vh;
-              overflow: hidden; /* 隐藏滚动条 */
-              /* 关键：设置背景为透明 */
-              background: rgb(255, 255, 255); /* 等价于 rgba(0,0,0,0) */
-              /* 使用标准值和浏览器特定前缀 */
+              overflow: hidden;
+              background: rgb(255, 255, 255);
               image-rendering: -moz-crisp-edges;
-              image-rendering: auto; /* 默认行为，大多数情况下足够 */
-              -ms-interpolation-mode: nearest-neighbor; /* IE/Edge */
+              image-rendering: auto;
+              -ms-interpolation-mode: nearest-neighbor;
           }
           #app {
               width: 100%;
               height: 100%;
           }
+          /* Wails 文件拖放全局样式 */
+          .wails-drag-overlay {
+              display: none;
+              position: fixed;
+              top: 0;
+              left: 0;
+              right: 0;
+              bottom: 0;
+              background: rgba(59, 130, 246, 0.15);
+              align-items: center;
+              justify-content: center;
+              z-index: 99999;
+              pointer-events: none;
+          }
+          .wails-drag-overlay .drop-zone {
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              gap: 12px;
+              padding: 40px;
+              background: rgba(255, 255, 255, 0.95);
+              border: 2px dashed #3b82f6;
+              border-radius: 12px;
+              color: #3b82f6;
+          }
+          .wails-drag-overlay .drop-zone p {
+              margin: 0;
+              font-size: 16px;
+              font-weight: 500;
+          }
       </style>
   </head>
-  <body>
+  <body data-file-drop-target>
     <div id="app"></div>
+    <!-- 全局文件拖放覆盖层 -->
+    <div id="global-drop-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(59,130,246,0.15);align-items:center;justify-content:center;z-index:99999;pointer-events:none;">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:40px;background:rgba(255,255,255,0.95);border:2px dashed #3b82f6;border-radius:12px;color:#3b82f6;">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+        <p style="margin:0;font-size:16px;font-weight:500;">拖放文件到此处上传</p>
+      </div>
+    </div>
     <script type="module" src="/src/main.js"></script>
+    <script>
+      // HTML5 拖放事件显示覆盖层（只在拖拽文件时触发，不影响面板拖拽）
+      let dragCounter = 0;
+      const overlay = document.getElementById('global-drop-overlay');
+
+      // 检查是否是文件拖拽（排除面板拖拽等内部操作）
+      function isFileDrag(e) {
+        if (!e.dataTransfer) return false;
+        const types = e.dataTransfer.types;
+        // 只有包含 'Files' 类型才是文件拖拽
+        return types && types.indexOf('Files') !== -1;
+      }
+
+      document.addEventListener('dragenter', (e) => {
+        if (!isFileDrag(e)) return;
+        e.preventDefault();
+        dragCounter++;
+        if (dragCounter === 1) {
+          overlay.style.display = 'flex';
+        }
+      });
+
+      document.addEventListener('dragover', (e) => {
+        if (!isFileDrag(e)) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'copy';
+      });
+
+      document.addEventListener('dragleave', (e) => {
+        if (!isFileDrag(e)) return;
+        e.preventDefault();
+        dragCounter--;
+        if (dragCounter <= 0) {
+          dragCounter = 0;
+          overlay.style.display = 'none';
+        }
+      });
+
+      document.addEventListener('drop', (e) => {
+        if (!isFileDrag(e)) return;
+        e.preventDefault();
+        dragCounter = 0;
+        overlay.style.display = 'none';
+      });
+    </script>
   </body>
 </html>

@@ -18,7 +18,7 @@
           v-if="tab.status === 'disconnected'"
           class="tab-reconnect"
           @click.stop="reconnectTab(tab.id)"
-          title="重新连接"
+          :title="t('terminal.reconnect')"
         >
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M23 4v6h-6"/>
@@ -36,12 +36,12 @@
     
     <!-- 右侧窗口控制按钮 -->
     <div class="window-controls">
-      <button class="control-btn minimize" title="最小化" @click="Window.Minimise()">
+      <button class="control-btn minimize" :title="t('app.minimize')" @click="Window.Minimise()">
         <svg width="12" height="12" viewBox="0 0 12 12">
           <line x1="0" y1="6" x2="12" y2="6" stroke="currentColor" stroke-width="1.5"/>
         </svg>
       </button>
-      <button class="control-btn maximize" :title="isMaximised ? '恢复' : '最大化'" @click="toggleMaximise">
+      <button class="control-btn maximize" :title="isMaximised ? t('app.restore') : t('app.maximize')" @click="toggleMaximise">
         <svg v-if="!isMaximised" width="12" height="12" viewBox="0 0 12 12">
           <rect x="1" y="1" width="10" height="10" stroke="currentColor" stroke-width="1.5" fill="none"/>
         </svg>
@@ -50,7 +50,7 @@
           <rect x="1" y="3" width="8" height="8" stroke="currentColor" stroke-width="1.5" fill="white"/>
         </svg>
       </button>
-      <button class="control-btn close" title="关闭本组" @click="handleClose">
+      <button class="control-btn close" :title="t('ssh.closeGroup')" @click="handleClose">
         <svg width="12" height="12" viewBox="0 0 12 12">
           <line x1="1" y1="1" x2="11" y2="11" stroke="currentColor" stroke-width="1.5"/>
           <line x1="11" y1="1" x2="1" y2="11" stroke="currentColor" stroke-width="1.5"/>
@@ -61,9 +61,10 @@
     <!-- 关闭标签确认对话框 -->
     <Modal
       :visible="showCloseTabModal"
-      title="关闭连接"
+      :title="t('ssh.closeConnection')"
       :content="closeTabContent"
-      confirm-text="关闭"
+      :confirm-text="t('common.close')"
+      :cancel-text="t('common.cancel')"
       danger
       @close="showCloseTabModal = false"
       @confirm="confirmCloseTab"
@@ -72,9 +73,10 @@
     <!-- 关闭窗口确认对话框 -->
     <Modal
       :visible="showCloseWindowModal"
-      title="关闭窗口"
-      content="确定关闭当前窗口？所有标签页将被关闭。"
-      confirm-text="关闭窗口"
+      :title="t('ssh.closeWindow')"
+      :content="t('ssh.closeWindowConfirm')"
+      :confirm-text="t('ssh.closeWindow')"
+      :cancel-text="t('common.cancel')"
       danger
       @close="showCloseWindowModal = false"
       @confirm="confirmCloseWindow"
@@ -84,6 +86,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { Window, Events } from '@wailsio/runtime'
 import { useSSHTabsStore } from '../../../stores/sshTabs'
@@ -98,6 +101,7 @@ import { Disconnect } from "../../../../bindings/changeme/ssh/sshservice.js"
 import { listenToGroupUpdates } from '../../../utils/sshEvents'
 import { showMessage } from '../../../utils/message'
 
+const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const tabsStore = useSSHTabsStore()
@@ -122,8 +126,8 @@ let cleanupGroupListener = null
 
 // 计算属性：关闭标签的内容
 const closeTabContent = computed(() => {
-  const name = tabToClose.value?.name || '该连接'
-  return `确定要关闭 "${name}" 吗？`
+  const name = tabToClose.value?.name || t('ssh.thisConnection')
+  return t('ssh.closeTabConfirm', { name })
 })
 
 // 获取带唯一标识的标签名称
@@ -207,7 +211,7 @@ const confirmCloseTab = async () => {
     tabToClose.value = null
   } catch (error) {
     console.error('关闭连接失败:', error)
-    alert('关闭连接失败: ' + error.message)
+    alert(t('ssh.saveFailed', { message: error.message }))
   }
 }
 
@@ -305,14 +309,14 @@ function handleKeyboard(e) {
 async function saveCurrentGroup() {
   try {
     if (!activeTabId.value) {
-      showMessage('没有选中的连接', 'warning')
+      showMessage(t('ssh.noSelectedConnection'), 'warning')
       return
     }
     await SSHService.SaveConnection(activeTabId.value)
-    showMessage('连接已保存', 'success')
+    showMessage(t('ssh.connectionSaved'), 'success')
   } catch (e) {
     console.error('[Shortcuts] 保存失败:', e)
-    showMessage('保存失败: ' + (e?.message || e), 'error')
+    showMessage(t('ssh.saveFailed', { message: e?.message || e }), 'error')
   }
 }
 
@@ -321,7 +325,7 @@ async function cloudUpload() {
   try {
     const connected = await CloudService.IsConnected()
     if (!connected) {
-      showMessage('未连接云端', 'warning')
+      showMessage(t('ssh.cloudNotConnected'), 'warning')
       return
     }
 
@@ -348,10 +352,10 @@ async function cloudUpload() {
     }
 
     await CloudService.PushSync(Array.from(merged.values()))
-    showMessage(`上传成功，共 ${merged.size} 个连接`, 'success')
+    showMessage(t('settings.uploadSuccess', { count: merged.size }), 'success')
   } catch (e) {
     console.error('[Shortcuts] 上传失败:', e)
-    showMessage('上传失败: ' + (e?.message || e), 'error')
+    showMessage(t('settings.uploadFailed') + ': ' + (e?.message || e), 'error')
   }
 }
 
@@ -360,13 +364,13 @@ async function cloudDownload() {
   try {
     const connected = await CloudService.IsConnected()
     if (!connected) {
-      showMessage('未连接云端', 'warning')
+      showMessage(t('ssh.cloudNotConnected'), 'warning')
       return
     }
 
     const conns = await CloudService.PullSync()
     if (!conns || conns.length === 0) {
-      showMessage('云端无连接配置', 'info')
+      showMessage(t('settings.noCloudConfig'), 'info')
       return
     }
 
@@ -386,16 +390,17 @@ async function cloudDownload() {
         console.warn('[Shortcuts] 同步导入失败:', c.name, e.message)
       }
     }
-    showMessage(`下载完成，处理了 ${count} 个连接`, 'success')
+    showMessage(t('settings.syncComplete', { count }), 'success')
   } catch (e) {
     console.error('[Shortcuts] 下载失败:', e)
-    showMessage('下载失败: ' + (e?.message || e), 'error')
+    showMessage(t('settings.downloadFailed') + ': ' + (e?.message || e), 'error')
   }
 }
 
+let maxCheckTimer = null
 onMounted(() => {
   updateMaximiseButton()
-  setInterval(updateMaximiseButton, 500)
+  maxCheckTimer = setInterval(updateMaximiseButton, 500)
 
   // 注册快捷键监听
   document.addEventListener('keydown', handleKeyboard)
@@ -485,6 +490,9 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  // 清理定时器
+  if (maxCheckTimer) clearInterval(maxCheckTimer)
+
   // 清理快捷键监听
   document.removeEventListener('keydown', handleKeyboard)
 

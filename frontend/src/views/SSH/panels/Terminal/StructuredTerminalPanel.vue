@@ -4,21 +4,21 @@
       <div class="tb-l">
         <span class="led" :class="status"></span>
         <span class="st" :class="status">{{ statusLabel }}</span>
-        <span v-if="stats.commands > 0" class="s2">{{ stats.commands }} 条</span>
+        <span v-if="stats.commands > 0" class="s2">{{ t('terminal.commandCount', { count: stats.commands }) }}</span>
       </div>
       <div class="tb-c">
-        <button class="tbb" :class="{ recording: isRecording }" @click="toggleRecording" :title="isRecording ? '停止录制' : '开始录制'">
+        <button class="tbb" :class="{ recording: isRecording }" @click="toggleRecording" :title="isRecording ? t('terminal.stopRecording') : t('terminal.startRecording')">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
             <circle v-if="!isRecording" cx="12" cy="12" r="8"/>
             <rect v-else x="6" y="6" width="12" height="12" rx="2"/>
           </svg>
         </button>
-        <button class="tbb" @click="showHistory=!showHistory" title="命令历史">
+        <button class="tbb" @click="showHistory=!showHistory" :title="t('terminal.commandHistory')">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
           </svg>
         </button>
-        <button class="tbb" @click="clearAll" title="清空">
+        <button class="tbb" @click="clearAll" :title="t('common.clear')">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
           </svg>
@@ -26,12 +26,12 @@
       </div>
       <div class="tb-r">
         <span class="sep"></span>
-        <button class="tbb vw" :class="{a: view==='block'}" @click="switchView('block')" title="结构化视图">
+        <button class="tbb vw" :class="{a: view==='block'}" @click="switchView('block')" :title="t('terminal.structuredView')">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
           </svg>
         </button>
-        <button class="tbb vw" :class="{a: view==='classic'}" @click="switchView('classic')" title="经典终端">
+        <button class="tbb vw" :class="{a: view==='classic'}" @click="switchView('classic')" :title="t('terminal.classicTerminal')">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
           </svg>
@@ -41,34 +41,34 @@
 
     <div v-show="view==='block'" class="view-block" @contextmenu.prevent="onBlockContextMenu">
       <div class="bp" ref="blocksRef" @scroll="onBlocksScroll">
-        <div v-if="bm.blocks.value.length===0" class="empty">输入命令开始</div>
+        <div v-if="bm.blocks.value.length===0" class="empty">{{ t('terminal.inputCommandToStart') }}</div>
         <TerminalBlock v-for="b in bm.blocks.value" :key="b.id" :block="b"
           @toggle-collapse="b.collapsed=!b.collapsed"
           @copy="copyBlock(b.id)" @remove="bm.removeBlock(b.id)"
           @re-execute="reExec(b.id)" :plain-text="true" />
       </div>
       <div class="shortcut-bar">
-        <span class="shortcut"><kbd>Tab</kbd> 补全</span>
-        <span class="shortcut"><kbd>Ctrl+C</kbd> 中断</span>
-        <span class="shortcut"><kbd>Ctrl+L</kbd> 清屏</span>
-        <span class="shortcut"><kbd>Ctrl+R</kbd> 搜索</span>
-        <span class="shortcut"><kbd>Ctrl+Z</kbd> 暂停</span>
-        <span class="shortcut"><kbd>↑↓</kbd> 历史</span>
+        <span class="shortcut"><kbd>Tab</kbd> {{ t('terminal.shortcutComplete') }}</span>
+        <span class="shortcut"><kbd>Ctrl+C</kbd> {{ t('terminal.shortcutInterrupt') }}</span>
+        <span class="shortcut"><kbd>Ctrl+L</kbd> {{ t('terminal.shortcutClear') }}</span>
+        <span class="shortcut"><kbd>Ctrl+R</kbd> {{ t('terminal.shortcutSearch') }}</span>
+        <span class="shortcut"><kbd>Ctrl+Z</kbd> {{ t('terminal.shortcutPause') }}</span>
+        <span class="shortcut"><kbd>↑↓</kbd> {{ t('terminal.shortcutHistory') }}</span>
         <span class="sep"></span>
-        <span class="shortcut app"><kbd>Ctrl+O</kbd> 临时终端</span>
-        <button class="shortcut-more" @click="showShortcuts = true">更多...</button>
+        <span class="shortcut app"><kbd>Ctrl+O</kbd> {{ t('terminal.shortcutTempTerminal') }}</span>
+        <button class="shortcut-more" @click="showShortcuts = true">{{ t('terminal.shortcutMore') }}</button>
       </div>
       <div class="inp" ref="inpAreaRef">
         <span class="ps">$</span>
         <div class="iw">
           <input v-if="commandSendMode !== 'button'" ref="inpRef" v-model="cmd" class="ci"
-            placeholder="输入命令" :disabled="status!=='active'"
+            :placeholder="t('terminal.inputCommand')" :disabled="status!=='active'"
             @keydown="onKey" @input="onInput" />
           <textarea v-else ref="inpRef" v-model="cmd" class="ci ci-textarea"
-            placeholder="输入命令（Enter 换行，Ctrl+Enter 或点击发送）" :disabled="status!=='active'"
+            :placeholder="t('terminal.inputCommandMultiline')" :disabled="status!=='active'"
             @keydown="onKeyButton" @input="onInputButton" rows="1"></textarea>
         </div>
-        <button v-if="commandSendMode === 'button'" class="send-btn" @click="exec" :disabled="!cmd.trim() || status !== 'active'" title="发送命令">
+        <button v-if="commandSendMode === 'button'" class="send-btn" @click="exec" :disabled="!cmd.trim() || status !== 'active'" :title="t('terminal.sendCommand')">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
           </svg>
@@ -90,12 +90,12 @@
       <div v-if="showSearch" class="search-bar">
         <div class="search-box">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input ref="searchInputRef" v-model="searchQuery" class="search-input" placeholder="搜索命令或输出..."
+          <input ref="searchInputRef" v-model="searchQuery" class="search-input" :placeholder="t('terminal.searchPlaceholder')"
             @keydown.enter="searchNext" @keydown.escape="showSearch = false" @input="onSearchInput" />
           <span class="search-count" v-if="searchResults.length > 0">{{ searchIndex + 1 }}/{{ searchResults.length }}</span>
-          <button class="search-btn" @click="searchPrev" title="上一个"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg></button>
-          <button class="search-btn" @click="searchNext" title="下一个"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button>
-          <button class="search-btn close" @click="showSearch = false" title="关闭"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+          <button class="search-btn" @click="searchPrev" :title="t('terminal.searchPrev')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg></button>
+          <button class="search-btn" @click="searchNext" :title="t('terminal.searchNext')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button>
+          <button class="search-btn close" @click="showSearch = false" :title="t('terminal.searchClose')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         </div>
       </div>
     </Transition>
@@ -120,12 +120,13 @@
 
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted, inject, nextTick } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { Terminal } from 'xterm'
 import { FitAddon } from 'xterm-addon-fit'
 import { WebLinksAddon } from 'xterm-addon-web-links'
 import { SearchAddon } from 'xterm-addon-search'
 import 'xterm/css/xterm.css'
-import { Events } from '@wailsio/runtime'
+import { Events, Browser } from '@wailsio/runtime'
 import { SSHService } from '../../../../../bindings/changeme/ssh/index.js'
 import { useBlockManager } from './composables/useBlockManager'
 import { useCommandHistory } from './composables/useCommandHistory'
@@ -144,6 +145,7 @@ import ShortcutsDialog from './components/ShortcutsDialog.vue'
 import TerminalContextMenu from './components/TerminalContextMenu.vue'
 import { highlightOutput } from './utils/highlightAddon'
 
+const { t } = useI18n()
 const props = defineProps({ params: { type: Object, default: () => ({}) } })
 const connId = inject('connId')
 const dp = props.params?.params || props.params
@@ -190,7 +192,7 @@ const completionRef = ref(null)
 const blocksRef = ref(null)
 const xtermEl = ref(null)
 
-const statusLabel = computed(() => ({ idle:'空闲', starting:'连接中', active:'已连接', disconnected:'已断开', error:'错误' }[status.value]||''))
+const statusLabel = computed(() => ({ idle:t('terminal.statusIdle'), starting:t('terminal.statusConnecting'), active:t('terminal.statusConnected'), disconnected:t('terminal.statusDisconnected'), error:t('terminal.statusError') }[status.value]||''))
 const stats = computed(() => bm.getStats())
 const hasSelection = computed(() => clipboard.hasSelection.value || (view.value === 'classic' && xterm?.hasSelection()))
 
@@ -232,7 +234,7 @@ function onOutput(event) {
   if (isRecording.value) recordingEntries.value.push({ type: 'output', data: text, timestamp: Date.now() - recordingStartTime })
 }
 
-function onDisconnected(e) { if (disposed || e?.data?.connID !== connId) return; status.value = 'disconnected'; bm.addSystemMessage('连接已断开'); logConnectionEvent(connId, 'disconnect') }
+function onDisconnected(e) { if (disposed || e?.data?.connID !== connId) return; status.value = 'disconnected'; bm.addSystemMessage(t('terminal.disconnectedMessage')); logConnectionEvent(connId, 'disconnect') }
 function onReconnected(e) { if (disposed || e?.data?.connID !== connId) return; status.value = 'active'; SSHService.StartShellSessionWithID(connId, sessionId).catch(() => {}); logConnectionEvent(connId, 'reconnect') }
 
 onMounted(async () => {
@@ -262,6 +264,11 @@ onUnmounted(() => {
   SSHService.CloseShellSessionByID(connId, sessionId).catch(() => {})
   resizeObs?.disconnect(); xterm?.dispose(); sm.removeSession(sessionId)
   Events.Emit('terminal:session-closed', { connId, sessionId, isAI })
+  // 清理事件监听器
+  Events.Off('ssh:terminal-output')
+  Events.Off('ssh:connection-disconnected')
+  Events.Off('ssh:connection-reconnected')
+  Events.Off('ai:terminal-exec-start')
 })
 
 function getCSSVar(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim() }
@@ -278,7 +285,7 @@ function initXterm() {
   const fontSize = cfg.get('terminal', 'fontSize') || 14
   xterm = new Terminal({ fontSize, fontFamily: '"Cascadia Code","Fira Code",Consolas,monospace', theme: getXtermTheme(), cursorBlink: true, scrollback: 10000 })
   fitAddon = new FitAddon(); xterm._searchAddon = new SearchAddon()
-  xterm.loadAddon(fitAddon); xterm.loadAddon(new WebLinksAddon()); xterm.loadAddon(xterm._searchAddon)
+  xterm.loadAddon(fitAddon); xterm.loadAddon(new WebLinksAddon((e, uri) => { e.preventDefault(); Browser.OpenURL(uri) })); xterm.loadAddon(xterm._searchAddon)
   xterm.open(xtRef.value); fitAddon.fit()
   xterm.attachCustomKeyEventHandler((e) => { if (e.ctrlKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) return false; return true })
   xtermEl.value = xtRef.value.querySelector('.xterm') || xtRef.value
@@ -376,9 +383,9 @@ function handleCommonKeys(e) {
 
 function onKey(e) {
   if (handleCommonKeys(e)) return
-  const ik = { 'r': { code: '\x12', name: 'Ctrl+R (反向搜索)' }, 's': { code: '\x13', name: 'Ctrl+S (正向搜索)' } }
-  if (e.ctrlKey && ik[e.key]) { e.preventDefault(); showCompletion.value = false; const info = ik[e.key]; const sm2 = cfg.get('terminal', 'switchMode') || 'prompt'; if (sm2 === 'inline') openMiniTerminal(info.code); else { pendingKey.value = e.key; confirmTitle.value = '需要切换到经典终端'; confirmDesc.value = `${info.name} 需要在经典终端中执行。`; showConfirmSwitch.value = true } return }
-  if (e.ctrlKey && e.key === 'z') { e.preventDefault(); showCompletion.value = false; const sm2 = cfg.get('terminal', 'switchMode') || 'prompt'; if (sm2 === 'inline') openMiniTerminal('\x1a'); else { pendingKey.value = 'z'; confirmTitle.value = '需要切换到经典终端'; confirmDesc.value = 'Ctrl+Z (暂停进程) 需要在经典终端中执行。'; showConfirmSwitch.value = true } return }
+  const ik = { 'r': { code: '\x12', name: 'Ctrl+R (' + t('terminal.shortcutReverseSearch') + ')' }, 's': { code: '\x13', name: 'Ctrl+S (' + t('terminal.shortcutForwardSearch') + ')' } }
+  if (e.ctrlKey && ik[e.key]) { e.preventDefault(); showCompletion.value = false; const info = ik[e.key]; const sm2 = cfg.get('terminal', 'switchMode') || 'prompt'; if (sm2 === 'inline') openMiniTerminal(info.code); else { pendingKey.value = e.key; confirmTitle.value = t('terminal.switchToClassic'); confirmDesc.value = t('terminal.switchDesc', { name: info.name }); showConfirmSwitch.value = true } return }
+  if (e.ctrlKey && e.key === 'z') { e.preventDefault(); showCompletion.value = false; const sm2 = cfg.get('terminal', 'switchMode') || 'prompt'; if (sm2 === 'inline') openMiniTerminal('\x1a'); else { pendingKey.value = 'z'; confirmTitle.value = t('terminal.switchToClassic'); confirmDesc.value = t('terminal.switchDesc', { name: 'Ctrl+Z (' + t('terminal.shortcutPause') + ')' }); showConfirmSwitch.value = true } return }
   if (e.ctrlKey && e.key === '\\') { e.preventDefault(); send('\x1c'); return }
   if (e.ctrlKey && e.key === 's') { e.preventDefault(); send('\x13'); return }
   if (e.ctrlKey && e.key === 'q') { e.preventDefault(); send('\x11'); return }

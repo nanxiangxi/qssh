@@ -4,6 +4,7 @@
 
 import * as CloudService from "./cloudservice.js";
 import * as ConfigService from "./configservice.js";
+import * as DatabaseService from "./databaseservice.js";
 import * as FirewallService from "./firewallservice.js";
 import * as GreetService from "./greetservice.js";
 import * as PortForwardService from "./portforwardservice.js";
@@ -12,6 +13,7 @@ import * as SSHService from "./sshservice.js";
 export {
     CloudService,
     ConfigService,
+    DatabaseService,
     FirewallService,
     GreetService,
     PortForwardService,
@@ -23,6 +25,9 @@ export {
     AIConfig,
     AdvancedConfig,
     AppConfig,
+    AuditEntry,
+    BatchCommand,
+    BatchResult,
     CPUStats,
     CloudConfig,
     CommandResult,
@@ -30,6 +35,7 @@ export {
     DiskIOStats,
     DiskPartition,
     DiskStats,
+    EnvInfo,
     FileInfo,
     FileManagerConfig,
     FirewallInfo,
@@ -38,6 +44,7 @@ export {
     HostKeyCallback,
     LoadAvg,
     MemoryStats,
+    MonitorSnapshot,
     NetInterface,
     NetworkStats,
     PortForward,
@@ -45,6 +52,7 @@ export {
     SSHClient,
     SSHConfig,
     SSHGroup,
+    SSHKeyInfo,
     SSHSettings,
     ShortcutsConfig,
     SystemStats,

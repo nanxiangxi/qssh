@@ -10,7 +10,7 @@
             </svg>
             <span>{{ title }}</span>
           </div>
-          <button class="mini-btn" @click="$emit('close')" title="关闭 (Esc)">
+          <button class="mini-btn" @click="$emit('close')" :title="t('common.close') + ' (Esc)'">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="18" y1="6" x2="6" y2="18"/>
               <line x1="6" y1="6" x2="18" y2="18"/>
@@ -20,7 +20,7 @@
         <!-- xterm 容器（接收移入的 xterm DOM） -->
         <div class="mini-body" ref="miniBodyRef"></div>
         <div class="mini-status">
-          <span>Esc 关闭 · 同一会话 · 输入直接发送</span>
+          <span>{{ t('terminal.escCloseHint') }}</span>
         </div>
       </div>
     </div>
@@ -29,6 +29,9 @@
 
 <script setup>
 import { ref, computed, watch, nextTick } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = defineProps({
   visible: { type: Boolean, default: false },
@@ -42,9 +45,9 @@ const emit = defineEmits(['close'])
 const miniBodyRef = ref(null)
 
 const title = computed(() => {
-  if (props.initialKey === '\x12') return 'Ctrl+R 反向搜索'
-  if (props.initialKey === '\x1a') return 'Ctrl+Z 暂停'
-  return '临时终端'
+  if (props.initialKey === '\x12') return t('terminal.ctrlRReverseSearch')
+  if (props.initialKey === '\x1a') return t('terminal.ctrlZPause')
+  return t('terminal.tempTerminal')
 })
 
 // 监听可见性变化，移动 xterm DOM

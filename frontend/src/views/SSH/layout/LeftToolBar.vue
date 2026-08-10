@@ -37,12 +37,24 @@
           <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/>
           <path d="M12 6v6l4 2"/>
         </svg>
+        <svg v-else-if="tool.panelType === 'database'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <ellipse cx="12" cy="5" rx="9" ry="3"/>
+          <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+          <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+        </svg>
+        <svg v-else-if="tool.panelType === 'environment'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/>
+        </svg>
       </button>
     </div>
   </aside>
 </template>
 
 <script setup>
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
+
 const props = defineProps({
   activePanels: { type: Array, required: true }
 })
@@ -50,12 +62,14 @@ const props = defineProps({
 defineEmits(['toggle-panel'])
 
 const tools = [
-  { id: 'terminal', panelType: 'terminal', title: '终端' },
-  { id: 'files', panelType: 'fileManager', title: '文件管理' },
-  { id: 'performance', panelType: 'monitor', title: '性能监控' },
-  { id: 'portForward', panelType: 'portForward', title: '端口转发' },
-  { id: 'firewall', panelType: 'firewall', title: '防火墙' },
-  { id: 'guardian', panelType: 'guardian', title: '进程守护' }
+  { id: 'terminal', panelType: 'terminal', title: t('tabs.terminal') },
+  { id: 'files', panelType: 'fileManager', title: t('tabs.fileManager') },
+  { id: 'performance', panelType: 'monitor', title: t('tabs.monitor') },
+  { id: 'portForward', panelType: 'portForward', title: t('tabs.portForward') },
+  { id: 'firewall', panelType: 'firewall', title: t('tabs.firewall') },
+  { id: 'guardian', panelType: 'guardian', title: t('tabs.guardian') },
+  { id: 'database', panelType: 'database', title: t('tabs.database') },
+  { id: 'environment', panelType: 'environment', title: t('tabs.environment') }
 ]
 
 const isActive = (panelType) => {
