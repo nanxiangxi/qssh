@@ -17,7 +17,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted } from 'vue'
+import { computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import TopBookmarkBar from './TopBookmarkBar.vue'
 import TabContent from './TabContent.vue'
@@ -82,6 +82,11 @@ onUnmounted(() => {
 })
 
 const currentConnectionId = computed(() => sshLayoutStore.currentConnectionId)
+
+// 监听标签切换
+watch(currentConnectionId, (newId, oldId) => {
+  console.log(`[SSHLayout] 标签切换: ${oldId} → ${newId}`)
+})
 </script>
 
 <style scoped>

@@ -28,7 +28,7 @@ type envRule struct {
 	VersionCmd string
 }
 
-// findBin 生成检测命令：依次检查 which → 常见路径 → 包管理器
+// findBin 生成检测命令：依次检查 which → 常见路径
 // paths 是该工具可能安装的额外路径列表
 func findBin(bin string, paths ...string) string {
 	cmds := []string{

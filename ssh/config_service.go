@@ -194,7 +194,7 @@ func setBool(dst *bool, m map[string]interface{}, key string) {
 	}
 }
 func setInt(dst *int, m map[string]interface{}, key string) {
-	if v, ok := m[key].(float64); ok && v > 0 {
+	if v, ok := m[key].(float64); ok {
 		*dst = int(v)
 	}
 }
@@ -363,16 +363,16 @@ func (s *ConfigService) ExportConfig() (string, error) {
 	return string(data), nil
 }
 
-// ImportConfig 导入配置
+// ImportConfig 导入配置（合并默认值，确保新字段有默认值）
 func (s *ConfigService) ImportConfig(jsonStr string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	var config AppConfig
-	if err := json.Unmarshal([]byte(jsonStr), &config); err != nil {
+	var raw map[string]interface{}
+	if err := json.Unmarshal([]byte(jsonStr), &raw); err != nil {
 		return err
 	}
-	s.config = &config
+	s.config = mergeConfig(raw, getDefaultConfig())
 	return s.save()
 }
 

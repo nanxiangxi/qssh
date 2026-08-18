@@ -719,7 +719,7 @@ const toggleSort = () => {
 }
 
 const openSettings = () => {
-  router.push('/home/settings')
+  router.push('/settings')
 }
 </script>
 

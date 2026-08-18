@@ -26,7 +26,7 @@ var trayIcon []byte
 
 // 版本信息
 const (
-	AppVersion = "0.4.0"
+	AppVersion = "0.4.2"
 	AppName    = "启SSH"
 	AppNameEN  = "Qssh"
 )
@@ -306,13 +306,16 @@ func main() {
 					}
 					n, err := sshService.ReadFromShellSession(connID, sessionID, buf)
 					if err != nil {
+						fmt.Printf("[OutputReader] 读取失败: connID=%s, sessionID=%s, err=%v\n", connID, sessionID, err)
 						continue
 					}
 					if n > 0 {
+						data := string(buf[:n])
+						fmt.Printf("[OutputReader] 输出: connID=%s, sessionID=%s, data=%s\n", connID, sessionID, data[:min(50, len(data))])
 						app.Event.Emit("ssh:terminal-output", map[string]interface{}{
 							"connID":    connID,
 							"sessionID": sessionID,
-							"data":      string(buf[:n]),
+							"data":      data,
 						})
 					}
 				}
@@ -330,6 +333,13 @@ func main() {
 }
 
 // calculateWindowSize 根据屏幕大小计算合适的窗口尺寸
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
 func calculateWindowSize(app *application.App) (int, int) {
 	type size struct {
 		width  int
@@ -362,9 +372,4 @@ func calculateWindowSize(app *application.App) (int, int) {
 	}
 
 	return 1200, 800
-}
-
-// readFromShell 从Shell读取数据（非阻塞）
-func readFromShell(sshService *ssh.SSHService, connID string, buf []byte) (int, error) {
-	return sshService.ReadFromShell(connID, buf)
 }

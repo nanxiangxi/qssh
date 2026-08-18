@@ -1,7 +1,7 @@
 <template>
   <Transition name="fade">
-    <div v-if="visible" class="mini-terminal-mask" @mousedown.self="$emit('close')">
-      <div class="mini-terminal">
+    <div v-if="visible" class="mini-terminal-mask" @mousedown.self="$emit('close')" tabindex="-1">
+      <div class="mini-terminal" @mousedown.stop>
         <div class="mini-header">
           <div class="mini-title">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -66,19 +66,27 @@ function moveXterm(toPopup) {
   if (toPopup && miniBodyRef.value) {
     // 移动到弹窗
     miniBodyRef.value.appendChild(el)
-    // 强制重新调整尺寸
+    // 强制重新调整尺寸并聚焦
     nextTick(() => {
-      // 多次调整确保正确
       if (props.onFit) props.onFit()
       setTimeout(() => {
         if (props.onFit) props.onFit()
         // 聚焦输入
         const textarea = el.querySelector('.xterm-helper-textarea')
         if (textarea) textarea.focus()
+      }, 150)
+    })
+  } else {
+    // 移回原始容器后重新聚焦
+    nextTick(() => {
+      if (props.onFit) props.onFit()
+      setTimeout(() => {
+        if (props.onFit) props.onFit()
+        const textarea = el.querySelector('.xterm-helper-textarea')
+        if (textarea) textarea.focus()
       }, 100)
     })
   }
-  // 移回操作由父组件处理
 }
 </script>
 

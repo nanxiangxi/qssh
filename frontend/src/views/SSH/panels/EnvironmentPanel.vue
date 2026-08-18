@@ -75,7 +75,7 @@
               <span v-if="env.status === 'installed'" class="card-dot installed"></span>
               <span v-else class="card-dot notfound"></span>
             </div>
-            <div v-if="env.status === 'installed'" class="card-desc">{{ t('env.desc.' + env.name) || env.description }}</div>
+            <div v-if="env.status === 'installed'" class="card-desc">{{ getDesc(env.name) || env.description }}</div>
             <div v-if="env.status === 'installed' && env.path" class="card-path" :title="env.path">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
@@ -163,6 +163,16 @@ const groupedEnvs = computed(() => {
 
 const connId = computed(() => sshLayoutStore.currentConnectionId)
 
+// 环境名称 → i18n desc 键名映射（避免 .NET/Node.js 等含点号的键名）
+const descKeyMap = {
+  '.NET': 'dotnet',
+  'Node.js': 'nodejs',
+}
+const getDesc = (name) => {
+  const key = descKeyMap[name] || name
+  return t('env.desc.' + key)
+}
+
 const detect = async () => {
   const id = connId.value
   if (!id) {
@@ -205,8 +215,42 @@ const selectPath = (path) => {
 // 跳转文件管理器
 const goToPath = (envPath) => {
   if (!envPath || !connId.value) return
-  const dir = envPath.substring(0, envPath.lastIndexOf('/')) || '/'
-  Events.Emit('file-manager:navigate', { connId: connId.value, path: dir })
+
+  // 提取目录部分（处理不同路径格式）
+  let dir = '/'
+  if (envPath.includes('/')) {
+    // 取最后一个 / 之前的部分
+    const lastSlash = envPath.lastIndexOf('/')
+    dir = envPath.substring(0, lastSlash) || '/'
+  } else if (envPath.includes('\\')) {
+    // Windows 路径
+    const lastSlash = envPath.lastIndexOf('\\')
+    dir = envPath.substring(0, lastSlash) || 'C:\\'
+  }
+
+  // 确保路径以 / 开头（Linux）或盘符开头（Windows）
+  if (!dir.startsWith('/') && !dir.match(/^[A-Z]:\\/i)) {
+    dir = '/' + dir
+  }
+
+  // 如果路径是可执行文件（如 /usr/bin/go），取其父目录
+  // 如果路径已经是目录（如 /usr/local/go/bin），直接使用
+  const parts = envPath.split('/')
+  const lastPart = parts[parts.length - 1]
+  if (lastPart && !lastPart.includes('.') && !lastPart.startsWith('bin')) {
+    // 可能是目录，直接使用
+    dir = envPath
+  }
+
+  console.log('[EnvPanel] 导航到目录:', dir, '原始路径:', envPath)
+
+  // 先确保文件管理器面板已打开
+  Events.Emit('toggle-panel', { panelType: 'fileManager', connId: connId.value })
+
+  // 延迟一下确保面板已打开，然后发送导航事件
+  setTimeout(() => {
+    Events.Emit('file-manager:navigate', { connId: connId.value, path: dir })
+  }, 100)
 }
 
 watch(connId, (newId) => { if (newId) detect() })

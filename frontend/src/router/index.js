@@ -5,16 +5,11 @@ import SSHLayout from '../views/SSH/layout/index.vue'
 const routes = [
   {
     path: '/',
-    redirect: '/home'
-  },
-  {
-    path: '/home',
     component: HomeLayout,
-    redirect: '/home/new',
     meta: { title: 'Home' },
     children: [
       {
-        path: 'new',
+        path: '',
         name: 'NewConnection',
         component: () => import('../views/Home/NewConnection.vue'),
         meta: { title: 'New Connection' }
@@ -31,6 +26,10 @@ const routes = [
     path: '/ssh',
     component: SSHLayout,
     meta: { title: 'SSH' }
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    redirect: '/'
   }
 ]
 

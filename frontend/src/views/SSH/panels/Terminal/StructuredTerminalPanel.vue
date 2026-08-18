@@ -144,6 +144,7 @@ import CommandHistoryDialog from './components/CommandHistoryDialog.vue'
 import ShortcutsDialog from './components/ShortcutsDialog.vue'
 import TerminalContextMenu from './components/TerminalContextMenu.vue'
 import { highlightOutput } from './utils/highlightAddon'
+import { useTerminalSessionStore } from '../../../../stores/terminalSessions'
 
 const { t } = useI18n()
 const props = defineProps({ params: { type: Object, default: () => ({}) } })
@@ -151,6 +152,7 @@ const connId = inject('connId')
 const dp = props.params?.params || props.params
 const sessionId = dp?.sessionId || `term_${Date.now()}`
 const isAI = dp?.isAI || false
+const sessionStore = useTerminalSessionStore()
 
 const bm = useBlockManager()
 const ch = useCommandHistory(connId)
@@ -181,6 +183,16 @@ const confirmTitle = ref('')
 const confirmDesc = ref('')
 const pendingKey = ref('')
 const showMiniTerminal = ref(false)
+
+// 安全 fit：仅在终端处于正常容器时执行（不在临时终端弹窗中）
+function safeFit(delay) {
+  setTimeout(() => {
+    if (showMiniTerminal.value) return // 临时终端打开中，跳过
+    if (!fitAddon || !xterm) return
+    fitAddon.fit()
+    SSHService.ResizeTerminalByID(connId, sessionId, xterm.cols, xterm.rows).catch(() => {})
+  }, delay)
+}
 const miniInitialKey = ref('')
 const showContextMenu = ref(false)
 const contextMenuPos = ref({ x: 0, y: 0 })
@@ -222,13 +234,19 @@ function onBlocksScroll() {
 }
 
 function onOutput(event) {
-  if (disposed) return
+  if (disposed) return // 组件已卸载，跳过
   const d = event?.data
   if (!d || d.sessionID !== sessionId) return
   let text = typeof d === 'string' ? d : (d.data || '')
   if (!text) return
+  console.log(`[Terminal] onOutput: sessionId=${sessionId}, text=${JSON.stringify(text).substring(0, 100)}`)
   if (highlightEnabled.value) text = highlightOutput(text)
-  if (xterm) xterm.write(text)
+  if (xterm) {
+    xterm.write(text)
+    console.log(`[Terminal] xterm.write 成功: sessionId=${sessionId}`)
+  } else {
+    console.warn(`[Terminal] xterm 不存在，无法写入: sessionId=${sessionId}`)
+  }
   bm.appendOutput(text)
   bm.endBlockIfPrompt()
   if (isRecording.value) recordingEntries.value.push({ type: 'output', data: text, timestamp: Date.now() - recordingStartTime })
@@ -236,6 +254,7 @@ function onOutput(event) {
 
 function onDisconnected(e) { if (disposed || e?.data?.connID !== connId) return; status.value = 'disconnected'; bm.addSystemMessage(t('terminal.disconnectedMessage')); logConnectionEvent(connId, 'disconnect') }
 function onReconnected(e) { if (disposed || e?.data?.connID !== connId) return; status.value = 'active'; SSHService.StartShellSessionWithID(connId, sessionId).catch(() => {}); logConnectionEvent(connId, 'reconnect') }
+function onAITerminalExecStart(e) { if (disposed) return; const d = e?.data; if (!d || d.sessionID !== sessionId) return; if (!bm.activeBlock.value) bm.startCommand(`[AI] ${d.command}`) }
 
 onMounted(async () => {
   sm.createSession(sessionId, connId, { type: isAI ? SESSION_TYPE.AI : SESSION_TYPE.NORMAL })
@@ -250,25 +269,56 @@ onMounted(async () => {
     logConnectionEvent(connId, 'connect')
     await cdSync.initHomeDir()
     Events.Emit('terminal:session-ready', { connId, sessionId, panelId: sessionId, isAI })
-  } catch (e) { status.value = 'error'; logConnectionEvent(connId, 'error', { error: String(e) }); return }
+  } catch (e) {
+    status.value = 'error'
+    const errMsg = String(e?.message || e)
+    logConnectionEvent(connId, 'error', { error: errMsg })
+    if (errMsg.includes('最大会话数') || errMsg.includes('MaxSessions')) {
+      console.error(`[Terminal] 创建终端失败：SSH 服务器已达到最大会话数限制。请关闭其他终端后重试。`)
+    } else {
+      console.error(`[Terminal] 创建终端失败: ${errMsg}`)
+    }
+    return
+  }
   Events.On('ssh:terminal-output', onOutput)
   Events.On('ssh:connection-disconnected', onDisconnected)
   Events.On('ssh:connection-reconnected', onReconnected)
   document.addEventListener('keydown', onGlobalKey)
-  Events.On('ai:terminal-exec-start', (e) => { if (disposed) return; const d = e?.data; if (!d || d.sessionID !== sessionId) return; if (!bm.activeBlock.value) bm.startCommand(`[AI] ${d.command}`) })
+  Events.On('ai:terminal-exec-start', onAITerminalExecStart)
 })
+
+// 注入标签切换标记（来自 DockviewLayout）
+const isTabSwitch = inject('isTabSwitch', ref(false))
+
+// 监听标签激活事件，恢复终端焦点
+function onTerminalFocus(event) {
+  if (!event?.data || event.data.connId !== connId) return
+  console.log(`[Terminal] 收到 terminal:focus 事件: sessionId=${sessionId}, view=${view.value}`)
+  if (view.value === 'classic' && xterm) {
+    nextTick(() => {
+      xterm.focus()
+      console.log(`[Terminal] xterm.focus() 已调用: sessionId=${sessionId}`)
+    })
+  } else if (inpRef.value) {
+    nextTick(() => {
+      inpRef.value.focus()
+      console.log(`[Terminal] inpRef.focus() 已调用: sessionId=${sessionId}`)
+    })
+  }
+}
+Events.On('terminal:focus', onTerminalFocus)
 
 onUnmounted(() => {
   if (disposed) return; disposed = true
+  console.log(`[Terminal] onUnmounted: sessionId=${sessionId}, connId=${connId}, isAI=${isAI}`)
   document.removeEventListener('keydown', onGlobalKey)
-  SSHService.CloseShellSessionByID(connId, sessionId).catch(() => {})
+  // SSH 会话由 DockviewLayout 的 onDidRemovePanel 通过 sessionStore.closeSession 统一管理
+  // 这里只清理前端资源，不直接关闭 SSH 会话
   resizeObs?.disconnect(); xterm?.dispose(); sm.removeSession(sessionId)
   Events.Emit('terminal:session-closed', { connId, sessionId, isAI })
-  // 清理事件监听器
-  Events.Off('ssh:terminal-output')
-  Events.Off('ssh:connection-disconnected')
-  Events.Off('ssh:connection-reconnected')
-  Events.Off('ai:terminal-exec-start')
+  // 不调用 Events.Off（Wails 不支持按回调过滤，会误删其他终端的监听器）
+  // 依赖 disposed 标志阻止已卸载组件的回调执行
+  console.log(`[Terminal] onUnmounted 完成: sessionId=${sessionId}`)
 })
 
 function getCSSVar(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim() }
@@ -288,11 +338,44 @@ function initXterm() {
   xterm.loadAddon(fitAddon); xterm.loadAddon(new WebLinksAddon((e, uri) => { e.preventDefault(); Browser.OpenURL(uri) })); xterm.loadAddon(xterm._searchAddon)
   xterm.open(xtRef.value); fitAddon.fit()
   xterm.attachCustomKeyEventHandler((e) => { if (e.ctrlKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) return false; return true })
+  // 跟踪焦点状态（通过 DOM 事件）
+  const helperTextarea = xtRef.value.querySelector('.xterm-helper-textarea')
+  if (helperTextarea) {
+    helperTextarea.addEventListener('focus', () => console.log(`[Terminal] xterm 获得焦点: sessionId=${sessionId}`))
+    helperTextarea.addEventListener('blur', () => console.log(`[Terminal] xterm 失去焦点: sessionId=${sessionId}`))
+  }
   xtermEl.value = xtRef.value.querySelector('.xterm') || xtRef.value
-  resizeObs = new ResizeObserver(() => { fitAddon?.fit(); SSHService.ResizeTerminalByID(connId, sessionId, xterm.cols, xterm.rows).catch(() => {}) })
+  console.log(`[Terminal] initXterm 完成: sessionId=${sessionId}, connId=${connId}`)
+  // 延迟 fit 确保容器尺寸正确（跳过临时终端场景，避免干扰 DOM 移动）
+  safeFit(100)
+  safeFit(300)
+  // 延迟聚焦，确保终端在 dockview 面板初始化后保持焦点
+  setTimeout(() => {
+    if (!showMiniTerminal.value && xterm) {
+      xterm.focus()
+      console.log(`[Terminal] 延迟聚焦完成: sessionId=${sessionId}`)
+    }
+  }, 200)
+  resizeObs = new ResizeObserver((entries) => {
+    // 跳过零尺寸（标签页隐藏时触发）
+    const entry = entries[0]
+    if (!entry || entry.contentRect.width === 0 || entry.contentRect.height === 0) return
+    // 跳过未就绪的会话（SSH 连接建立前）
+    if (!sessionStore.isSessionReady(sessionId)) return
+    // 跳过临时终端打开中（避免干扰 DOM 移动）
+    if (showMiniTerminal.value) return
+    console.log(`[Terminal] ResizeObserver: sessionId=${sessionId}, size=${entry.contentRect.width}x${entry.contentRect.height}`)
+    fitAddon?.fit()
+    SSHService.ResizeTerminalByID(connId, sessionId, xterm.cols, xterm.rows).then(() => {
+      console.log(`[Terminal] ResizeTerminalByID 成功: sessionId=${sessionId}, cols=${xterm.cols}, rows=${xterm.rows}`)
+    }).catch((err) => {
+      console.error(`[Terminal] ResizeTerminalByID 失败: sessionId=${sessionId}`, err)
+    })
+  })
   resizeObs.observe(xtRef.value)
 
   xterm.onData((data) => {
+    console.log(`[Terminal] onData: sessionId=${sessionId}, data=${JSON.stringify(data)}, focused=${document.hasFocus()}`)
     const cc = data.charCodeAt(0)
     if (cc === 6) { showSearch.value = true; nextTick(() => searchInputRef.value?.focus()); return }
     if (cc === 27) { showCompletion.value = false; if (showSearch.value) { showSearch.value = false; return } send(data); return }
@@ -423,7 +506,19 @@ function exec() {
   if (c) { logTerminalCommand(connId, c); if (!bm.activeBlock.value) { bm.startCommand(c); ch.addCommand(c); if (isRecording.value) recordingEntries.value.push({ type: 'command', data: c, timestamp: Date.now() - recordingStartTime }) } }
   cdSync.detectCd(c)
 }
-async function send(data) { if (status.value !== 'active') return; try { await SSHService.WriteToTerminalByID(connId, sessionId, data) } catch {} }
+async function send(data) {
+  if (status.value !== 'active') {
+    console.warn(`[Terminal] send 跳过: sessionId=${sessionId}, status=${status.value}`)
+    return
+  }
+  console.log(`[Terminal] send: sessionId=${sessionId}, data=${JSON.stringify(data).substring(0, 50)}`)
+  try {
+    await SSHService.WriteToTerminalByID(connId, sessionId, data)
+    console.log(`[Terminal] send 成功: sessionId=${sessionId}`)
+  } catch (e) {
+    console.error(`[Terminal] send 失败: sessionId=${sessionId}`, e)
+  }
+}
 
 function onGlobalKey(e) { if (!disposed && e.ctrlKey && e.key === 'f') { e.preventDefault(); openSearch() } }
 function openSearch() { showSearch.value = true; nextTick(() => searchInputRef.value?.focus()) }
@@ -456,7 +551,15 @@ function scrollToBlock(id) { nextTick(() => { const el = document.querySelector(
 
 const interactiveKeyMap = { 'r': '\x12', 'z': '\x1a', 's': '\x13' }
 function handleConfirmSwitch() { showConfirmSwitch.value = false; if (!pendingKey.value) return; view.value = 'classic'; nextTick(() => { if (!xterm) initXterm(); setTimeout(() => { fitAddon?.fit(); send(interactiveKeyMap[pendingKey.value] || '\x12'); xterm?.focus(); pendingKey.value = '' }, 50) }) }
-function closeMiniTerminal() { showMiniTerminal.value = false; nextTick(() => { if (xtRef.value && xtermEl.value) { xtRef.value.appendChild(xtermEl.value); setTimeout(() => { fitAddon?.fit(); xterm?.focus() }, 50) } }) }
+function closeMiniTerminal() {
+  showMiniTerminal.value = false
+  // 移回 DOM（InteractivePrompt 的 moveXterm(false) 会处理聚焦）
+  nextTick(() => {
+    if (xtRef.value && xtermEl.value) {
+      xtRef.value.appendChild(xtermEl.value)
+    }
+  })
+}
 function openMiniTerminal(k = '') { miniInitialKey.value = k; showMiniTerminal.value = true }
 function refitXterm() { nextTick(() => { fitAddon?.fit(); if (xterm) SSHService.ResizeTerminalByID(connId, sessionId, xterm.cols, xterm.rows).catch(() => {}); if (miniInitialKey.value) { setTimeout(() => { send(miniInitialKey.value); miniInitialKey.value = '' }, 50) } }) }
 

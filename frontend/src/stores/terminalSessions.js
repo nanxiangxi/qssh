@@ -18,7 +18,23 @@ export const useTerminalSessionStore = defineStore('terminalSessions', () => {
   const sessions = ref({})
 
   // 分配终端会话 ID（不启动 shell）
-  function createSession(panelId, connId, isAI = false) {
+  // 复用模式：如果 connId 下已有可用会话，直接复用（用于标签切换场景）
+  function createSession(panelId, connId, isAI = false, reuse = false) {
+    console.log(`[TerminalSessions] createSession: panelId=${panelId}, connId=${connId}, isAI=${isAI}, reuse=${reuse}`)
+    console.log(`[TerminalSessions] 当前会话:`, Object.entries(sessions.value).map(([k, v]) => `${k} → ${v.sessionId}(${v.connId})`).join(', '))
+
+    // 复用模式：查找同连接下已有的可用会话
+    if (reuse && !isAI) {
+      for (const [existingPanelId, sess] of Object.entries(sessions.value)) {
+        if (sess.connId === connId && !sess.isAI && existingPanelId !== panelId) {
+          // 复用已有会话
+          sessions.value[panelId] = { ...sess, claimed: false }
+          console.log(`[TerminalSessions] 复用会话: ${panelId} → ${sess.sessionId}`)
+          return sess.sessionId
+        }
+      }
+    }
+
     // 检查当前连接的 session 数量
     const currentCount = Object.values(sessions.value).filter(s => s.connId === connId).length
     if (currentCount >= MAX_SESSIONS) {
@@ -27,7 +43,7 @@ export const useTerminalSessionStore = defineStore('terminalSessions', () => {
     }
     const sessionId = `term_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`
     sessions.value[panelId] = { sessionId, connId, ready: false, isAI, claimed: false }
-    console.log(`[TerminalSessions] 会话分配: ${panelId} → ${sessionId} (AI: ${isAI}) [${currentCount + 1}/${MAX_SESSIONS}]`)
+    console.log(`[TerminalSessions] 新会话分配: ${panelId} → ${sessionId} [${currentCount + 1}/${MAX_SESSIONS}]`)
     return sessionId
   }
 
@@ -53,15 +69,45 @@ export const useTerminalSessionStore = defineStore('terminalSessions', () => {
     }
   }
 
+  // 检查会话是否就绪
+  function isSessionReady(sessionId) {
+    for (const sess of Object.values(sessions.value)) {
+      if (sess.sessionId === sessionId) {
+        return sess.ready
+      }
+    }
+    return false
+  }
+
   // 关闭终端会话（面板关闭时调用）
   async function closeSession(panelId) {
     const sess = sessions.value[panelId]
-    if (!sess) return
-    try {
-      await SSHService.CloseShellSessionByID(sess.connId, sess.sessionId)
-    } catch (e) {}
+    if (!sess) {
+      console.log(`[TerminalSessions] closeSession: 面板 ${panelId} 无会话，跳过`)
+      return
+    }
+    console.log(`[TerminalSessions] closeSession: 面板=${panelId}, sessionId=${sess.sessionId}, connId=${sess.connId}`)
     delete sessions.value[panelId]
-    console.log(`[TerminalSessions] 会话关闭: ${panelId}`)
+
+    // 检查是否还有其他面板在使用同一个 sessionId
+    const stillInUse = Object.values(sessions.value).filter(s => s.sessionId === sess.sessionId)
+    console.log(`[TerminalSessions] 会话 ${sess.sessionId} 使用者数量: ${stillInUse.length}`, stillInUse.map(s => s.connId))
+
+    if (stillInUse.length === 0) {
+      // 没有其他面板使用此会话，才真正关闭 SSH 会话
+      try {
+        console.log(`[TerminalSessions] 关闭 SSH 会话: ${sess.sessionId}`)
+        await SSHService.CloseShellSessionByID(sess.connId, sess.sessionId)
+        console.log(`[TerminalSessions] SSH 会话已关闭: ${sess.sessionId}`)
+      } catch (e) {
+        console.error(`[TerminalSessions] 关闭 SSH 会话失败: ${sess.sessionId}`, e)
+      }
+    } else {
+      console.log(`[TerminalSessions] 会话仍被 ${stillInUse.length} 个面板使用，跳过关闭: ${sess.sessionId}`)
+    }
+
+    // 打印当前所有会话状态
+    console.log(`[TerminalSessions] 当前会话列表:`, Object.entries(sessions.value).map(([k, v]) => `${k} → ${v.sessionId}`).join(', '))
   }
 
   function getSession(panelId) {
@@ -105,6 +151,7 @@ export const useTerminalSessionStore = defineStore('terminalSessions', () => {
     findPanelBySessionId,
     claimNextSession,
     markSessionReady,
+    isSessionReady,
     getSessionBySessionId
   }
 })

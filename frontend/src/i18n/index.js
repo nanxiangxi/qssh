@@ -9,6 +9,8 @@ const i18n = createI18n({
   legacy: false,
   locale: savedLocale,
   fallbackLocale: 'en-US',
+  strictMessage: false,
+  escapeHtml: false,
   messages: {
     'zh-CN': zhCN,
     'en-US': enUS,

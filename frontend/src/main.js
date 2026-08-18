@@ -5,7 +5,7 @@ import router from './router'
 import i18n from './i18n'
 import './styles/theme.css'
 import { useConfigStore } from './stores/config'
-import { Events } from '@wailsio/runtime'
+import { Events, Window } from '@wailsio/runtime'
 import * as CloudService from '@bindings/changeme/ssh/cloudservice.js'
 
 const app = createApp(App)
@@ -46,6 +46,14 @@ configStore.init().then(() => {
   }
 }).catch(e => {
   console.error('[Main] 配置加载失败:', e)
+})
+
+// F12 打开开发者工具（仅 devtools 构建生效）
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'F12') {
+    e.preventDefault()
+    Window.OpenDevTools()
+  }
 })
 
 app.mount('#app')

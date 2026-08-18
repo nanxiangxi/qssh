@@ -92,7 +92,7 @@ export function GetUIConfig() {
 }
 
 /**
- * ImportConfig 导入配置
+ * ImportConfig 导入配置（合并默认值，确保新字段有默认值）
  * @param {string} jsonStr
  * @returns {$CancellablePromise<void>}
  */

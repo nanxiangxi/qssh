@@ -17,7 +17,7 @@
 </template>
 
 <script>
-import { defineComponent, ref, reactive, computed, onMounted, onUnmounted } from 'vue'
+import { defineComponent, ref, reactive, computed, onMounted, onUnmounted, provide } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { DockviewVue } from 'dockview-vue'
 import 'dockview-vue/dist/styles/dockview.css'
@@ -65,6 +65,9 @@ export default defineComponent({
   setup(props, { emit }) {
     const dockviewRef = ref(null)
     let dockviewApi = null
+    const isTabSwitch = ref(false) // 标记是否为标签切换（组件销毁时不关闭 SSH 会话）
+    provide('isTabSwitch', isTabSwitch) // 供子组件读取
+    provide('connId', props.connId) // 供动态创建的面板组件使用
     const { t } = useI18n()
 
     const ctxMenu = reactive({ show: false, x: 0, y: 0, panelId: '', panelType: '' })
@@ -185,8 +188,15 @@ export default defineComponent({
         }
         // 使用配置的终端类型
         component = getTerminalComponent()
-        // 分配 sessionId（不启动 shell，shell 由 TerminalPanel 挂载后启动）
-        sessionId = sessionStore.createSession(panelId, props.connId, isAI)
+        // 检查当前连接的会话数量，避免超出 SSH 服务器限制
+        const currentSessions = Object.values(sessionStore.sessions).filter(s => s.connId === props.connId)
+        if (currentSessions.length >= 8) {
+          console.warn('[DockviewLayout] 已达最大会话数 (8)，无法创建新终端')
+          return null
+        }
+
+        // 分配 sessionId（复用模式：标签切换时复用已有会话）
+        sessionId = sessionStore.createSession(panelId, props.connId, isAI, opts.reuse || false)
         if (!sessionId) {
           console.warn('[DockviewLayout] 会话创建失败（可能已达上限），取消添加面板')
           return null
@@ -217,6 +227,19 @@ export default defineComponent({
         const panel = dockviewApi.addPanel(addOpts)
         if (setActive && panel.group) panel.group.setActive()
         emitChange()
+
+        // 触发 resize，确保新面板尺寸正确
+        setTimeout(() => {
+          if (!dockviewApi) return
+          const container = dockviewRef.value?.$el
+          if (container) {
+            const { clientWidth: w, clientHeight: h } = container
+            if (w > 0 && h > 0) {
+              dockviewApi.layout(w, h)
+            }
+          }
+        }, 50)
+
         return panel
       } catch (e) {
         console.error('[DockviewLayout] 添加面板失败:', e)
@@ -241,6 +264,17 @@ export default defineComponent({
       })
       // emitChange 由 onDidRemovePanel 逐个触发
       ctxMenu.show = false
+      // 批量关闭后触发 resize
+      setTimeout(() => {
+        if (!dockviewApi) return
+        const container = dockviewRef.value?.$el
+        if (container) {
+          const { clientWidth: w, clientHeight: h } = container
+          if (w > 0 && h > 0) {
+            dockviewApi.layout(w, h)
+          }
+        }
+      }, 100)
     }
 
     const closeAllByType = (panelType) => {
@@ -250,6 +284,17 @@ export default defineComponent({
         .forEach(p => dockviewApi.removePanel(p))
       // emitChange 由 onDidRemovePanel 逐个触发
       ctxMenu.show = false
+      // 批量关闭后触发 resize
+      setTimeout(() => {
+        if (!dockviewApi) return
+        const container = dockviewRef.value?.$el
+        if (container) {
+          const { clientWidth: w, clientHeight: h } = container
+          if (w > 0 && h > 0) {
+            dockviewApi.layout(w, h)
+          }
+        }
+      }, 100)
     }
 
     const togglePanel = (panelType) => {
@@ -341,16 +386,40 @@ export default defineComponent({
     const onReady = (event) => {
       dockviewApi = event.api
 
-      // 面板关闭时关闭对应的 SSH 会话
+      // 面板关闭时关闭对应的 SSH 会话（标签切换时不关闭）
       dockviewApi.onDidRemovePanel((panel) => {
-        sessionStore.closeSession(panel.id)
+        console.log(`[DockviewLayout] onDidRemovePanel: ${panel.id}, isTabSwitch=${isTabSwitch.value}`)
+        if (!isTabSwitch.value) {
+          sessionStore.closeSession(panel.id)
+        }
         emitChange()
+        // 触发剩余面板的 resize，修复终端尺寸异常
+        // 多次触发确保 dockview 和终端都能正确响应
+        const triggerResize = () => {
+          if (!dockviewApi) return
+          const container = dockviewRef.value?.$el
+          if (container) {
+            const { clientWidth: w, clientHeight: h } = container
+            if (w > 0 && h > 0) {
+              dockviewApi.layout(w, h)
+            }
+          }
+        }
+        setTimeout(triggerResize, 50)
+        setTimeout(triggerResize, 150)
+        setTimeout(triggerResize, 300)
       })
 
       // 监听 AI 创建终端请求
       Events.On('ai:create-terminal', (event) => {
         if (!event?.data || event.data.connId !== props.connId) return
         addPanel('terminal', { setActive: true, isAI: true })
+      })
+
+      // 监听面板切换请求（来自环境面板等）
+      Events.On('toggle-panel', (event) => {
+        if (!event?.data || event.data.connId !== props.connId) return
+        togglePanel(event.data.panelType)
       })
 
       // 监听 AI 关闭终端请求（通过 sessionId 查找面板，过滤当前连接）
@@ -382,8 +451,13 @@ export default defineComponent({
         emitChange()
       })
 
-      // 加载默认终端
-      addPanel('terminal', { setActive: true })
+      // 监听面板焦点变化
+      dockviewApi.onDidActivePanelChange((panel) => {
+        console.log(`[DockviewLayout] 面板焦点变化: ${panel?.id || 'null'}`)
+      })
+
+      // 加载默认终端（复用模式：标签切换时复用已有会话）
+      addPanel('terminal', { setActive: true, reuse: true })
     }
 
     onMounted(() => {
@@ -392,10 +466,14 @@ export default defineComponent({
     })
 
     onUnmounted(() => {
+      // 标记为标签切换，避免销毁 dockview 时关闭 SSH 会话
+      isTabSwitch.value = true
       destroyAIToolExecutor()
       Events.Off('ai:create-terminal')
       Events.Off('ai:close-terminal')
       Events.Off('terminal:session-ready')
+      Events.Off('toggle-panel')
+      dockviewApi = null
       console.log('[DockviewLayout] 组件卸载')
     })
 
@@ -414,7 +492,8 @@ export default defineComponent({
       togglePanel,
       newPanelBeside,
       onContainerContextMenu,
-      onReady
+      onReady,
+      get api() { return dockviewApi }
     }
   }
 })

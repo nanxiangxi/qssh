@@ -462,9 +462,11 @@ func (s *SSHClient) CreateShell(sessionID string) (*ssh.Session, error) {
 // readShellOutput 持续读取单个 session 的输出
 func (s *SSHClient) readShellOutput(sessionID string, sh *shellSession) {
 	buf := make([]byte, 4096)
+	fmt.Printf("[readShellOutput] 启动: sessionID=%s\n", sessionID)
 	for sh.closing.Load() == 0 {
 		n, err := sh.stdout.Read(buf)
 		if err != nil {
+			fmt.Printf("[readShellOutput] 读取错误: sessionID=%s, err=%v\n", sessionID, err)
 			if sh.closing.Load() == 0 {
 				if err == io.EOF || s.closing.Load() == 0 {
 					s.handleDisconnect()
@@ -478,6 +480,7 @@ func (s *SSHClient) readShellOutput(sessionID string, sh *shellSession) {
 			sh.bufMutex.Unlock()
 		}
 	}
+	fmt.Printf("[readShellOutput] 退出: sessionID=%s\n", sessionID)
 }
 
 // WriteToShell 向指定 session 写入数据

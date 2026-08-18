@@ -11,7 +11,7 @@ info:
   description: "一个中文的SSH工具，便携，简单，开源"
   copyright: "© 2026 南翔希"
   comments: "一个中文的SSH工具，便携，简单，开源"
-  version: "0.1.0"
+  version: "0.4.0"
   # cfBundleIconName: "appicon" # The macOS icon name in Assets.car icon bundles (optional)
   #                               # Should match the name of your .icon file without the extension
   #                               # If not set and Assets.car exists, defaults to "appicon"

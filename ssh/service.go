@@ -1044,7 +1044,12 @@ func (s *SSHService) StartShellSessionWithID(connID, sessionID string) error {
 	}
 
 	if _, err := client.CreateShell(sessionID); err != nil {
-		return err
+		// 检查是否是 SSH 会话数限制问题
+		errMsg := err.Error()
+		if strings.Contains(errMsg, "open failed") || strings.Contains(errMsg, "rejected") {
+			return fmt.Errorf("创建终端失败：SSH 服务器可能已达到最大会话数限制。请关闭其他终端后重试")
+		}
+		return fmt.Errorf("创建终端失败: %v", err)
 	}
 
 	s.mu.Lock()
